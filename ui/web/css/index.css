@@ -6,4 +6,10 @@ form {
 	display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
+}
+
+input[type=number] {
+	width: 80px;
+	margin-right: 1rem;
 }

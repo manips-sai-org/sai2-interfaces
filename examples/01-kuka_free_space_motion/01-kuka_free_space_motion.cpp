@@ -219,13 +219,18 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	motion_primitive->enableGravComp();
 
 	Eigen::Matrix3d initial_orientation;
+	Eigen::Vector3d initial_orientation_euler;
+	Eigen::Vector3d desired_orientation_euler;
 	Eigen::Vector3d initial_position;
 	robot->rotation(initial_orientation, motion_primitive->_link_name);
 	robot->position(initial_position, motion_primitive->_link_name, motion_primitive->_control_frame.translation());
 
 	redis_client.setEigenMatrixDerived(DESIRED_POS_KEY, initial_position);
-	redis_client.setEigenMatrixDerived(DESIRED_ORI_KEY, initial_orientation);
+	redis_client.setEigenMatrixDerived(DESIRED_ORI_KEY, initial_orientation_euler);
 	redis_client.setEigenMatrixDerived(DESIRED_JOINT_POS_KEY, robot->_q);
+	initial_orientation = Eigen::AngleAxisd(initial_orientation_euler(2), Eigen::Vector3d::UnitZ())
+						  * Eigen::AngleAxisd(initial_orientation_euler(1), Eigen::Vector3d::UnitY())
+						  * Eigen::AngleAxisd(initial_orientation_euler(0), Eigen::Vector3d::UnitX());
 
 	redis_client.setCommandIs(KP_POS_KEY, std::to_string(motion_primitive->_posori_task->_kp_pos));
 	redis_client.setCommandIs(KV_POS_KEY, std::to_string(motion_primitive->_posori_task->_kv_pos));
@@ -284,7 +289,10 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 
 
 		// orientation part
-		redis_client.getEigenMatrixDerived(DESIRED_ORI_KEY, motion_primitive->_desired_orientation);
+		redis_client.getEigenMatrixDerived(DESIRED_ORI_KEY, desired_orientation_euler);
+		motion_primitive->_desired_orientation = Eigen::AngleAxisd(desired_orientation_euler(2), Eigen::Vector3d::UnitZ())
+												 * Eigen::AngleAxisd(desired_orientation_euler(1), Eigen::Vector3d::UnitY())
+												 * Eigen::AngleAxisd(desired_orientation_euler(0), Eigen::Vector3d::UnitX());
 
 		// position part
 		redis_client.getEigenMatrixDerived(DESIRED_POS_KEY, motion_primitive->_desired_position);
