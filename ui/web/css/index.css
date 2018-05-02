@@ -1,5 +1,35 @@
+body {
+    color: #525252;
+}
+
+.logo {
+    position: absolute;
+    top: 2rem;
+    right: 5rem;
+    height: 125px;
+}
+
+.title {
+	margin: 4rem 0;
+	padding: 0;
+    text-align: center;
+}
+
+#container {
+	display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.module {
+	margin: 2rem;
+    max-width: 400px;
+    flex-grow: 1;
+}
+
 form {
-    margin: 3rem;
+    /*margin: 0 2rem;*/
 }
 
 .display_row {
@@ -13,3 +43,4 @@ input[type=number] {
 	width: 80px;
 	margin-right: 1rem;
 }
+
