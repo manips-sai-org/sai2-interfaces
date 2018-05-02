@@ -25,6 +25,7 @@ body {
 .module {
 	margin: 2rem;
     max-width: 400px;
+    min-width: 300px;
     flex-grow: 1;
 }
 
