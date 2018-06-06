@@ -33,15 +33,27 @@ const string camera_name = "camera";
 
 RedisClient redis_client;
 
-const string DESIRED_POS_KEY = "sai2::sai2Interfaces::desired_position";
-const string DESIRED_ORI_KEY = "sai2::sai2Interfaces::desired_orientation";
-const string DESIRED_JOINT_POS_KEY = "sai2::sai2Interfaces::desired_joint_orientation";
+// operational space control
+const string DESIRED_POS_KEY_X = "sai2::sai2Interfaces::desired_position::x";
+const string DESIRED_POS_KEY_Y = "sai2::sai2Interfaces::desired_position::y";
+const string DESIRED_POS_KEY_Z = "sai2::sai2Interfaces::desired_position::z";
+const string DESIRED_ORI_KEY_X = "sai2::sai2Interfaces::desired_orientation::x";
+const string DESIRED_ORI_KEY_Y = "sai2::sai2Interfaces::desired_orientation::y";
+const string DESIRED_ORI_KEY_Z = "sai2::sai2Interfaces::desired_orientation::z";
 const string KP_POS_KEY = "sai2::sai2Interfaces::kp_pos";
 const string KV_POS_KEY = "sai2::sai2Interfaces::kv_pos";
 const string KP_ORI_KEY = "sai2::sai2Interfaces::kp_ori";
 const string KV_ORI_KEY = "sai2::sai2Interfaces::kv_ori";
+
+// joint space control
+const string DESIRED_JOINT_POS_KEY = "sai2::sai2Interfaces::desired_joint_position";
 const string KP_JOINT_KEY = "sai2::sai2Interfaces::kp_joint";
 const string KV_JOINT_KEY = "sai2::sai2Interfaces::kv_joint";
+
+// pick and place control
+const string GRASP_COMMAND = "sai2::sai2Interfaces::grasp";
+const string GRASP_OPEN = "o";
+const string GRASP_CLOSE = "c";
 
 // simulation and control loop
 void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim);
@@ -218,27 +230,15 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	Eigen::VectorXd motion_primitive_torques;
 	motion_primitive->enableGravComp();
 
-	Eigen::Matrix3d initial_orientation;
-	Eigen::Vector3d initial_orientation_euler;
-	Eigen::Vector3d desired_orientation_euler;
-	Eigen::Vector3d initial_position;
-	robot->rotation(initial_orientation, motion_primitive->_link_name);
-	robot->position(initial_position, motion_primitive->_link_name, motion_primitive->_control_frame.translation());
-
-	redis_client.setEigenMatrixDerived(DESIRED_POS_KEY, initial_position);
-	redis_client.setEigenMatrixDerived(DESIRED_ORI_KEY, initial_orientation_euler);
-	redis_client.setEigenMatrixDerived(DESIRED_JOINT_POS_KEY, robot->_q);
-	initial_orientation = Eigen::AngleAxisd(initial_orientation_euler(2), Eigen::Vector3d::UnitZ())
-						  * Eigen::AngleAxisd(initial_orientation_euler(1), Eigen::Vector3d::UnitY())
-						  * Eigen::AngleAxisd(initial_orientation_euler(0), Eigen::Vector3d::UnitX());
-
-	redis_client.setCommandIs(KP_POS_KEY, std::to_string(motion_primitive->_posori_task->_kp_pos));
-	redis_client.setCommandIs(KV_POS_KEY, std::to_string(motion_primitive->_posori_task->_kv_pos));
-	redis_client.setCommandIs(KP_ORI_KEY, std::to_string(motion_primitive->_posori_task->_kp_ori));
-	redis_client.setCommandIs(KV_ORI_KEY, std::to_string(motion_primitive->_posori_task->_kv_ori));
-	redis_client.setCommandIs(KP_JOINT_KEY, std::to_string(motion_primitive->_joint_task->_kp));
-	redis_client.setCommandIs(KV_JOINT_KEY, std::to_string(motion_primitive->_joint_task->_kv));
-
+	Eigen::Matrix3d desired_rmat;
+	double desired_euler_x;
+	double desired_euler_y;
+	double desired_euler_z;
+	Eigen::Vector3d desired_pos;
+	double desired_pos_x;
+	double desired_pos_y;
+	double desired_pos_z;
+	
 	// create a loop timer
 	double control_freq = 1000;
 	LoopTimer timer;
@@ -287,15 +287,28 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 		redis_client.getCommandIs(KV_JOINT_KEY, redis_buffer);
 		motion_primitive->_joint_task->_kv = std::stod(redis_buffer);
 
-
 		// orientation part
-		redis_client.getEigenMatrixDerived(DESIRED_ORI_KEY, desired_orientation_euler);
-		motion_primitive->_desired_orientation = Eigen::AngleAxisd(desired_orientation_euler(2), Eigen::Vector3d::UnitZ())
-												 * Eigen::AngleAxisd(desired_orientation_euler(1), Eigen::Vector3d::UnitY())
-												 * Eigen::AngleAxisd(desired_orientation_euler(0), Eigen::Vector3d::UnitX());
+		redis_client.getCommandIs(DESIRED_ORI_KEY_X, redis_buffer);
+		desired_euler_x = std::stod(redis_buffer);
+		redis_client.getCommandIs(DESIRED_ORI_KEY_Y, redis_buffer);
+		desired_euler_y = std::stod(redis_buffer);
+		redis_client.getCommandIs(DESIRED_ORI_KEY_Z, redis_buffer);
+		desired_euler_z = std::stod(redis_buffer);
+		desired_rmat = Eigen::AngleAxisd(desired_euler_z, Eigen::Vector3d::UnitZ())
+						 * Eigen::AngleAxisd(desired_euler_y, Eigen::Vector3d::UnitY())
+						 * Eigen::AngleAxisd(desired_euler_x, Eigen::Vector3d::UnitX());
+		motion_primitive->_desired_orientation = desired_rmat;
 
 		// position part
-		redis_client.getEigenMatrixDerived(DESIRED_POS_KEY, motion_primitive->_desired_position);
+		redis_client.getCommandIs(DESIRED_POS_KEY_X, redis_buffer);
+		desired_pos_x = std::stod(redis_buffer);
+		redis_client.getCommandIs(DESIRED_POS_KEY_Y, redis_buffer);
+		desired_pos_y = std::stod(redis_buffer);
+		redis_client.getCommandIs(DESIRED_POS_KEY_Z, redis_buffer);
+		desired_pos_z = std::stod(redis_buffer);
+		desired_pos = Eigen::Vector3d(desired_pos_x, desired_pos_y, desired_pos_z);
+		motion_primitive->_desired_position = desired_pos;
+		cout << "desired_pos: " << desired_pos << endl;
 
 		// joint part
 		redis_client.getEigenMatrixDerived(DESIRED_JOINT_POS_KEY, motion_primitive->_joint_task->_desired_position);

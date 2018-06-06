@@ -1,8 +1,8 @@
 # create an executable
-ADD_EXECUTABLE (01-kuka_free_space_motion 01-kuka_free_space_motion.cpp)
+ADD_EXECUTABLE (multi_primitives multi_primitives.cpp)
 
 # and link the library against the executable
-TARGET_LINK_LIBRARIES (01-kuka_free_space_motion
+TARGET_LINK_LIBRARIES (multi_primitives
 	${SAI2-INTERFACES_EXAMPLES_COMMON_LIBRARIES}
 	)
 
