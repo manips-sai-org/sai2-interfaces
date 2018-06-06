@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import threading
 from multiprocessing import Process
 from argparse import ArgumentParser
+from urllib.parse import urlparse, parse_qs
 import redis
 import json
 import os
@@ -114,11 +115,19 @@ def makeHTTPRequestHandler(get_callback=None, post_callback=None, callback_args=
 
 
 def handle_get_request(request_handler, get_vars, **kwargs):
-    """
-    HTTPRequestHandler callback:
+    if request_handler.path.startswith('/redis'):
+        get_redis_value(request_handler, **kwargs)
+    else:
+        serve_file(request_handler)
 
-    Serve content inside WEB_DIRECTORY
-    """
+def get_redis_value(request_handler, **kwargs):
+    query_params = parse_qs(urlparse(request_handler.path).query)
+    key = query_params["key"][0]
+    value = kwargs["redis_db"].get(key)
+    request_handler.wfile.write(value.encode("utf-8"))
+
+def serve_file(request_handler):
+    # Serve content inside WEB_DIRECTORY
     path_tokens = [token for token in request_handler.path.split("/") if token]
 
     # Default to index.html
@@ -146,7 +155,21 @@ def handle_post_request(request_handler, post_vars, **kwargs):
 
     Set POST variables as Redis keys
     """
+    path = request_handler.path
+    if path.startswith('/log'):
+        handle_log(request_handler)
+    elif path.startswith('/redis'):
+        set_redis_key_vals(post_vars, **kwargs)
 
+def handle_log(request_handler):
+    path = request_handler.path
+    if path.startswith('/log/start'):
+        print('start logging')
+        
+    elif path.startswith('/log/stop'):
+        print('stop logging')
+
+def set_redis_key_vals(post_vars, **kwargs):
     for key, val_str in post_vars.items():
         val = val_str[0].decode('utf-8')
         print("%s: %s" % (key, val))

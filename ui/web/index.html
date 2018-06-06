@@ -10,22 +10,59 @@
     <link rel="stylesheet" href="/css/range_input.css" type="text/css">
     <link rel="stylesheet" href="/css/index.css" type="text/css">
     <!-- imported modules -->
-    <link rel="import" href="/module/position/index.html">
-    <link rel="import" href="/module/rotation/index.html">
+    <link rel="import" href="/module/log/index.html">
+    <link rel="import" href="/module/robot-continuous/index.html">
+    <link rel="import" href="/module/robot-discrete/index.html">
   </head>
   <body>
     <h1 class="title">Operational Space Control</h1>
     <img src="/images/operational_space.png" class="logo" />
-    <div id="container"></div>
-    <script>
-      var links = document.querySelectorAll('link[rel="import"]');
-      for (var i = 0; i < links.length; i++) {
-        var link = links[i];
-        var content = link.import;
-        // Grab DOM from html's body.
-        var el = content.querySelector('body').children[0];
-        document.querySelector('#container').appendChild(el.cloneNode(true));
-      }
-    </script>
+
+    
+    <div id="container">
+
+      <!-- logging -->
+      <div class="module">
+        <robot-log></robot-log>
+      </div>
+
+      <!-- control modules -->
+      <div class="module">
+        <h2>Position (meter)</h2>
+        <robot-continuous key="sai2::sai2Interfaces::desired_position::x"
+                        min="-1" max="1" step="0.01"></robot-continuous>
+        <robot-continuous key="sai2::sai2Interfaces::desired_position::y"
+                        min="-1" max="1" step="0.01"></robot-continuous>
+        <robot-continuous key="sai2::sai2Interfaces::desired_position::z"
+                        min="-1" max="1" step="0.01"></robot-continuous>
+      </div>
+      <div class="module">
+        <h2>Rotation Euler Angles (radian)</h2>
+        <robot-continuous key="sai2::sai2Interfaces::desired_orientation::x"
+                        min="-6.28" max="6.28" step="0.01"></robot-continuous>
+        <robot-continuous key="sai2::sai2Interfaces::desired_orientation::y"
+                        min="-6.28" max="6.28" step="0.01"></robot-continuous>
+        <robot-continuous key="sai2::sai2Interfaces::desired_orientation::z"
+                        min="-6.28" max="6.28" step="0.01"></robot-continuous>
+      </div>
+      <div class="module">
+        <h2>Gains</h2>
+        <robot-continuous key="sai2::sai2Interfaces::kp_pos"
+                        min="0" max="1000" step="1"></robot-continuous>
+        <robot-continuous key="sai2::sai2Interfaces::kv_pos"
+                        min="0" max="1000" step="1"></robot-continuous>
+        <robot-continuous key="sai2::sai2Interfaces::kp_ori"
+                        min="0" max="1000" step="1"></robot-continuous>
+        <robot-continuous key="sai2::sai2Interfaces::kv_ori"
+                        min="0" max="1000" step="1"></robot-continuous>
+      </div>
+      <div class="module">
+        <h2>Grasp</h2>
+        <robot-discrete key="sai2::sai2Interfaces::grasp"
+                        value="o"></robot-continuous>
+        <robot-discrete key="sai2::sai2Interfaces::grasp"
+                        value="c"></robot-continuous>
+      </div>
+    </div>
   </body>
 </html>

@@ -24,24 +24,19 @@ body {
 
 .module {
 	margin: 2rem;
-    max-width: 400px;
+    max-width: 500px;
     min-width: 300px;
     flex-grow: 1;
 }
 
-form {
-    /*margin: 0 2rem;*/
-}
-
 .display_row {
-	display: flex;
+    display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
 }
 
 input[type=number] {
-	width: 80px;
-	margin-right: 1rem;
+    width: 80px;
+    margin: 0 1rem;
 }
-
