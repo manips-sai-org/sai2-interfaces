@@ -229,6 +229,9 @@ int main (int argc, char** argv) {
 //------------------------------------------------------------------------------
 void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	
+	// IMPORTANT: first thing to do in controller
+	// this informs the UI, that controller is not ready yet,
+	// and user is disabled from updating redis values
 	redis_client.set(CONTROL_STATE_KEY, CONTROL_STATE_INITIALIZING);
 
 	robot->updateModel();
@@ -275,6 +278,11 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	redis_client.set(KV_ORI_KEY, std::to_string(motion_primitive->_posori_task->_kv_ori));	
 	redis_client.set(KP_JOINT_KEY, std::to_string(motion_primitive->_joint_task->_kp));	
 	redis_client.set(KV_JOINT_KEY, std::to_string(motion_primitive->_joint_task->_kv));
+	
+	// IMPORTANT: after controller is initialized
+	// this informs the UI, that controller is ready,
+	// UI will fetch new value from redis,
+	// and user is allowed to update redis values
 	redis_client.set(CONTROL_STATE_KEY, CONTROL_STATE_INITIALIZED);
 	
 	// create a loop timer
