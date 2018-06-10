@@ -33,6 +33,12 @@ const string camera_name = "camera";
 
 RedisClient redis_client;
 
+// control init
+const string CONTROL_STATE_KEY = "sai2::sai2Interfaces::control_state";
+const string CONTROL_STATE_INITIALIZING = "initializing";
+const string CONTROL_STATE_INITIALIZED = "initialized";
+const string CONTROL_STATE_READY = "ready";
+
 // operational space control
 const string DESIRED_POS_KEY_X = "sai2::sai2Interfaces::desired_position::x";
 const string DESIRED_POS_KEY_Y = "sai2::sai2Interfaces::desired_position::y";
@@ -79,6 +85,13 @@ bool fTransYn = false;
 bool fTransZp = false;
 bool fTransZn = false;
 bool fRotPanTilt = false;
+
+string dtos(double x) {
+    std::stringstream s;  // Allocates memory on stack
+    s << x;
+    return s.str();       // returns a s.str() as a string by value
+                          // Frees allocated memory of s
+} 
 
 int main (int argc, char** argv) {
 	cout << "Loading URDF world model file: " << world_file << endl;
@@ -216,12 +229,14 @@ int main (int argc, char** argv) {
 //------------------------------------------------------------------------------
 void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	
+	redis_client.set(CONTROL_STATE_KEY, CONTROL_STATE_INITIALIZING);
+
 	robot->updateModel();
 	int dof = robot->dof();
 	Eigen::VectorXd command_torques = Eigen::VectorXd::Zero(dof);
 
 	string link_name = "link6";
-	Eigen::Vector3d pos_in_link = Eigen::Vector3d(0.0,0.0,0.0);
+	Eigen::Vector3d pos_in_link = Eigen::Vector3d(0.0, 0.0, 0.0);
 
 	string redis_buffer;
 
@@ -238,6 +253,29 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	double desired_pos_x;
 	double desired_pos_y;
 	double desired_pos_z;
+
+	// set initial position, orientation
+	Eigen::Matrix3d initial_rmat;	
+	Eigen::Vector3d initial_euler;	
+	Eigen::Vector3d initial_position;	
+	robot->rotation(initial_rmat, motion_primitive->_link_name);	
+	robot->position(initial_position, motion_primitive->_link_name, motion_primitive->_control_frame.translation());
+	initial_euler = initial_rmat.eulerAngles(2, 1, 0);
+
+	redis_client.set(DESIRED_POS_KEY_X, std::to_string(initial_position(0)));
+	redis_client.set(DESIRED_POS_KEY_Y, std::to_string(initial_position(1)));
+	redis_client.set(DESIRED_POS_KEY_Z, std::to_string(initial_position(2)));
+	redis_client.set(DESIRED_ORI_KEY_X, std::to_string(initial_euler(0)));
+	redis_client.set(DESIRED_ORI_KEY_Y, std::to_string(initial_euler(1)));
+	redis_client.set(DESIRED_ORI_KEY_Z, std::to_string(initial_euler(2)));
+	
+	redis_client.set(KP_POS_KEY, std::to_string(motion_primitive->_posori_task->_kp_pos));	
+	redis_client.set(KV_POS_KEY, std::to_string(motion_primitive->_posori_task->_kv_pos));	
+	redis_client.set(KP_ORI_KEY, std::to_string(motion_primitive->_posori_task->_kp_ori));	
+	redis_client.set(KV_ORI_KEY, std::to_string(motion_primitive->_posori_task->_kv_ori));	
+	redis_client.set(KP_JOINT_KEY, std::to_string(motion_primitive->_joint_task->_kp));	
+	redis_client.set(KV_JOINT_KEY, std::to_string(motion_primitive->_joint_task->_kv));
+	redis_client.set(CONTROL_STATE_KEY, CONTROL_STATE_INITIALIZED);
 	
 	// create a loop timer
 	double control_freq = 1000;
@@ -308,7 +346,6 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 		desired_pos_z = std::stod(redis_buffer);
 		desired_pos = Eigen::Vector3d(desired_pos_x, desired_pos_y, desired_pos_z);
 		motion_primitive->_desired_position = desired_pos;
-		cout << "desired_pos: " << desired_pos << endl;
 
 		// joint part
 		redis_client.getEigenMatrixDerived(DESIRED_JOINT_POS_KEY, motion_primitive->_joint_task->_desired_position);

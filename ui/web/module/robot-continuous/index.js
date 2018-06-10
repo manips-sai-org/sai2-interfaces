@@ -6,6 +6,7 @@ customElements.define('robot-continuous', class extends HTMLElement {
 
 	connectedCallback() {
 		let template_node = this.template.content.cloneNode(true);
+		let container = template_node.querySelector('.module');
 
 		this.key = this.getAttribute('key');
 		this.min = this.getAttribute('min');
@@ -46,16 +47,36 @@ customElements.define('robot-continuous', class extends HTMLElement {
 			post_redis_key_val(self.key, value);
 		};
 
+		// register listeners for controller ready event
+		document.addEventListener(EVENT_NOT_READY, function() {
+			console.log('not ready');
+			// disable user from modifying redis value
+			$(container).addClass('disabled');
+		});
+
+		document.addEventListener(EVENT_READY, function() {
+			console.log('controller ready. reading from redis.')
+			// allow user to modify redis value
+			$(container).removeClass('disabled');
+			// fetch new redis value and update UI
+			self.get_redis_val_and_update();
+		});
+
 		// fetch initial value from redis
-		get_redis_val(self.key)
-			.done(function(value) {
-				console.log('setting initial value from redis. key: ' + self.key, ' value: ' + value);
-				self.update_input_slider_value(value);
-				self.update_input_number_value(value);
-			});
+		this.get_redis_val_and_update();
 
 		// append to document
 		this.appendChild(template_node);
+	}
+
+	get_redis_val_and_update() {
+		let self = this;
+		get_redis_val(self.key)
+			.done(function(value) {
+				console.log('setting value from redis. key: ' + self.key, ' value: ' + value);
+				self.update_input_slider_value(value);
+				self.update_input_number_value(value);
+			});
 	}
 
 	get_input_slider_value() {

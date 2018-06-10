@@ -1,3 +1,5 @@
+# adopted from Toki Migimatsu's CS223A homework script
+
 from __future__ import print_function, division
 import threading
 from multiprocessing import Process
@@ -165,7 +167,7 @@ def handle_log(request_handler):
     path = request_handler.path
     if path.startswith('/log/start'):
         print('start logging')
-        
+
     elif path.startswith('/log/stop'):
         print('stop logging')
 
@@ -199,5 +201,9 @@ if __name__ == "__main__":
     http_server_process = Process(target=http_server.serve_forever)
     http_server_process.start()
     print("Started HTTP server on port %d" % (args.http_port))
+
+    # create redis monitor
+    # redis_monitor = RedisMonitor(host=args.redis_host, port=args.redis_port, db=args.redis_db)
+    # redis_monitor.run_forever(ws_server)
 
     http_server_process.join()
