@@ -6,7 +6,7 @@ customElements.define('robot-continuous', class extends HTMLElement {
 
 	connectedCallback() {
 		let template_node = this.template.content.cloneNode(true);
-		let container = template_node.querySelector('.module');
+		let container = template_node.querySelector('.container');
 
 		this.key = this.getAttribute('key');
 		this.min = this.getAttribute('min');
