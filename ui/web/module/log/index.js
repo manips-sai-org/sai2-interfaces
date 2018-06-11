@@ -20,12 +20,14 @@ customElements.define('robot-log', class extends HTMLElement {
 				console.log('start logging');
 				self.start_logging()
 					.done(function(data) {
-
+						button.innerHTML = 'stop logging';
 					});
-				button.innerHTML = 'stop logging';
 			} else {
 				console.log('stop logging');
-				button.innerHTML = 'start logging';
+				self.stop_logging()
+					.done(function(data) {
+						button.innerHTML = 'start logging';
+					});
 			}
 		};
 
@@ -39,7 +41,17 @@ customElements.define('robot-log', class extends HTMLElement {
 			contentType: "application/json; charset=utf-8",
 			url: "/log/start"
 		}).fail(function(data) {
-			alert('log error: ' + str(data));
+			alert('log error: ' + toString(data));
+		});
+	}
+
+	stop_logging() {
+		return $.ajax({
+			method: "POST",
+			contentType: "application/json; charset=utf-8",
+			url: "/log/stop"
+		}).fail(function(data) {
+			alert('log error: ' + toString(data));
 		});
 	}
 });

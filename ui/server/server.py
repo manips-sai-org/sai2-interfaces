@@ -12,6 +12,7 @@ import shutil
 import cgi
 import mimetypes
 import sys
+import logger
 WEB_DIRECTORY = os.path.join(os.path.dirname(__file__), "..", "web")
 
 if sys.version.startswith("3"):
@@ -159,17 +160,18 @@ def handle_post_request(request_handler, post_vars, **kwargs):
     """
     path = request_handler.path
     if path.startswith('/log'):
-        handle_log(request_handler)
+        handle_log(request_handler, **kwargs)
     elif path.startswith('/redis'):
         set_redis_key_vals(post_vars, **kwargs)
 
 def handle_log(request_handler):
     path = request_handler.path
     if path.startswith('/log/start'):
-        print('start logging')
+        dir = '../logs'
+        logger.start_logging(dir, kwargs["redis_db"])
 
     elif path.startswith('/log/stop'):
-        print('stop logging')
+        logger.stop_logging()
 
 def set_redis_key_vals(post_vars, **kwargs):
     for key, val_str in post_vars.items():

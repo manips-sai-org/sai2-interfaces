@@ -9,7 +9,7 @@ function post_redis_key_val(key, val) {
 		url: "/redis",
 		data: data
 	}).fail(function(data) {
-		alert('set redis error: ' + str(data));
+		alert('set redis error: ' + toString(data));
 	});
 }
 
@@ -21,6 +21,6 @@ function get_redis_val(key) {
 			key: key
 		}
 	}).fail(function(data) {
-		alert('get redis error: ' + str(data));
+		alert('get redis error: ' + toString(data));
 	});
 }

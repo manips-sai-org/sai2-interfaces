@@ -32,6 +32,12 @@ const string robot_name = "Kuka-IIWA";
 const string camera_name = "camera";
 
 RedisClient redis_client;
+string last_primitive;
+
+// current controller
+const string PRIMITIVE_KEY = "sai2::sai2Interfaces::primitive";
+const string PRIMITIVE_REDUNDANT_ARM_MOTION = "redundant_arm_motion";
+const string PRIMITIVE_JOINT_TASK = "joint_task";
 
 // control init
 const string CONTROL_STATE_KEY = "sai2::sai2Interfaces::control_state";
@@ -52,7 +58,13 @@ const string KP_ORI_KEY = "sai2::sai2Interfaces::kp_ori";
 const string KV_ORI_KEY = "sai2::sai2Interfaces::kv_ori";
 
 // joint space control
-const string DESIRED_JOINT_POS_KEY = "sai2::sai2Interfaces::desired_joint_position";
+const string DESIRED_JOINT_POS_KEY_0 = "sai2::sai2Interfaces::desired_joint_position::0";
+const string DESIRED_JOINT_POS_KEY_1 = "sai2::sai2Interfaces::desired_joint_position::1";
+const string DESIRED_JOINT_POS_KEY_2 = "sai2::sai2Interfaces::desired_joint_position::2";
+const string DESIRED_JOINT_POS_KEY_3 = "sai2::sai2Interfaces::desired_joint_position::3";
+const string DESIRED_JOINT_POS_KEY_4 = "sai2::sai2Interfaces::desired_joint_position::4";
+const string DESIRED_JOINT_POS_KEY_5 = "sai2::sai2Interfaces::desired_joint_position::5";
+const string DESIRED_JOINT_POS_KEY_6 = "sai2::sai2Interfaces::desired_joint_position::6";
 const string KP_JOINT_KEY = "sai2::sai2Interfaces::kp_joint";
 const string KV_JOINT_KEY = "sai2::sai2Interfaces::kv_joint";
 
@@ -61,9 +73,23 @@ const string GRASP_COMMAND = "sai2::sai2Interfaces::grasp";
 const string GRASP_OPEN = "o";
 const string GRASP_CLOSE = "c";
 
+// output to redis
+const string LOG_TIME_KEY = "sai2::iiwaForceControl::iiwaBot::simulation::data_log::time";
+const string LOG_JOINT_POS_KEY = "sai2::iiwaForceControl::iiwaBot::simulation::data_log::joint_pos";
+const string LOG_JOINT_VEL_KEY = "sai2::iiwaForceControl::iiwaBot::simulation::data_log::joint_vel";
+const string LOG_EE_POS_KEY = "sai2::iiwaForceControl::iiwaBot::simulation::data_log::ee_pos";
+const string LOG_EE_VEL_KEY = "sai2::iiwaForceControl::iiwaBot::simulation::data_log::ee_vel";
+const string LOG_COMMAND_TORQUE_KEY = "sai2::iiwaForceControl::iiwaBot::simulation::data_log::command_torques";
+
 // simulation and control loop
 void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim);
 void simulation(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim);
+void init_ram_primitive(Sai2Model::Sai2Model* robot, Sai2Primitives::RedundantArmMotion * ram_primitive);
+void init_joint_task(Sai2Model::Sai2Model* robot, Sai2Primitives::JointTask * joint_task);
+void compute_torques_ram_primitive(Eigen::VectorXd & motion_primitive_torques, Sai2Model::Sai2Model* robot, 
+									Sai2Primitives::RedundantArmMotion * ram_primitive);
+void compute_torques_joint_task(Eigen::VectorXd & motion_primitive_torques, Sai2Model::Sai2Model* robot, 
+									Sai2Primitives::JointTask * joint_task);
 
 // initialize window manager
 GLFWwindow* glfwInitialize();
@@ -229,55 +255,32 @@ int main (int argc, char** argv) {
 //------------------------------------------------------------------------------
 void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 	
+	robot->updateModel();
+	int dof = robot->dof();
+	Eigen::VectorXd command_torques = Eigen::VectorXd::Zero(dof);
+	Eigen::VectorXd motion_primitive_torques;
+
+	string ee_link_name = "link6";
+	Eigen::Vector3d ee_pos_link = Eigen::Vector3d(0.0, 0.0, 0.0);
+
+	// Motion arm primitive
+	Sai2Primitives::RedundantArmMotion* ram_primitive = new Sai2Primitives::RedundantArmMotion(robot, ee_link_name, ee_pos_link);
+	ram_primitive->enableGravComp();
+
+	// Joint task
+	Sai2Primitives::JointTask * joint_task = new Sai2Primitives::JointTask(robot);
+	
+	// set current primitive to RAM by default
+	redis_client.set(PRIMITIVE_KEY, PRIMITIVE_REDUNDANT_ARM_MOTION);
+
 	// IMPORTANT: first thing to do in controller
 	// this informs the UI, that controller is not ready yet,
 	// and user is disabled from updating redis values
 	redis_client.set(CONTROL_STATE_KEY, CONTROL_STATE_INITIALIZING);
 
-	robot->updateModel();
-	int dof = robot->dof();
-	Eigen::VectorXd command_torques = Eigen::VectorXd::Zero(dof);
-
-	string link_name = "link6";
-	Eigen::Vector3d pos_in_link = Eigen::Vector3d(0.0, 0.0, 0.0);
-
-	string redis_buffer;
-
-	// Motion arm primitive
-	Sai2Primitives::RedundantArmMotion* motion_primitive = new Sai2Primitives::RedundantArmMotion(robot, link_name, pos_in_link);
-	Eigen::VectorXd motion_primitive_torques;
-	motion_primitive->enableGravComp();
-
-	Eigen::Matrix3d desired_rmat;
-	double desired_euler_x;
-	double desired_euler_y;
-	double desired_euler_z;
-	Eigen::Vector3d desired_pos;
-	double desired_pos_x;
-	double desired_pos_y;
-	double desired_pos_z;
-
 	// set initial position, orientation
-	Eigen::Matrix3d initial_rmat;	
-	Eigen::Vector3d initial_euler;	
-	Eigen::Vector3d initial_position;	
-	robot->rotation(initial_rmat, motion_primitive->_link_name);	
-	robot->position(initial_position, motion_primitive->_link_name, motion_primitive->_control_frame.translation());
-	initial_euler = initial_rmat.eulerAngles(2, 1, 0);
-
-	redis_client.set(DESIRED_POS_KEY_X, std::to_string(initial_position(0)));
-	redis_client.set(DESIRED_POS_KEY_Y, std::to_string(initial_position(1)));
-	redis_client.set(DESIRED_POS_KEY_Z, std::to_string(initial_position(2)));
-	redis_client.set(DESIRED_ORI_KEY_X, std::to_string(initial_euler(0)));
-	redis_client.set(DESIRED_ORI_KEY_Y, std::to_string(initial_euler(1)));
-	redis_client.set(DESIRED_ORI_KEY_Z, std::to_string(initial_euler(2)));
-	
-	redis_client.set(KP_POS_KEY, std::to_string(motion_primitive->_posori_task->_kp_pos));	
-	redis_client.set(KV_POS_KEY, std::to_string(motion_primitive->_posori_task->_kv_pos));	
-	redis_client.set(KP_ORI_KEY, std::to_string(motion_primitive->_posori_task->_kp_ori));	
-	redis_client.set(KV_ORI_KEY, std::to_string(motion_primitive->_posori_task->_kv_ori));	
-	redis_client.set(KP_JOINT_KEY, std::to_string(motion_primitive->_joint_task->_kp));	
-	redis_client.set(KV_JOINT_KEY, std::to_string(motion_primitive->_joint_task->_kv));
+	init_ram_primitive(robot, ram_primitive);
+	init_joint_task(robot, joint_task);
 	
 	// IMPORTANT: after controller is initialized
 	// this informs the UI, that controller is ready,
@@ -301,73 +304,47 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
 		// update time
 		double curr_time = timer.elapsedTime();
 		double loop_dt = curr_time - last_time;
+		double time = controller_counter/control_freq;
 
 		// read joint positions, velocities, update model
 		sim->getJointPositions(robot_name, robot->_q);
 		sim->getJointVelocities(robot_name, robot->_dq);
 		robot->updateModel();
 
-		// update tasks model
-		motion_primitive->updatePrimitiveModel();
-
 		// -------------------------------------------
-		////////////////////////////// Compute joint torques
-		double time = controller_counter/control_freq;
-
-		// read gains from redis
-		redis_client.getCommandIs(KP_POS_KEY, redis_buffer);
-		motion_primitive->_posori_task->_kp_pos = std::stod(redis_buffer);
-		
-		redis_client.getCommandIs(KV_POS_KEY, redis_buffer);
-		motion_primitive->_posori_task->_kv_pos = std::stod(redis_buffer);
-		
-		redis_client.getCommandIs(KP_ORI_KEY, redis_buffer);
-		motion_primitive->_posori_task->_kp_ori = std::stod(redis_buffer);
-		
-		redis_client.getCommandIs(KV_ORI_KEY, redis_buffer);
-		motion_primitive->_posori_task->_kv_ori = std::stod(redis_buffer);
-		
-		redis_client.getCommandIs(KP_JOINT_KEY, redis_buffer);
-		motion_primitive->_joint_task->_kp = std::stod(redis_buffer);
-		
-		redis_client.getCommandIs(KV_JOINT_KEY, redis_buffer);
-		motion_primitive->_joint_task->_kv = std::stod(redis_buffer);
-
-		// orientation part
-		redis_client.getCommandIs(DESIRED_ORI_KEY_X, redis_buffer);
-		desired_euler_x = std::stod(redis_buffer);
-		redis_client.getCommandIs(DESIRED_ORI_KEY_Y, redis_buffer);
-		desired_euler_y = std::stod(redis_buffer);
-		redis_client.getCommandIs(DESIRED_ORI_KEY_Z, redis_buffer);
-		desired_euler_z = std::stod(redis_buffer);
-		desired_rmat = Eigen::AngleAxisd(desired_euler_z, Eigen::Vector3d::UnitZ())
-						 * Eigen::AngleAxisd(desired_euler_y, Eigen::Vector3d::UnitY())
-						 * Eigen::AngleAxisd(desired_euler_x, Eigen::Vector3d::UnitX());
-		motion_primitive->_desired_orientation = desired_rmat;
-
-		// position part
-		redis_client.getCommandIs(DESIRED_POS_KEY_X, redis_buffer);
-		desired_pos_x = std::stod(redis_buffer);
-		redis_client.getCommandIs(DESIRED_POS_KEY_Y, redis_buffer);
-		desired_pos_y = std::stod(redis_buffer);
-		redis_client.getCommandIs(DESIRED_POS_KEY_Z, redis_buffer);
-		desired_pos_z = std::stod(redis_buffer);
-		desired_pos = Eigen::Vector3d(desired_pos_x, desired_pos_y, desired_pos_z);
-		motion_primitive->_desired_position = desired_pos;
-
-		// joint part
-		redis_client.getEigenMatrixDerived(DESIRED_JOINT_POS_KEY, motion_primitive->_joint_task->_desired_position);
-
-		// torques
-		motion_primitive->computeTorques(motion_primitive_torques);
+		// select primitive according to redis
+		// Compute joint torques
+		string primitive = redis_client.get(PRIMITIVE_KEY);
+		if (primitive == PRIMITIVE_REDUNDANT_ARM_MOTION) {
+	    	if (last_primitive != primitive) {
+	    		init_ram_primitive(robot, ram_primitive);
+	    	}
+			ram_primitive->updatePrimitiveModel();
+			compute_torques_ram_primitive(motion_primitive_torques, robot, ram_primitive);
+		} else if (primitive == PRIMITIVE_JOINT_TASK) {
+	    	if (last_primitive != primitive) {
+	    		init_joint_task(robot, joint_task);
+	    	}
+	    	joint_task->updateTaskModel(Eigen::MatrixXd::Identity(dof, dof));
+	    	compute_torques_joint_task(motion_primitive_torques, robot, joint_task);
+		}
+		last_primitive = primitive;
 
 		//------ Final torques
 		command_torques = motion_primitive_torques;
-		// command_torques.setZero();
-
-		// -------------------------------------------
 		sim->setJointTorques(robot_name, command_torques);
 		
+		// log to redis
+		Eigen::Vector3d pos;
+		Eigen::Matrix3d rmat;
+		robot->position(pos, ee_link_name, ee_pos_link);
+		robot->rotation(rmat, ee_link_name);
+		redis_client.set(LOG_TIME_KEY, std::to_string(curr_time));
+		redis_client.setEigenMatrixDerived(LOG_JOINT_POS_KEY, robot->_q);
+		redis_client.setEigenMatrixDerived(LOG_JOINT_VEL_KEY, robot->_dq);
+		redis_client.setEigenMatrixDerived(LOG_EE_POS_KEY, pos);
+		redis_client.setEigenMatrixDerived(LOG_EE_VEL_KEY, rmat);
+		redis_client.setEigenMatrixDerived(LOG_COMMAND_TORQUE_KEY, command_torques);
 
 		// -------------------------------------------
 		if(controller_counter % 500 == 0)
@@ -389,6 +366,146 @@ void control(Sai2Model::Sai2Model* robot, Simulation::Sai2Simulation* sim) {
     std::cout << "Control Loop updates   : " << timer.elapsedCycles() << "\n";
     std::cout << "Control Loop frequency : " << timer.elapsedCycles()/end_time << "Hz\n";
 
+}
+
+void init_ram_primitive(Sai2Model::Sai2Model* robot, Sai2Primitives::RedundantArmMotion * ram_primitive) {
+	Eigen::Matrix3d initial_rmat;	
+	Eigen::Vector3d initial_euler;	
+	Eigen::Vector3d initial_position;	
+	robot->rotation(initial_rmat, ram_primitive->_link_name);
+	robot->position(initial_position, ram_primitive->_link_name, ram_primitive->_control_frame.translation());
+	initial_euler = initial_rmat.eulerAngles(2, 1, 0);
+
+	redis_client.set(DESIRED_POS_KEY_X, std::to_string(initial_position(0)));
+	redis_client.set(DESIRED_POS_KEY_Y, std::to_string(initial_position(1)));
+	redis_client.set(DESIRED_POS_KEY_Z, std::to_string(initial_position(2)));
+	redis_client.set(DESIRED_ORI_KEY_X, std::to_string(initial_euler(2)));
+	redis_client.set(DESIRED_ORI_KEY_Y, std::to_string(initial_euler(1)));
+	redis_client.set(DESIRED_ORI_KEY_Z, std::to_string(initial_euler(0)));
+	
+	redis_client.set(KP_POS_KEY, std::to_string(ram_primitive->_posori_task->_kp_pos));	
+	redis_client.set(KV_POS_KEY, std::to_string(ram_primitive->_posori_task->_kv_pos));	
+	redis_client.set(KP_ORI_KEY, std::to_string(ram_primitive->_posori_task->_kp_ori));	
+	redis_client.set(KV_ORI_KEY, std::to_string(ram_primitive->_posori_task->_kv_ori));	
+	redis_client.set(KP_JOINT_KEY, std::to_string(ram_primitive->_joint_task->_kp));	
+	redis_client.set(KV_JOINT_KEY, std::to_string(ram_primitive->_joint_task->_kv));
+}
+
+void init_joint_task(Sai2Model::Sai2Model* robot, Sai2Primitives::JointTask * joint_task) {
+	Eigen::VectorXd initial_joint_position = robot->_q;
+	joint_task->_kp = 100.;
+	joint_task->_kv = 20.;
+	redis_client.set(DESIRED_JOINT_POS_KEY_0, std::to_string(initial_joint_position(0)));
+	redis_client.set(DESIRED_JOINT_POS_KEY_1, std::to_string(initial_joint_position(1)));
+	redis_client.set(DESIRED_JOINT_POS_KEY_2, std::to_string(initial_joint_position(2)));
+	redis_client.set(DESIRED_JOINT_POS_KEY_3, std::to_string(initial_joint_position(3)));
+	redis_client.set(DESIRED_JOINT_POS_KEY_4, std::to_string(initial_joint_position(4)));
+	redis_client.set(DESIRED_JOINT_POS_KEY_5, std::to_string(initial_joint_position(5)));
+	redis_client.set(DESIRED_JOINT_POS_KEY_6, std::to_string(initial_joint_position(6)));
+	redis_client.set(KP_JOINT_KEY, std::to_string(joint_task->_kp));
+	redis_client.set(KV_JOINT_KEY, std::to_string(joint_task->_kv));
+}
+
+void compute_torques_ram_primitive(Eigen::VectorXd & motion_primitive_torques, Sai2Model::Sai2Model* robot, 
+									Sai2Primitives::RedundantArmMotion * ram_primitive) {
+	Eigen::Matrix3d desired_rmat;
+	double desired_euler_x;
+	double desired_euler_y;
+	double desired_euler_z;
+	Eigen::Vector3d desired_pos;
+	double desired_pos_x;
+	double desired_pos_y;
+	double desired_pos_z;
+	string redis_buffer;
+
+	// read gains from redis
+	redis_client.getCommandIs(KP_POS_KEY, redis_buffer);
+	ram_primitive->_posori_task->_kp_pos = std::stod(redis_buffer);
+	
+	redis_client.getCommandIs(KV_POS_KEY, redis_buffer);
+	ram_primitive->_posori_task->_kv_pos = std::stod(redis_buffer);
+	
+	redis_client.getCommandIs(KP_ORI_KEY, redis_buffer);
+	ram_primitive->_posori_task->_kp_ori = std::stod(redis_buffer);
+	
+	redis_client.getCommandIs(KV_ORI_KEY, redis_buffer);
+	ram_primitive->_posori_task->_kv_ori = std::stod(redis_buffer);
+	
+	redis_client.getCommandIs(KP_JOINT_KEY, redis_buffer);
+	ram_primitive->_joint_task->_kp = std::stod(redis_buffer);
+	
+	redis_client.getCommandIs(KV_JOINT_KEY, redis_buffer);
+	ram_primitive->_joint_task->_kv = std::stod(redis_buffer);
+
+	// orientation part
+	redis_client.getCommandIs(DESIRED_ORI_KEY_X, redis_buffer);
+	desired_euler_x = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_ORI_KEY_Y, redis_buffer);
+	desired_euler_y = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_ORI_KEY_Z, redis_buffer);
+	desired_euler_z = std::stod(redis_buffer);
+	desired_rmat = Eigen::AngleAxisd(desired_euler_z, Eigen::Vector3d::UnitZ())
+					 * Eigen::AngleAxisd(desired_euler_y, Eigen::Vector3d::UnitY())
+					 * Eigen::AngleAxisd(desired_euler_x, Eigen::Vector3d::UnitX());
+	ram_primitive->_desired_orientation = desired_rmat;
+
+	// position part
+	redis_client.getCommandIs(DESIRED_POS_KEY_X, redis_buffer);
+	desired_pos_x = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_POS_KEY_Y, redis_buffer);
+	desired_pos_y = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_POS_KEY_Z, redis_buffer);
+	desired_pos_z = std::stod(redis_buffer);
+	desired_pos = Eigen::Vector3d(desired_pos_x, desired_pos_y, desired_pos_z);
+	ram_primitive->_desired_position = desired_pos;
+
+	// torques
+	ram_primitive->computeTorques(motion_primitive_torques);
+}
+
+void compute_torques_joint_task(Eigen::VectorXd & motion_primitive_torques, Sai2Model::Sai2Model* robot, 
+									Sai2Primitives::JointTask * joint_task) {
+	int dof = robot->dof();
+	Eigen::VectorXd desired_joint_pos = Eigen::VectorXd::Zero(dof);
+	double desired_pos_0;
+	double desired_pos_1;
+	double desired_pos_2;
+	double desired_pos_3;
+	double desired_pos_4;
+	double desired_pos_5;
+	double desired_pos_6;
+	string redis_buffer;
+
+	// read gains from redis
+	redis_client.getCommandIs(KP_JOINT_KEY, redis_buffer);
+	joint_task->_kp = std::stod(redis_buffer);
+	
+	redis_client.getCommandIs(KV_JOINT_KEY, redis_buffer);
+	joint_task->_kv = std::stod(redis_buffer);
+	
+	// position part
+	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_0, redis_buffer);
+	desired_pos_0 = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_1, redis_buffer);
+	desired_pos_1 = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_2, redis_buffer);
+	desired_pos_2 = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_3, redis_buffer);
+	desired_pos_3 = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_4, redis_buffer);
+	desired_pos_4 = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_5, redis_buffer);
+	desired_pos_5 = std::stod(redis_buffer);
+	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_6, redis_buffer);
+	desired_pos_6 = std::stod(redis_buffer);
+
+	desired_joint_pos << desired_pos_0, desired_pos_1, desired_pos_2,
+									desired_pos_3, desired_pos_4, desired_pos_5,
+									desired_pos_6;
+	joint_task->_desired_position = desired_joint_pos;
+
+	// torques
+	joint_task->computeTorques(motion_primitive_torques);
 }
 
 //------------------------------------------------------------------------------
