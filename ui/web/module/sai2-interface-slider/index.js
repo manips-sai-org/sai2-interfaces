@@ -1,4 +1,4 @@
-customElements.define('robot-continuous', class extends HTMLElement {
+customElements.define('sai2-interface-slider', class extends HTMLElement {
 	constructor() {
 		super();
 		this.template = document.currentScript.ownerDocument.querySelector('template');
@@ -9,13 +9,14 @@ customElements.define('robot-continuous', class extends HTMLElement {
 		let container = template_node.querySelector('.container');
 
 		this.key = this.getAttribute('key');
+		this.display = this.getAttribute('display');
 		this.min = this.getAttribute('min');
 		this.max = this.getAttribute('max');
 		this.step = this.getAttribute('step');
 		
 		// set display
 		let display = template_node.querySelector('.display');
-		display.innerHTML = this.key;
+		display.innerHTML = this.display || this.key; // default to key, if display not set
 		
 		// set number input min, max, step
 		let input_number = template_node.querySelector('input[type=number]');

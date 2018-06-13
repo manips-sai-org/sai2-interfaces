@@ -13,9 +13,9 @@
     <link rel="stylesheet" href="/css/range_input.css" type="text/css">
     <link rel="stylesheet" href="/css/index.css" type="text/css">
     <!-- imported modules -->
-    <link rel="import" href="/module/log/index.html">
-    <link rel="import" href="/module/robot-continuous/index.html">
-    <link rel="import" href="/module/robot-discrete/index.html">
+    <link rel="import" href="/module/sai2-interface-logger/index.html">
+    <link rel="import" href="/module/sai2-interface-slider/index.html">
+    <link rel="import" href="/module/sai2-interface-button/index.html">
   </head>
   <body>
     <h1 class="title">Operational Space Control</h1>
@@ -24,7 +24,7 @@
     <div id="container">
 
       <!-- logging -->
-      <robot-log></robot-log>
+      <sai2-interface-logger></sai2-interface-logger>
 
       <!-- controller selector -->
       <select class="primitive_selector">
@@ -38,39 +38,51 @@
         <!-- control modules -->
         <div class="module">
           <h2>Position (meter)</h2>
-          <robot-continuous key="sai2::sai2Interfaces::desired_position::x"
-                          min="-1" max="1" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_position::y"
-                          min="-1" max="1" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_position::z"
-                          min="-1" max="1" step="0.01"></robot-continuous>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_position::x"
+                          display="desired position x"
+                          min="-1" max="1" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_position::y"
+                          display="desired position y"
+                          min="-1" max="1" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_position::z"
+                          display="desired position z"
+                          min="-1" max="1" step="0.01"></sai2-interface-slider>
         </div>
         <div class="module">
           <h2>Rotation Euler Angles (radian)</h2>
-          <robot-continuous key="sai2::sai2Interfaces::desired_orientation::x"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_orientation::y"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_orientation::z"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_orientation::x"
+                          display="desired euler x"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_orientation::y"
+                          display="desired euler y"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_orientation::z"
+                          display="desired euler z"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
         </div>
         <div class="module">
           <h2>Gains</h2>
-          <robot-continuous key="sai2::sai2Interfaces::kp_pos"
-                          min="0" max="1000" step="1"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::kv_pos"
-                          min="0" max="1000" step="1"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::kp_ori"
-                          min="0" max="1000" step="1"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::kv_ori"
-                          min="0" max="1000" step="1"></robot-continuous>
+          <sai2-interface-slider key="sai2::sai2Interfaces::kp_pos"
+                          display="Kp position"
+                          min="0" max="1000" step="1"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::kv_pos"
+                          display="Kv position"
+                          min="0" max="1000" step="1"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::kp_ori"
+                          display="Kp rotation"
+                          min="0" max="1000" step="1"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::kv_ori"
+                          display="Kv position"
+                          min="0" max="1000" step="1"></sai2-interface-slider>
         </div>
         <div class="module">
           <h2>Grasp</h2>
-          <robot-discrete key="sai2::sai2Interfaces::grasp"
-                          value="o"></robot-discrete>
-          <robot-discrete key="sai2::sai2Interfaces::grasp"
-                          value="c"></robot-discrete>
+          <sai2-interface-button key="sai2::sai2Interfaces::grasp"
+                          display="open grasp"
+                          value="o"></sai2-interface-button>
+          <sai2-interface-button key="sai2::sai2Interfaces::grasp"
+                          display="close grasp"
+                          value="c"></sai2-interface-button>
         </div>
       </div>
 
@@ -78,20 +90,27 @@
       <div id="joint_task" class="modules row-wrap">
         <div class="module">
           <h2>Joint Positions</h2>
-          <robot-continuous key="sai2::sai2Interfaces::desired_joint_position::0"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_joint_position::1"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_joint_position::2"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_joint_position::3"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_joint_position::4"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_joint_position::5"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>
-          <robot-continuous key="sai2::sai2Interfaces::desired_joint_position::6"
-                          min="-6.28" max="6.28" step="0.01"></robot-continuous>                
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_joint_position::0"
+                          display="desired joint position 0"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_joint_position::1"
+                          display="desired joint position 1"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_joint_position::2"
+                          display="desired joint position 2"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_joint_position::3"
+                          display="desired joint position 3"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_joint_position::4"
+                          display="desired joint position 4"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_joint_position::5"
+                          display="desired joint position 5"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>
+          <sai2-interface-slider key="sai2::sai2Interfaces::desired_joint_position::6"
+                          display="desired joint position 6"
+                          min="-6.28" max="6.28" step="0.01"></sai2-interface-slider>                
         </div>
       </div>
 

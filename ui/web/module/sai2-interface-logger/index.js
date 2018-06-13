@@ -1,4 +1,4 @@
-customElements.define('robot-log', class extends HTMLElement {
+customElements.define('sai2-interface-logger', class extends HTMLElement {
 	constructor() {
 		super();
 		this.logging = false;

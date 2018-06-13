@@ -1,4 +1,4 @@
-customElements.define('robot-discrete', class extends HTMLElement {
+customElements.define('sai2-interface-button', class extends HTMLElement {
 	constructor() {
 		super();
 		this.template = document.currentScript.ownerDocument.querySelector('template');
@@ -8,11 +8,13 @@ customElements.define('robot-discrete', class extends HTMLElement {
 		let template_node = this.template.content.cloneNode(true);
 		
 		this.key = this.getAttribute('key');
+		this.display = this.getAttribute('display');
 		this.value = this.getAttribute('value');
 		
 		// set display
 		let button = template_node.querySelector('button');
-		button.innerHTML = this.key + ' : ' + this.value;
+		let default_display = this.key + ' : ' + this.value;
+		button.innerHTML = this.display || default_display;
 		
 		// set up listeners
 		// register listeners for input textbox
