@@ -10,6 +10,7 @@ customElements.define('robot-log', class extends HTMLElement {
 		
 		let button = template_node.querySelector('button');
 		let display = template_node.querySelector('.display');
+		let input = template_node.querySelector('.log_dir');
 		button.innerHTML = 'start logging';
 
 		// set up listeners
@@ -18,7 +19,9 @@ customElements.define('robot-log', class extends HTMLElement {
 			self.logging = !self.logging;
 			if (self.logging) {
 				console.log('start logging');
-				self.start_logging()
+				var dir = input.value;
+				debugger;
+				self.start_logging(dir)
 					.done(function(data) {
 						button.innerHTML = 'stop logging';
 					});
@@ -35,11 +38,13 @@ customElements.define('robot-log', class extends HTMLElement {
 		this.appendChild(template_node);
 	}
 
-	start_logging() {
+	start_logging(dir) {
 		return $.ajax({
 			method: "POST",
-			contentType: "application/json; charset=utf-8",
-			url: "/log/start"
+			url: "/log/start",
+			data: {
+				dir: dir
+			}
 		}).fail(function(data) {
 			alert('log error: ' + toString(data));
 		});
@@ -48,7 +53,6 @@ customElements.define('robot-log', class extends HTMLElement {
 	stop_logging() {
 		return $.ajax({
 			method: "POST",
-			contentType: "application/json; charset=utf-8",
 			url: "/log/stop"
 		}).fail(function(data) {
 			alert('log error: ' + toString(data));

@@ -160,16 +160,15 @@ def handle_post_request(request_handler, post_vars, **kwargs):
     """
     path = request_handler.path
     if path.startswith('/log'):
-        handle_log(request_handler, **kwargs)
+        handle_log(request_handler, post_vars, **kwargs)
     elif path.startswith('/redis'):
         set_redis_key_vals(post_vars, **kwargs)
 
-def handle_log(request_handler):
+def handle_log(request_handler, post_vars, **kwargs):
     path = request_handler.path
     if path.startswith('/log/start'):
-        dir = '../logs'
+        dir = post_vars[b'dir'][0].decode('utf-8')
         logger.start_logging(dir, kwargs["redis_db"])
-
     elif path.startswith('/log/stop'):
         logger.stop_logging()
 

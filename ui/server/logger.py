@@ -16,13 +16,15 @@ def signal_handler(signal, frame):
     runloop = False
     stop_logging()
     print('Exiting logger')
+    exit(0)
 
 signal.signal(signal.SIGINT, signal_handler)
 
 def start_logging(dir, redis_server):
     global thread
+    global runloop
     # stop existing logging threads
-    # stop_logging()
+    stop_logging()
 
     runloop = True
     os.makedirs(dir, exist_ok=True)
@@ -36,8 +38,9 @@ def stop_logging():
     global threads
     global runloop
     runloop = False
-    if type(thread) is 'threading.Thread': thread.join()
-    print('killed log thread')
+    if type(thread) is 'threading.Thread': 
+        thread.join()
+        print('killed log thread')
 
 def log(log_path, redis_server):
     header = 'time;joint_pos;joint_vel;ee_pos;ee_rot;ee_des_pos;ee_des_rot;command_torques\n'
@@ -72,6 +75,7 @@ def log(log_path, redis_server):
         
         line = '%s;%s;%s;%s;%s;%s\n' % (timestamp, joint_pos, joint_vel, ee_pos, ee_vel, command_torque)
         log_file.write(line)
+        log_file.flush()
 
         t += logger_period
         counter += 1
@@ -96,5 +100,5 @@ def array_to_str(array):
 if __name__ == '__main__':
     redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
     start_logging('../logs', redis_client)
-    stop_logging()
+    # stop_logging()
 
