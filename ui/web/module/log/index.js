@@ -19,8 +19,8 @@ customElements.define('robot-log', class extends HTMLElement {
 			self.logging = !self.logging;
 			if (self.logging) {
 				console.log('start logging');
-				var dir = input.value;
-				debugger;
+				// default to ../logs
+				var dir = input.value || '../logs';
 				self.start_logging(dir)
 					.done(function(data) {
 						button.innerHTML = 'stop logging';
