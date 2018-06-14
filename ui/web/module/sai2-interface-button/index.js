@@ -1,7 +1,16 @@
+// need self executing function, 
+// because otherwise template will be declared multiple times
+(function() {
+// declare this template outside of constructor
+// because on firefox, document.currentScript does not work 
+// need to query by id, instead of 'template'
+// because on firefox, querying by template results in wrong template
+var template = document.currentScript.ownerDocument.querySelector('#template-button');
+
 customElements.define('sai2-interface-button', class extends HTMLElement {
 	constructor() {
 		super();
-		this.template = document.currentScript.ownerDocument.querySelector('template');
+		this.template = template;
 	}
 
 	connectedCallback() {
@@ -27,3 +36,4 @@ customElements.define('sai2-interface-button', class extends HTMLElement {
 		this.appendChild(template_node);
 	}
 });
+})();

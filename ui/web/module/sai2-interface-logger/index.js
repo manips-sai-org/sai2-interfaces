@@ -1,15 +1,17 @@
+(function() {
+var template = document.currentScript.ownerDocument.querySelector('#template-logger');
+
 customElements.define('sai2-interface-logger', class extends HTMLElement {
 	constructor() {
 		super();
 		this.logging = false;
-		this.template = document.currentScript.ownerDocument.querySelector('template');
+		this.template = template;
 	}
 
 	connectedCallback() {
 		let template_node = this.template.content.cloneNode(true);
 		
 		let button = template_node.querySelector('button');
-		let display = template_node.querySelector('.display');
 		let input = template_node.querySelector('.log_dir');
 		button.innerHTML = 'start logging';
 
@@ -33,7 +35,7 @@ customElements.define('sai2-interface-logger', class extends HTMLElement {
 					});
 			}
 		};
-
+		
 		// append to document
 		this.appendChild(template_node);
 	}
@@ -59,3 +61,4 @@ customElements.define('sai2-interface-logger', class extends HTMLElement {
 		});
 	}
 });
+})();

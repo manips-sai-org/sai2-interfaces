@@ -1,7 +1,10 @@
+(function() {
+var template = document.currentScript.ownerDocument.querySelector('#template-slider');
+
 customElements.define('sai2-interface-slider', class extends HTMLElement {
 	constructor() {
 		super();
-		this.template = document.currentScript.ownerDocument.querySelector('template');
+		this.template = template;
 	}
 
 	connectedCallback() {
@@ -97,3 +100,4 @@ customElements.define('sai2-interface-slider', class extends HTMLElement {
 	}
 
 });
+})();

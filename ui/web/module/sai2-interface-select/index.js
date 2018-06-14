@@ -1,7 +1,10 @@
+(function() {
+var template = document.currentScript.ownerDocument.querySelector('#template-select');
+
 customElements.define('sai2-interface-select', class extends HTMLElement {
 	constructor() {
 		super();
-		this.template = document.currentScript.ownerDocument.querySelector('template');
+		this.template = template;
 	}
 
 	connectedCallback() {
@@ -56,3 +59,4 @@ customElements.define('sai2-interface-select', class extends HTMLElement {
 		});
 	}
 });
+})();
