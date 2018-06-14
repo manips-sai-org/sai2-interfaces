@@ -102,12 +102,64 @@ bool fTransZp = false;
 bool fTransZn = false;
 bool fRotPanTilt = false;
 
+// util method to convert double to string
 string dtos(double x) {
     std::stringstream s;  // Allocates memory on stack
     s << x;
     return s.str();       // returns a s.str() as a string by value
                           // Frees allocated memory of s
-} 
+}
+
+// write eigen vector expanded into several key value pairs
+// such that each redis value will contain a float
+// e.g. if setting key: [val0, val1, val2], three key values are saved:
+// <key>	<val>
+// key..0	 val0
+// key..1	 val1
+// key..2	 val2
+template<typename Derived>
+void setEigenVectorDerivedExpanded(const std::string &cmd_mssg, const Eigen::MatrixBase<Derived> &set_mat) {
+	if (set_mat.cols() != 1) {
+		// only support vector
+		throw std::runtime_error("RedisClient: Could not set expanded on matrix. must be vector.");
+	}
+	std::vector<std::pair<std::string, std::string>> keyvals;
+	for (int i = 0; i < set_mat.size(); i++) {
+		std::string key = cmd_mssg + ".." + std::to_string(i);
+		std::stringstream ss;
+		ss << set_mat(i);
+		std::string val = ss.str();
+		keyvals.push_back({key, val});
+	}
+	redis_client.mset(keyvals);
+}
+
+	// read eigen vector from several key value pairs
+// such that returned value will assemble multiple floats into a vector
+// e.g. if redis contains:
+// <key>	<val>
+// key..0	 val0
+// key..1	 val1
+// key..2	 val2
+// the returned value is:
+// [val0, val1, val2]
+template<typename Derived>
+void getEigenVectorDerivedExpanded(const std::string &cmd_mssg, Eigen::MatrixBase<Derived> &ret_mat) {
+	if (ret_mat.cols() != 1) {
+		// only support vector
+		throw std::runtime_error("RedisClient: Could not get expanded on matrix. must be vector.");
+	}
+	std::vector<std::string> keys;
+	for (int i = 0; i < ret_mat.size(); i++) {
+		std::string key = cmd_mssg + ".." + std::to_string(i);
+		keys.push_back(key);
+	}
+	std::vector<std::string> vals = redis_client.mget(keys);
+	for (int i = 0; i < vals.size(); i++) {
+		ret_mat(i) = std::stod(vals[i]);
+	}
+}
+
 
 int main (int argc, char** argv) {
 	cout << "Loading URDF world model file: " << world_file << endl;
@@ -366,8 +418,8 @@ void init_ram_primitive(Sai2Model::Sai2Model* robot, Sai2Primitives::RedundantAr
 	robot->position(initial_position, ram_primitive->_link_name, ram_primitive->_control_frame.translation());
 	initial_euler = initial_rmat.eulerAngles(2, 1, 0);
 
-	redis_client.setEigenVectorDerivedExpanded(DESIRED_POS_KEY, initial_position);
-	redis_client.setEigenVectorDerivedExpanded(DESIRED_ORI_KEY, initial_euler);
+	setEigenVectorDerivedExpanded(DESIRED_POS_KEY, initial_position);
+	setEigenVectorDerivedExpanded(DESIRED_ORI_KEY, initial_euler);
 	
 	redis_client.set(KP_POS_KEY, std::to_string(ram_primitive->_posori_task->_kp_pos));	
 	redis_client.set(KV_POS_KEY, std::to_string(ram_primitive->_posori_task->_kv_pos));	
@@ -381,7 +433,7 @@ void init_joint_task(Sai2Model::Sai2Model* robot, Sai2Primitives::JointTask * jo
 	Eigen::VectorXd initial_joint_position = robot->_q;
 	joint_task->_kp = 100.;
 	joint_task->_kv = 20.;
-	redis_client.setEigenVectorDerivedExpanded(DESIRED_JOINT_POS_KEY, initial_joint_position);
+	setEigenVectorDerivedExpanded(DESIRED_JOINT_POS_KEY, initial_joint_position);
 	redis_client.set(KP_JOINT_KEY, std::to_string(joint_task->_kp));
 	redis_client.set(KV_JOINT_KEY, std::to_string(joint_task->_kv));
 }
@@ -419,14 +471,14 @@ void compute_torques_ram_primitive(Eigen::VectorXd & motion_primitive_torques, S
 	ram_primitive->_joint_task->_kv = std::stod(redis_buffer);
 
 	// orientation part
-	redis_client.getEigenVectorDerivedExpanded(DESIRED_ORI_KEY, desired_euler);
+	getEigenVectorDerivedExpanded(DESIRED_ORI_KEY, desired_euler);
 	desired_rmat = Eigen::AngleAxisd(desired_euler(0), Eigen::Vector3d::UnitZ())
 					 * Eigen::AngleAxisd(desired_euler(1), Eigen::Vector3d::UnitY())
 					 * Eigen::AngleAxisd(desired_euler(2), Eigen::Vector3d::UnitX());
 	ram_primitive->_desired_orientation = desired_rmat;
 
 	// position part
-	redis_client.getEigenVectorDerivedExpanded(DESIRED_POS_KEY, desired_pos);
+	getEigenVectorDerivedExpanded(DESIRED_POS_KEY, desired_pos);
 	ram_primitive->_desired_position = desired_pos;
 
 	// torques
@@ -454,7 +506,7 @@ void compute_torques_joint_task(Eigen::VectorXd & motion_primitive_torques, Sai2
 	joint_task->_kv = std::stod(redis_buffer);
 	
 	// position part
-	redis_client.getEigenVectorDerivedExpanded(DESIRED_JOINT_POS_KEY, desired_joint_pos);
+	getEigenVectorDerivedExpanded(DESIRED_JOINT_POS_KEY, desired_joint_pos);
 	joint_task->_desired_position = desired_joint_pos;
 
 	// torques
