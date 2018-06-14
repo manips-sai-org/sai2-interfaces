@@ -46,25 +46,15 @@ const string CONTROL_STATE_INITIALIZED = "initialized";
 const string CONTROL_STATE_READY = "ready";
 
 // operational space control
-const string DESIRED_POS_KEY_X = "sai2::sai2Interfaces::desired_position::x";
-const string DESIRED_POS_KEY_Y = "sai2::sai2Interfaces::desired_position::y";
-const string DESIRED_POS_KEY_Z = "sai2::sai2Interfaces::desired_position::z";
-const string DESIRED_ORI_KEY_X = "sai2::sai2Interfaces::desired_orientation::x";
-const string DESIRED_ORI_KEY_Y = "sai2::sai2Interfaces::desired_orientation::y";
-const string DESIRED_ORI_KEY_Z = "sai2::sai2Interfaces::desired_orientation::z";
+const string DESIRED_POS_KEY = "sai2::sai2Interfaces::desired_position";
+const string DESIRED_ORI_KEY = "sai2::sai2Interfaces::desired_orientation";
 const string KP_POS_KEY = "sai2::sai2Interfaces::kp_pos";
 const string KV_POS_KEY = "sai2::sai2Interfaces::kv_pos";
 const string KP_ORI_KEY = "sai2::sai2Interfaces::kp_ori";
 const string KV_ORI_KEY = "sai2::sai2Interfaces::kv_ori";
 
 // joint space control
-const string DESIRED_JOINT_POS_KEY_0 = "sai2::sai2Interfaces::desired_joint_position::0";
-const string DESIRED_JOINT_POS_KEY_1 = "sai2::sai2Interfaces::desired_joint_position::1";
-const string DESIRED_JOINT_POS_KEY_2 = "sai2::sai2Interfaces::desired_joint_position::2";
-const string DESIRED_JOINT_POS_KEY_3 = "sai2::sai2Interfaces::desired_joint_position::3";
-const string DESIRED_JOINT_POS_KEY_4 = "sai2::sai2Interfaces::desired_joint_position::4";
-const string DESIRED_JOINT_POS_KEY_5 = "sai2::sai2Interfaces::desired_joint_position::5";
-const string DESIRED_JOINT_POS_KEY_6 = "sai2::sai2Interfaces::desired_joint_position::6";
+const string DESIRED_JOINT_POS_KEY = "sai2::sai2Interfaces::desired_joint_position";
 const string KP_JOINT_KEY = "sai2::sai2Interfaces::kp_joint";
 const string KV_JOINT_KEY = "sai2::sai2Interfaces::kv_joint";
 
@@ -376,12 +366,8 @@ void init_ram_primitive(Sai2Model::Sai2Model* robot, Sai2Primitives::RedundantAr
 	robot->position(initial_position, ram_primitive->_link_name, ram_primitive->_control_frame.translation());
 	initial_euler = initial_rmat.eulerAngles(2, 1, 0);
 
-	redis_client.set(DESIRED_POS_KEY_X, std::to_string(initial_position(0)));
-	redis_client.set(DESIRED_POS_KEY_Y, std::to_string(initial_position(1)));
-	redis_client.set(DESIRED_POS_KEY_Z, std::to_string(initial_position(2)));
-	redis_client.set(DESIRED_ORI_KEY_X, std::to_string(initial_euler(2)));
-	redis_client.set(DESIRED_ORI_KEY_Y, std::to_string(initial_euler(1)));
-	redis_client.set(DESIRED_ORI_KEY_Z, std::to_string(initial_euler(0)));
+	redis_client.setEigenVectorDerivedExpanded(DESIRED_POS_KEY, initial_position);
+	redis_client.setEigenVectorDerivedExpanded(DESIRED_ORI_KEY, initial_euler);
 	
 	redis_client.set(KP_POS_KEY, std::to_string(ram_primitive->_posori_task->_kp_pos));	
 	redis_client.set(KV_POS_KEY, std::to_string(ram_primitive->_posori_task->_kv_pos));	
@@ -395,19 +381,14 @@ void init_joint_task(Sai2Model::Sai2Model* robot, Sai2Primitives::JointTask * jo
 	Eigen::VectorXd initial_joint_position = robot->_q;
 	joint_task->_kp = 100.;
 	joint_task->_kv = 20.;
-	redis_client.set(DESIRED_JOINT_POS_KEY_0, std::to_string(initial_joint_position(0)));
-	redis_client.set(DESIRED_JOINT_POS_KEY_1, std::to_string(initial_joint_position(1)));
-	redis_client.set(DESIRED_JOINT_POS_KEY_2, std::to_string(initial_joint_position(2)));
-	redis_client.set(DESIRED_JOINT_POS_KEY_3, std::to_string(initial_joint_position(3)));
-	redis_client.set(DESIRED_JOINT_POS_KEY_4, std::to_string(initial_joint_position(4)));
-	redis_client.set(DESIRED_JOINT_POS_KEY_5, std::to_string(initial_joint_position(5)));
-	redis_client.set(DESIRED_JOINT_POS_KEY_6, std::to_string(initial_joint_position(6)));
+	redis_client.setEigenVectorDerivedExpanded(DESIRED_JOINT_POS_KEY, initial_joint_position);
 	redis_client.set(KP_JOINT_KEY, std::to_string(joint_task->_kp));
 	redis_client.set(KV_JOINT_KEY, std::to_string(joint_task->_kv));
 }
 
 void compute_torques_ram_primitive(Eigen::VectorXd & motion_primitive_torques, Sai2Model::Sai2Model* robot, 
 									Sai2Primitives::RedundantArmMotion * ram_primitive) {
+	Eigen::Vector3d desired_euler;
 	Eigen::Matrix3d desired_rmat;
 	double desired_euler_x;
 	double desired_euler_y;
@@ -438,25 +419,14 @@ void compute_torques_ram_primitive(Eigen::VectorXd & motion_primitive_torques, S
 	ram_primitive->_joint_task->_kv = std::stod(redis_buffer);
 
 	// orientation part
-	redis_client.getCommandIs(DESIRED_ORI_KEY_X, redis_buffer);
-	desired_euler_x = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_ORI_KEY_Y, redis_buffer);
-	desired_euler_y = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_ORI_KEY_Z, redis_buffer);
-	desired_euler_z = std::stod(redis_buffer);
-	desired_rmat = Eigen::AngleAxisd(desired_euler_z, Eigen::Vector3d::UnitZ())
-					 * Eigen::AngleAxisd(desired_euler_y, Eigen::Vector3d::UnitY())
-					 * Eigen::AngleAxisd(desired_euler_x, Eigen::Vector3d::UnitX());
+	redis_client.getEigenVectorDerivedExpanded(DESIRED_ORI_KEY, desired_euler);
+	desired_rmat = Eigen::AngleAxisd(desired_euler(0), Eigen::Vector3d::UnitZ())
+					 * Eigen::AngleAxisd(desired_euler(1), Eigen::Vector3d::UnitY())
+					 * Eigen::AngleAxisd(desired_euler(2), Eigen::Vector3d::UnitX());
 	ram_primitive->_desired_orientation = desired_rmat;
 
 	// position part
-	redis_client.getCommandIs(DESIRED_POS_KEY_X, redis_buffer);
-	desired_pos_x = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_POS_KEY_Y, redis_buffer);
-	desired_pos_y = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_POS_KEY_Z, redis_buffer);
-	desired_pos_z = std::stod(redis_buffer);
-	desired_pos = Eigen::Vector3d(desired_pos_x, desired_pos_y, desired_pos_z);
+	redis_client.getEigenVectorDerivedExpanded(DESIRED_POS_KEY, desired_pos);
 	ram_primitive->_desired_position = desired_pos;
 
 	// torques
@@ -484,24 +454,7 @@ void compute_torques_joint_task(Eigen::VectorXd & motion_primitive_torques, Sai2
 	joint_task->_kv = std::stod(redis_buffer);
 	
 	// position part
-	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_0, redis_buffer);
-	desired_pos_0 = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_1, redis_buffer);
-	desired_pos_1 = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_2, redis_buffer);
-	desired_pos_2 = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_3, redis_buffer);
-	desired_pos_3 = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_4, redis_buffer);
-	desired_pos_4 = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_5, redis_buffer);
-	desired_pos_5 = std::stod(redis_buffer);
-	redis_client.getCommandIs(DESIRED_JOINT_POS_KEY_6, redis_buffer);
-	desired_pos_6 = std::stod(redis_buffer);
-
-	desired_joint_pos << desired_pos_0, desired_pos_1, desired_pos_2,
-									desired_pos_3, desired_pos_4, desired_pos_5,
-									desired_pos_6;
+	redis_client.getEigenVectorDerivedExpanded(DESIRED_JOINT_POS_KEY, desired_joint_pos);
 	joint_task->_desired_position = desired_joint_pos;
 
 	// torques

@@ -1,8 +1,12 @@
 # create an executable
 ADD_EXECUTABLE (multi_primitives multi_primitives.cpp)
+ADD_EXECUTABLE (test_redis test_redis.cpp)
 
 # and link the library against the executable
 TARGET_LINK_LIBRARIES (multi_primitives
+	${SAI2-INTERFACES_EXAMPLES_COMMON_LIBRARIES}
+	)
+TARGET_LINK_LIBRARIES (test_redis
 	${SAI2-INTERFACES_EXAMPLES_COMMON_LIBRARIES}
 	)
 
