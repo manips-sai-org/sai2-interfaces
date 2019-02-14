@@ -187,7 +187,7 @@ int main (int argc, char** argv) {
 
 	// load robots
 	Eigen::Vector3d world_gravity = sim->_world->getGravity().eigen();
-	auto robot = new Sai2Model::Sai2Model(robot_file, false, world_gravity, sim->getRobotBaseTransform(robot_name));
+	auto robot = new Sai2Model::Sai2Model(robot_file, false, sim->getRobotBaseTransform(robot_name), world_gravity);
 
 	sim->getJointPositions(robot_name, robot->_q);
 	robot->updateModel();
