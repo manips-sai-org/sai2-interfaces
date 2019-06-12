@@ -19,11 +19,11 @@ python interface/server.py start templates/plot_logger.html
 
 Let's open up `localhost:8000`, and if you see this:
 
-![A window with a plot and logger](img/plot-logger-test.png)
+![A window with a plot and logger](img/plot-logger-initial.png)
 
 Great! It works! From there, you can examine available redis keys or log some redis keys to a file. Here's what it could look like:
 
-![A window with a plot with data and a blank logger](img/plot-logger-test2.png)
+![A window with a plot with data and a blank logger](img/plot-logger-data.png)
 
 
 ### Exporting sai2-interfaces
