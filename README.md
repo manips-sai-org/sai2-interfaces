@@ -1,28 +1,42 @@
-## Project name: sai2-interface
+# sai2-interfaces
 
-### Project description:
-This library implements a web-app graphical user interface to set redis key values
+sai2-interfaces is intended to enable SAI2 developers to quickly build a user-friendly interface to debug or interact with a robot. It is split into two parts: the frontend (HTML/CSS/JS) and the backend server.
 
-The currently supported browser is Chrome (Chromium) and Firefox 59+. The supported server run time is python3.
+## Quickstart
+We currently fully support Chrome/Chromium, and have partial support for Firefox. All features except the trajectory generation module work on Firefox. The backend server requires Python 3.5+.
 
-![screenshot](screenshot.png)
+### Installing Dependencies
+The backend server depends on [redis](https://pypi.org/project/redis/), [Flask](https://pypi.org/project/Flask/), and [click](https://pypi.org/project/click/). You can install them as below:
+```
+pip install -r requirements.txt
+```
 
-### Sample usage
-To run the example:
+### Running a template
+sai2-interfaces provides a set of simple, universal templates. In our case, we're going to bring up an interface with a plot and a logger. From the top level of our repo:
+```
+python interface/server.py start templates/plot_logger.html
+```
+
+Let's open up `localhost:8000`, and if you see this:
+
+![A window with a plot and logger](img/plot-logger-test.png)
+
+Great! It works! From there, you can examine available redis keys or log some redis keys to a file. Here's what it could look like:
+
+![A window with a plot with data and a blank logger](img/plot-logger-test2.png)
+
+
+### Exporting sai2-interfaces
+We use cmake to make sai2-interfaces available to other projects, such as [sai2-examples](https://github.com/manips-sai-org/sai2-examples). You can run the following commands to export definitions to other projects:
 
 ```
-# build the sample controller
-cd sai2-interfaces/examples
-mkdir build
-cd build
+mkdir build && cd build
 cmake ..
-make -j 4
-
-# run server
-cd sai2-interfaces/ui
-python3 server/server.py
 ```
 
-### Project contributors:
+This project exports `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute path of the interface/ folder in this repository. You can then use cmake's `FILE(COPY)` macro to copy it with your binaries.
+
+## Project contributors
 * Keven Wang
 * Mikael Jorda
+* William Jen
