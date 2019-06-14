@@ -44,17 +44,35 @@
       .container {
         display: grid;
         justify-content: center;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
         grid-gap: 10px;
-        height: 100%;
+        grid-template-areas:
+          "leftplot rightplot"
+          "logger logger"
+      }
+
+      .leftplot {
+        grid-area: leftplot;
+        height: 80vh;
+      }
+
+      .rightplot {
+        grid-area: rightplot;
+        height: 80vh;
+      }
+
+      .logger {
+        grid-area: logger;
       }
 
       .container-item {
         border-style: solid;
         border-radius: 1em;
-        max-height: 100vh;
+        max-height: 80vh;
         display: flex;
         flex-direction: column;
+        padding: 0.25em;
       }
 
       .container-item-content {
@@ -69,17 +87,17 @@
     </div>
     
     <div class="container">
-      <div class="container-item">
+      <div class="container-item leftplot">
           <h2>Plot 1</h2>
           <sai2-interface-plot class="container-item-content">
           </sai2-interface-plot>
       </div>
-      <div class="container-item">
+      <div class="container-item rightplot">
           <h2>Plot 2</h2>
           <sai2-interface-plot class="container-item-content">
           </sai2-interface-plot>
       </div>
-      <div class="container-item">
+      <div class="container-item logger">
           <h2>Logger</h2>
           <sai2-interface-logger class="container-item-content"></sai2-interface-logger>
       </div>

@@ -49,10 +49,37 @@
       .container {
         display: grid;
         justify-content: center;
-        grid-template-rows: 1fr 1fr auto;
-        grid-template-columns: 1fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+        grid-template-areas:
+          "plot1 plot2"
+          "plot3 plot4"
+          "logger logger";
         grid-gap: 10px;
-        height: 100vh;
+      }
+
+      .plot1 { 
+        grid-area: plot1;
+        height: 50vh;
+      }
+
+      .plot2 { 
+        grid-area: plot2;
+        height: 50vh;
+      }
+
+      .plot3 { 
+        grid-area: plot3;
+        height: 50vh;
+      }
+
+      .plot4 { 
+        grid-area: plot4;
+        height: 50vh;
+      }
+      
+      .logger {
+        grid-area: logger;
       }
 
       .container-item {
@@ -61,6 +88,7 @@
         max-height: 100vh;
         display: flex;
         flex-direction: column;
+        padding: 0.25em;
       }
 
       .container-item-content {
@@ -75,30 +103,30 @@
     </div>
     
     <div class="container">
-      <div class="container-item">
+      <div class="container-item plot1">
         <h2>Plot 1</h2>
         <sai2-interface-plot class="container-item-content">
         </sai2-interface-plot>
       </div>
-      <div class="container-item">
+      <div class="container-item plot2">
         <h2>Plot 2</h2>
         <sai2-interface-plot class="container-item-content">
         </sai2-interface-plot>
       </div>
-      <div class="container-item">
-        <h2>Logger</h2>
-        <sai2-interface-logger class="container-item-content"></sai2-interface-logger>
-      </div>
-      <div class="container-item">
+      <div class="container-item plot3">
         <h2>Plot 3</h2>
         <sai2-interface-plot class="container-item-content">
         </sai2-interface-plot>
       </div>
-      <div class="container-item">
+      <div class="container-item plot4">
         <h2>Plot 4</h2>
         <sai2-interface-plot class="container-item-content">
         </sai2-interface-plot>
       </div>
+      <div class="container-item logger">
+          <h2>Logger</h2>
+          <sai2-interface-logger class="container-item-content"></sai2-interface-logger>
+        </div>
     </div>
   </body>
 </html>

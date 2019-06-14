@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Operational Space Position Control</title>
+    <title>Posori and Plot and Logger Example</title>
 
     <!-- Global and utility stylesheets -->
     <link rel="stylesheet" href="./css/library/picnic.min.css" type="text/css">
@@ -26,6 +26,7 @@
     <script type="module" src="./js/module/sai2-interface-toggle.js"></script>
     <script type="module" src="./js/module/sai2-interface-plot.js"></script>
     <script type="module" src="./js/module/sai2-interface-enum.js"></script>
+    <script type="module" src="./js/module/sai2-interface-display.js"></script>
     <script type="module" src="./js/module/sai2-interface-trajectory-select.js"></script>
 
     <!-- global execution scripts -->
@@ -39,15 +40,8 @@
         flex-direction: column;
       }
 
-      .title {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .title h1 {
+      .center {
         text-align: center;
-        display: inline-block;
       }
 
       .container {
@@ -64,35 +58,87 @@
         padding: 1em;
       }
 
+      .left-container {
+        display: grid;
+        gap: 1em;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+      }
+
       .right-container {
         display: grid;
         grid-template-rows: 1fr auto;
         gap: 10px;
       }
-
-      .center {
-        text-align: center;
-      }
     </style>
   </head>
   <body>
-    <div class="title">
-      <h1>Blank Left with Plot and Logger</h1>
-    </div>
+    <h1 class="center">Posori with Plot and Logger</h1>
     
     <div class="container">
-      <div class="container-item">
+      <div class="container-item left-container center">
+        <div>
+          <h2>Desired Position</h2>
+          <sai2-interface-slider 
+            key="desired_position"
+            display='["X", "Y", "Z"]'
+            min="[-1,-1,-1]" max="[1,1,1]" step="0.01">
+          </sai2-interface-slider>
+          <h2>Desired Orientation <br>(XYZ Fixed Angles)</h2>
+          <sai2-interface-slider
+            key="desired_orientation"
+            display='["X (γ)", "Y (β)", "Z (α)"]'
+            min="-6.28" max="6.28" step="0.01">
+          </sai2-interface-slider>
+        </div>
+        <div>
+          <h2>Gains</h2>
+          <sai2-interface-slider 
+            key="kp_pos"
+            display="Kp Pos"
+            min="0" max="400" step="0.01">
+          </sai2-interface-slider>
+          <sai2-interface-slider 
+            key="kv_pos"
+            display="Kv Pos"
+            min="0" max="100" step="0.01">
+          </sai2-interface-slider>
+          <sai2-interface-slider 
+            key="ki_pos"
+            display="Ki Pos"
+            min="0" max="100" step="0.01">
+          </sai2-interface-slider>
+          <sai2-interface-slider 
+            key="kp_ori"
+            display="Kp Ori"
+            min="0" max="100" step="0.01">
+          </sai2-interface-slider>
+          <sai2-interface-slider 
+            key="kv_ori"
+            display="Kv Ori"
+            min="0" max="100" step="0.01">
+          </sai2-interface-slider>
+          <sai2-interface-slider 
+            key="ki_ori"
+            display="Ki Ori"
+            min="0" max="100" step="0.01">
+          </sai2-interface-slider>
+          <h2>Toggleable Flags</h2>
+          <sai2-interface-toggle 
+            display="Use Interpolation"
+            key="posori_use_interpolation">
+          </sai2-interface-toggle>
+        </div>
       </div>
 
       <div class="container-item right-container">
         <div class="plot">
           <h2 class="center">Plot</h2>
-          <sai2-interface-plot>
-          </sai2-interface-plot>
+          <sai2-interface-plot/>
         </div>
         <div class="logger center">
           <h2>Logger</h2>
-          <sai2-interface-logger></sai2-interface-logger>
+          <sai2-interface-logger/>
         </div>
       </div>
     </div>
