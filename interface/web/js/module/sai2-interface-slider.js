@@ -74,7 +74,7 @@ customElements.define('sai2-interface-slider', class extends HTMLElement {
          * <div>
          *   <div>
          * 	   <label>item name</label>
-         * 	   <input type="number" class="number" onkeydown="return false">
+         * 	   <input type="number" class="number">
          *   </div>
          *   <input type="range" class="slider">
          * <div>
@@ -128,11 +128,15 @@ customElements.define('sai2-interface-slider', class extends HTMLElement {
         }
 
         // wait for 250ms for user to stop typing before issuing redis write
-        slider_value_input.addEventListener('keyup', () => {
-          clearTimeout(typingTimer);
-          if (slider_value_input.value)
-            typingTimer = setTimeout(sliding_value_input_callback, 500);
-        });
+        slider_value_input.onkeyup = e => {
+          if (e.key == 'Enter') {
+            sliding_value_input_callback();
+          } else {
+            clearTimeout(typingTimer);
+            if (slider_value_input.value)
+              typingTimer = setTimeout(sliding_value_input_callback, 500);
+          }
+        };
 
         // set up drag slider
         slider.type = 'range';
