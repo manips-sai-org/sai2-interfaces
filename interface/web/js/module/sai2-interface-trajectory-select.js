@@ -127,7 +127,7 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     this.points = { x: [], y: [], z: [], idx: [] };
     this.trajectory = { x: [], y: [], z: [], t:[], v: [], a: [] };
     this.ee_pos = { x: [], y: [], z: []};
-    this.next_point_index = 1; // call point 0 for EE, but it's not part of this series
+    this.next_point_index = 1; // point 0 is reserved for EE
   }
 
   connectedCallback() {
@@ -197,6 +197,9 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     this.xy_config = {...this.default_config};
     this.xz_config = {...this.default_config};
 
+    // initialize tooltips
+    // series 0, 2 are the control points - 2 is just the EE
+    // series 1 is the computed trajectory
     this.xy_config.tooltip = { 
       triggerOn: 'none',
       formatter: params => {
@@ -229,6 +232,9 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
       }
     };
     
+    // series definition
+    // control point shapes are defined by initialize_graphics
+    // since we need more control than the default
     this.xy_config.series = [{
         id: 'xy',
         type: 'line',
@@ -285,6 +291,13 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     this.xy_plot.setOption(this.xy_config);
     this.xz_plot.setOption(this.xz_config);
 
+    /**
+     * initialize_graphics() is responsible for drawing the circles
+     * and making the control points draggable. If you call this method,
+     * make sure to retest removing points/clearing trajectory.
+     * 
+     * @callback 
+     */
     let initialize_graphics = () => {
       this.xy_config.graphic = [];
       this.xz_config.graphic = [];
@@ -297,8 +310,8 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
           $action: 'replace',
           shape: { cx: 0, cy: 0, r: 10 },
           z: 100,
-          invisible: i === 0,
-          draggable: i !== 0,
+          invisible: i === 0,  // show circles if you're not EE - EE has special marker from series 2
+          draggable: i !== 0, // do not allow dragging of EE
           style: {
             fill: '#FFF',
             stroke: '#FF0000'
@@ -569,10 +582,12 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
         options.push(parseInt(option.value));
       }
 
+      // work on all points not the EE pos
       for (let i = this.points.idx.length - 1; i >= 1; i--) {
         if (options.includes(this.points.idx[i]))
           continue;
         
+        // instruct echarts to remove the appropriate draggable element
         this.xy_config.graphic[i].$action = 'remove'; 
         this.xz_config.graphic[i].$action = 'remove';
         this.points.x.splice(i, 1);
@@ -589,6 +604,11 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     this.appendChild(template_node);
 
     // grab ee pos and initialize plot afterwards
+    // goal: we want the special marker for EE pos
+    // and we want a dashed line connecting the EE pos to the other control points
+    // problem: EE pos is in a different series than the control points, so no line
+    // solution: we have the EE pos in series 2 with special marker, but make an invisible
+    //  point in series 0 (control points) right on the EE pos to get the dashed line.
     get_redis_val(current_ee_pos_key).then(data => {
       this.ee_pos.x[0] = data[0];
       this.ee_pos.y[0] = data[1];
