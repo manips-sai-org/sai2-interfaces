@@ -1,4 +1,5 @@
 import { registerWindowResizeCallback } from '../resize.js';
+import { get_redis_val } from '../redis.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -10,12 +11,51 @@ template.innerHTML = `
     }
 
     .sai2-interface-trajectory-select-top .metadata {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr auto auto;
+      grid-template-areas:
+        "trajectory-params"
+        "trajectory-buttons"
+        "point-remover"
+        "trajectory-info";
+    }
+
+    .sai2-interface-trajectory-select-top .metadata > div {
       display: flex;
-      align-items: baseline;
+      flex-direction: row;
       flex-wrap: wrap;
       justify-content: space-around;
-      flex: 1;
-    }    
+    }
+
+    .sai2-interface-trajectory-select-top .metadata .trajectory-params {
+      grid-area: trajectory-params;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      grid-template-columns: 1fr;
+    }
+
+    .sai2-interface-trajectory-select-top .metadata .trajectory-params > div {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .sai2-interface-trajectory-select-top .error-message {
+      color: red;
+    }
+
+    .sai2-interface-trajectory-select-top .metadata .trajectory-buttons {
+      grid-area: trajectory-buttons;
+    }
+
+    .sai2-interface-trajectory-select-top .metadata .point-remover {
+      grid-area: point-remover;
+    }
+
+    .sai2-interface-trajectory-select-top .metadata .trajectory-info {
+      grid-area: trajectory-info;
+    }
 
     .sai2-interface-trajectory-select-top .plots {
       flex: 9;
@@ -23,15 +63,48 @@ template.innerHTML = `
   </style>
 	<div class="sai2-interface-trajectory-select-top">
     <div class="metadata">
-      <label>Trajectory Duration</label>
-      <input class="traj-max-time" type="number" min="0.1" step="0.1">
-      <label>Trajectory Step Size</label>
-      <input class="traj-step-time" type="number" min="0.01" step="0.01">
-      <button class="trajectory-add-pt-btn">Add Point</button>
-      <button class="trajectory-get-btn">Get Trajectory</button>
-      <button class="trajectory-clear-btn">Clear Trajectory</button>
-      <button class="trajectory-run-btn">Run Trajectory</button>
+      <div class="trajectory-params">
+        <div>
+          <label>Trajectory Duration</label>
+          <input class="traj-max-time" type="number" min="0.1" step="0.1">
+          <label>Trajectory Step Size</label>
+          <input class="traj-step-time" type="number" min="0.01" step="0.01">
+        </div>
+        <div>
+          <label class="error-message"></label>
+        </div>
+      </div>
+      <div class="trajectory-buttons">
+        <button class="trajectory-add-pt-btn">Add Point</button>
+        <button class="trajectory-get-btn">Get Trajectory</button>
+        <button class="trajectory-clear-btn">Clear Trajectory</button>
+        <button class="trajectory-run-btn">Run Trajectory</button>
+      </div>
       <select class="point-remover chosen_select" multiple data-placeholder="Add a point..."></select>
+      <div class="trajectory-info">
+        <div>
+          <h4>Max Velocity: </h4>
+          <label>Norm: </label>
+          <label class="max-vel-norm"></label>
+          <label>X: </label>
+          <label class="max-vel-x"></label>
+          <label>Y: </label>
+          <label class="max-vel-y"></label>
+          <label>Z: </label>
+          <label class="max-vel-z"></label>
+        </div>
+        <div>
+          <h4>Max Acceleration:</h4>
+          <label>Norm: </label>
+          <label class="max-accel-norm"></label>
+          <label>X: </label>
+          <label class="max-accel-x"></label>
+          <label>Y: </label>
+          <label class="max-accel-y"></label>
+          <label>Z: </label>
+          <label class="max-accel-z"></label>
+        </div>
+      </div>
     </div>
     <div class="grid-half">
       <div class="col traj-xy"></div>
@@ -52,17 +125,18 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     this.xz_config = null;
 
     this.points = { x: [], y: [], z: [], idx: [] };
-    this.trajectory = { x: [], y: [], z: [], t:[], v: [] };
-    this.next_point_index = 0;
+    this.trajectory = { x: [], y: [], z: [], t:[], v: [], a: [] };
+    this.ee_pos = { x: [], y: [], z: []};
+    this.next_point_index = 1; // call point 0 for EE, but it's not part of this series
   }
 
   connectedCallback() {
     // get DOM elements
     let template_node = this.template.content.cloneNode(true);
-    let top_level_div = template_node.querySelector('.sai2-interface-trajectory-select-top');
     let xy_div = template_node.querySelector('.traj-xy');
     let xz_div = template_node.querySelector('.traj-xz');
 
+    // top level UI items
     let addPointButton = template_node.querySelector('.trajectory-add-pt-btn');
     let getTrajectoryButton = template_node.querySelector('.trajectory-get-btn');
     let clearTrajectoryButton = template_node.querySelector('.trajectory-clear-btn');
@@ -70,11 +144,23 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     let pointSelect = template_node.querySelector('.point-remover');
     let trajectoryMaxTimeInput = template_node.querySelector('.traj-max-time');
     let trajectoryStepSizeInput = template_node.querySelector('.traj-step-time');
+    let errorMessageLabel = template_node.querySelector('.error-message');
+
+    // max vel & accel UI items
+    let maxVelNorm = template_node.querySelector('.max-vel-norm');
+    let maxVelX = template_node.querySelector('.max-vel-x');
+    let maxVelY = template_node.querySelector('.max-vel-y');
+    let maxVelZ = template_node.querySelector('.max-vel-z');
+    let maxAccelNorm = template_node.querySelector('.max-accel-norm');
+    let maxAccelX = template_node.querySelector('.max-accel-x');
+    let maxAccelY = template_node.querySelector('.max-accel-y');
+    let maxAccelZ = template_node.querySelector('.max-accel-z');
 
     // grab passed-in attributes
     let xLim = JSON.parse(this.getAttribute('xLim'));
     let yLim = JSON.parse(this.getAttribute('yLim'));
     let zLim = JSON.parse(this.getAttribute('zLim'));
+    let current_ee_pos_key = this.getAttribute('current_pos_key');
 
     let primitive_key = "sai2::examples::primitive";
     let primitive_value = "primitive_trajectory_task";
@@ -96,7 +182,8 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
       },
       dataset: [
         { source: this.points },
-        { source: this.trajectory }
+        { source: this.trajectory },
+        { source: this.ee_pos }
       ]
     };
 
@@ -113,30 +200,32 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     this.xy_config.tooltip = { 
       triggerOn: 'none',
       formatter: params => {
-        if (params.seriesIndex === 0)
+        if (params.seriesIndex === 0 || params.seriesIndex === 2)
           return `Point ${this.points.idx[params.dataIndex]}
             <br>X: ${this.points.x[params.dataIndex]}
             <br>Y: ${this.points.y[params.dataIndex]}`;
         else
           return `Time ${this.trajectory.t[params.dataIndex].toFixed(4)}
-            <br>X: ${this.trajectory.x[params.dataIndex].toFixed(2)}
-            <br>Y: ${this.trajectory.y[params.dataIndex].toFixed(2)}
-            <br>V: ${this.trajectory.v[params.dataIndex].toFixed(2)}`;
+            <br>X: ${this.trajectory.x[params.dataIndex].toFixed(3)}
+            <br>Y: ${this.trajectory.y[params.dataIndex].toFixed(3)}
+            <br>V: ${this.trajectory.v[params.dataIndex].toFixed(3)}
+            <br>A: ${this.trajectory.a[params.dataIndex].toFixed(3)}`;
       }
     };
 
     this.xz_config.tooltip = { 
       triggerOn: 'none',
       formatter: params => {
-        if (params.seriesIndex === 0)
+        if (params.seriesIndex === 0 || params.seriesIndex === 2)
           return `Point ${this.points.idx[params.dataIndex]}
-            <br>X: ${this.points.x[params.dataIndex].toFixed(2)} 
-            <br>Z: ${this.points.z[params.dataIndex].toFixed(2)}`;
+            <br>X: ${this.points.x[params.dataIndex].toFixed(3)} 
+            <br>Z: ${this.points.z[params.dataIndex].toFixed(3)}`;
         else
           return `Time ${this.trajectory.t[params.dataIndex].toFixed(4)}
-            <br>X: ${this.trajectory.x[params.dataIndex].toFixed(2)}
-            <br>Z: ${this.trajectory.z[params.dataIndex].toFixed(2)}
-            <br>V: ${this.trajectory.v[params.dataIndex].toFixed(2)}`;
+            <br>X: ${this.trajectory.x[params.dataIndex].toFixed(3)}
+            <br>Z: ${this.trajectory.z[params.dataIndex].toFixed(3)}
+            <br>V: ${this.trajectory.v[params.dataIndex].toFixed(3)}
+            <br>A: ${this.trajectory.a[params.dataIndex].toFixed(3)}`;
       }
     };
     
@@ -146,7 +235,7 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
         datasetIndex: 0,
         lineStyle: { type: 'dashed' },
         encode: { x: 'x', y: 'y' },
-        symbolSize: 24
+        symbolSize: false
       }, {
         id: 'xy-traj',
         type: 'line',
@@ -154,6 +243,14 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
         encode: { x: 'x', y: 'y'},
         symbolSize: false,
         lineStyle: { color: 'blue' }
+      }, {
+        id: 'ee-pos-xy-traj',
+        type: 'line',
+        datasetIndex: 2,
+        symbolSize: 24,
+        encode: { x: 'x', y: 'y'},
+        symbol: 'pin',
+        itemStyle: { color: '#000'}
       }
     ];
 
@@ -163,7 +260,7 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
         datasetIndex: 0,
         lineStyle: {type: 'dashed'},
         encode: { x: 'x', y: 'z' },
-        symbolSize: 24,
+        symbolSize: false,
       }, {
         id: 'xz-traj',
         type: 'line',
@@ -171,6 +268,14 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
         encode: { x: 'x', y: 'z'},
         symbolSize: false,
         lineStyle: { color: 'blue' }
+      }, {
+        id: 'ee-pos-xy-traj',
+        type: 'line',
+        datasetIndex: 2,
+        symbolSize: 24,
+        encode: { x: 'x', y: 'z'},
+        symbol: 'pin',
+        itemStyle: { color: '#000'}
       }
     ];
 
@@ -192,8 +297,12 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
           $action: 'replace',
           shape: { cx: 0, cy: 0, r: 10 },
           z: 100,
-          invisible: true,
-          draggable: true,
+          invisible: i === 0,
+          draggable: i !== 0,
+          style: {
+            fill: '#FFF',
+            stroke: '#FF0000'
+          },
           onmouseover: () => {
             let showTipAction = {
               type: 'showTip',
@@ -214,7 +323,6 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
           ...graphic_template,
           position: this.xy_plot.convertToPixel('grid', [this.points.x[i], this.points.y[i]]),
           ondrag: params => {
-            console.log(params);
             let pt = this.xy_plot.convertFromPixel('grid', params.target.position);
             this.points.x[i] = pt[0];
             this.points.y[i] = pt[1];
@@ -313,11 +421,12 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
       let tf = parseFloat(trajectoryMaxTimeInput.value);
       let t_step = parseFloat(trajectoryStepSizeInput.value);
 
-      // XXX: handle more gracefully with an error message
       if (t_step > tf || !t_step || !tf) {
-        alert('Bad t_step');
+        errorMessageLabel.innerHTML = 'Bad trajectory final time or timestep.';
         return;
       }
+
+      errorMessageLabel.innerHTML = '';
 
       // collect points
       let points = [this.points.x, this.points.y, this.points.z];
@@ -336,6 +445,19 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
           this.trajectory.z = data.pos[2];
           this.trajectory.t = data.time;
           this.trajectory.v = data.vel;
+          this.trajectory.a = data.accel;
+
+          // set max accel/vel UI elements
+          maxAccelNorm.innerHTML = data.max_accel.norm.toExponential(3);
+          maxAccelX.innerHTML = data.max_accel.x.toExponential(3);
+          maxAccelY.innerHTML = data.max_accel.y.toExponential(3);
+          maxAccelZ.innerHTML = data.max_accel.z.toExponential(3);
+          maxVelNorm.innerHTML = data.max_vel.norm.toExponential(3);
+          maxVelX.innerHTML = data.max_vel.x.toExponential(3);
+          maxVelY.innerHTML = data.max_vel.y.toExponential(3);
+          maxVelZ.innerHTML = data.max_vel.z.toExponential(3);
+
+          // reset draggable
           initialize_graphics();
           this.xy_plot.setOption(this.xy_config);
           this.xz_plot.setOption(this.xz_config);
@@ -349,11 +471,12 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
       let tf = parseFloat(trajectoryMaxTimeInput.value);
       let t_step = parseFloat(trajectoryStepSizeInput.value);
 
-      // XXX: handle more gracefully with an error message
       if (t_step > tf || !t_step || !tf) {
-        alert('Bad t_step');
+        errorMessageLabel.innerHTML = 'Bad trajectory final time / timestep';
         return;
       }
+
+      errorMessageLabel.innerHTML = '';
 
       // collect points
       let points = [this.points.x, this.points.y, this.points.z];
@@ -368,7 +491,18 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
       };
 
       let running_callback = () => {
-        // poll repeatedly to get status
+        // poll repeatedly to get ee_pos & status
+        // clear both polling timers once complete
+        let ee_pos_poll_id = setInterval(() => {
+          get_redis_val(current_ee_pos_key).then(data => {
+            this.ee_pos.x[0] = data[0];
+            this.ee_pos.y[0] = data[1];
+            this.ee_pos.z[0] = data[2];
+            this.xy_plot.setOption(this.xy_config);
+            this.xz_plot.setOption(this.xz_config);
+          });
+        }, t_step / 3);
+
         let id = setInterval(() => {
           let poll_fetch_options = {
             method: 'GET',
@@ -381,6 +515,15 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
             .then(data => {
               if (!data.running) {
                 clearTimeout(id);
+                clearTimeout(ee_pos_poll_id);
+
+                // now that trajectory is finished, update this.point with new ee pos
+                this.points.x[0] = this.ee_pos.x[0];
+                this.points.y[0] = this.ee_pos.y[0];
+                this.points.z[0] = this.ee_pos.z[0];
+                this.xy_plot.setOption(this.xy_config);
+                this.xz_plot.setOption(this.xz_config);
+
                 _trajectory_running = false;
                 runTrajectoryButton.innerHTML = 'Start Trajectory';
                 runTrajectoryButton.className = 'button-enable';
@@ -398,8 +541,7 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
         fetch('/trajectory/run', fetchOptions)
           .then(() => running_callback())
           .catch(error => {
-            console.log(error);
-            alert('Running trajectory failed!');
+            errorMessageLabel.innerHTML = 'Trajectory execution failed: ' + toString(error);
           }
         );
       } else {
@@ -417,15 +559,8 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
       this.trajectory.z.length = 0;
       this.trajectory.t.length = 0;
       this.trajectory.v.length = 0;
-      let _dataset = {
-        dataset: [
-          { source: this.points },
-          { source: this.trajectory }
-        ]
-      };
-
-      this.xy_plot.setOption(_dataset);
-      this.xz_plot.setOption(_dataset);
+      this.xy_plot.setOption(this.xy_config);
+      this.xz_plot.setOption(this.xz_config);
     }
 
     pointSelect.onchange = e => {
@@ -434,17 +569,18 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
         options.push(parseInt(option.value));
       }
 
-      for (let i = this.points.idx.length - 1; i >= 0; i--) {
+      for (let i = this.points.idx.length - 1; i >= 1; i--) {
         if (options.includes(this.points.idx[i]))
           continue;
         
+        this.xy_config.graphic[i].$action = 'remove'; 
+        this.xz_config.graphic[i].$action = 'remove';
         this.points.x.splice(i, 1);
         this.points.y.splice(i, 1);
         this.points.z.splice(i, 1);
         this.points.idx.splice(i, 1);
       }
 
-      initialize_graphics();
       this.xy_plot.setOption(this.xy_config);
       this.xz_plot.setOption(this.xz_config);
     };
@@ -452,10 +588,20 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     // append to document
     this.appendChild(template_node);
 
-    // notify plots to resize, one after the other
-    setTimeout(() => {
+    // grab ee pos and initialize plot afterwards
+    get_redis_val(current_ee_pos_key).then(data => {
+      this.ee_pos.x[0] = data[0];
+      this.ee_pos.y[0] = data[1];
+      this.ee_pos.z[0] = data[2];
+      this.points.x.push(data[0]);
+      this.points.y.push(data[1]);
+      this.points.z.push(data[2]);
+      this.points.idx.push(0);
+      initialize_graphics();
+      this.xy_plot.setOption(this.xy_config);
+      this.xz_plot.setOption(this.xz_config);
       this.xy_plot.resize();
-      this.xz_plot.resize();
-    }, 250);
+      this.xz_plot.resize();  
+    });
   }
 });

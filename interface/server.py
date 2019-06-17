@@ -98,11 +98,26 @@ def handle_trajectory_generate():
     tf = data['tf']
     t_step = data['t_step']
     P = np.array(data['points'])
-    (t_traj, P_traj, V_traj) = catmullrom.compute_catmullrom_spline_trajectory(tf, P, t_step)
+    (t_traj, P_traj, V_traj, A_traj) = catmullrom.compute_catmullrom_spline_trajectory(tf, P, t_step)
+    V_traj_norm = np.linalg.norm(V_traj, axis=0)
+    A_traj_norm = np.linalg.norm(A_traj, axis=0)
     return jsonify({
         'time': t_traj.tolist(),
         'pos': P_traj.tolist(),
-        'vel': np.linalg.norm(V_traj,axis=0).tolist()
+        'vel': V_traj_norm.tolist(),
+        'max_vel' : {
+            'norm': np.max(V_traj_norm),
+            'x': np.max(V_traj[0, :]),
+            'y': np.max(V_traj[1, :]),
+            'z': np.max(V_traj[2, :])
+        },
+        'accel': A_traj_norm.tolist(),
+        'max_accel': {
+            'norm': np.max(A_traj_norm),
+            'x': np.max(A_traj[0, :]),
+            'y': np.max(A_traj[1, :]),
+            'z': np.max(A_traj[2, :])
+        }
     })
 
 @app.route('/trajectory/run', methods=['POST'])
@@ -120,7 +135,7 @@ def handle_trajectory_run():
     P = np.array(data['points'])
 
     # compute and run trajectory
-    (t_traj, P_traj, V_traj) = catmullrom.compute_catmullrom_spline_trajectory(tf, P, t_step)
+    (t_traj, P_traj, V_traj, _) = catmullrom.compute_catmullrom_spline_trajectory(tf, P, t_step)
     trajectory_runner = TrajectoryRunner(
         redis_client, 
         primitive_key, 

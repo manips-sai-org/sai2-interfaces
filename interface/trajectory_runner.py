@@ -4,8 +4,6 @@ import json
 from threading import Thread
 
 
-
-
 class TrajectoryRunner(object):
     def __init__(self, redis_client, primitive_key, posori_controller_value, position_key, velocity_key):
         self.redis_client = redis_client
@@ -19,14 +17,10 @@ class TrajectoryRunner(object):
         self.velocity_key = velocity_key
 
     def _trajectory_run_loop(self):
-        segment = 1
+        segment = 0
 
         # set controller to posori
         self.redis_client.set(self.primitive_key, self.posori_controller_value)
-
-        # tell controller to move to first point
-        self.redis_client.set(self.position_key, json.dumps(self.positions[:, 0].tolist()))
-        time.sleep(2) # wait to settle @ first point
 
         while self.running and segment < len(self.times):
             # issue desired pos & vel to redis
@@ -37,6 +31,7 @@ class TrajectoryRunner(object):
 
             # wait for next segment
             # trust that time is accurate enough
+            # XXX: there should probably be some sort of control for this
             segment += 1
             time.sleep(self.step_time)
 
