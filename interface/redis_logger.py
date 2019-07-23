@@ -5,7 +5,22 @@ from threading import Thread
 
 
 class RedisLogger(object):
+    '''
+    The RedisLogger logs a list of Redis keys in the background given a
+    frequency and output file. 
+
+    We note that because we are multithreading, we are affected by the
+    Python GIL. If we need additional performance, we should use fork a process,
+    but keep in mind that it'll be more complicated to signal across process
+    boundaries.
+    '''
+
     def __init__(self, redis_client):
+        '''
+        Constructs a new RedisLogger instance.
+
+        :param redis_client: redis.Redis connection to Redis key-value store
+        '''
         self.redis_client = redis_client
         self.thread = None
         self.running = False
@@ -15,6 +30,14 @@ class RedisLogger(object):
         self.log_start_time = None
 
     def _get_redis_key(self, key):
+        '''
+        W store vector/matrices in JSON form, but Redis just stores everything
+        as a string. So we attempt to force parse as JSON to see if it's a vector
+        or matrix type.
+
+        :param key: The Redis key to get
+        :returns: A string (or None) if associated key value is scalar, else a list/dict.
+        '''
         redis_str = self.redis_client.get(key)
         try:
             return json.loads(redis_str)
@@ -23,6 +46,9 @@ class RedisLogger(object):
 
 
     def _logger_loop(self):
+        '''
+        The main thread loop to log keys in the background. 
+        '''
         with open(self.filename, 'w+') as f:
             f.write('Logger Frequency: {} sec\n'.format(self.logger_period))
 
@@ -68,6 +94,16 @@ class RedisLogger(object):
                 time.sleep(self.logger_period)
 
     def start(self, filename, redis_keys, logger_period=1):
+        '''
+        Starts the logger by spinning off a thread. If the logger is 
+        already running, this call is ignored.
+
+        :param filename: A string containing the filename to write keys to.
+        :param redis_keys: A list of strings containing keys to poll Redis.
+        :param logger_period: A float containing how often to poll Redis, in seconds.
+            Default is 1 second.
+        :returns: True if thread started, False if already running or failure.
+        '''
         if self.running:
             return False
 
@@ -82,14 +118,20 @@ class RedisLogger(object):
         return True
 
     def stop(self):
-        self.running = False
-        self.thread.join()
+        '''
+        Stops the logger. No-op if not running.
+        '''
+        if self.running:
+            self.running = False
+            self.thread.join()
         
 
-### TEST ###
+# If you want to run this script directly instead of importing it
+# write your code here
 if __name__ == "__main__":
     r = redis.Redis()
     rl = RedisLogger(r)
     rl.start('test.log', ['sai2::examples::current_ee_pos', 'sai2::sai2Interfaces::kp_pos'], logger_period=1)
     time.sleep(5)
     rl.stop()
+    

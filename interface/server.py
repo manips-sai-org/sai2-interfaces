@@ -29,6 +29,9 @@ def get_redis_key(key):
     Retrieves a key from redis and attempts JSON parsing.
     We don't want to send a JSON object hiding in a string to the
     frontend, who would then be forced to double unwrap.
+
+    :param key: A string containing the Redis key to query
+    :returns: A string if Redis key is scalar, or a list/dict
     '''
     redis_str = redis_client.get(key)
     try:
@@ -40,12 +43,22 @@ def get_redis_key(key):
 
 @app.route('/')
 def get_home():
+    ''' Gets the home page "/", which is the example passed in the CLI. '''
     global example_to_serve
     return send_file(example_to_serve)
 
-
 @app.route('/redis', methods=['GET','POST'])
 def handle_redis_call():
+    ''' 
+    Handles get/set of Redis keys. Supports multiple getting of keys.
+
+    Front-end documentation:
+    To get a key, GET /redis with { 'key': 'your_redis_key_here' }.
+    To get multiple keys, query /redis with { 'key': ['key1', 'key2' , ...] }
+
+    To set a key, POST to /redis with a JSON object { 'key': 'key1', 'val': val }.
+        `val` must be a valid JSON object or string or number.
+    '''
     if request.method == 'GET':
         key_list = json.loads(request.args.get('key'))
         if type(key_list) == str:
@@ -61,19 +74,46 @@ def handle_redis_call():
 
         return Response(status=200)
 
-
 @app.route('/redis/keys', methods=['GET'])
 def handle_get_all_redis_keys():
+    '''
+    Gets all SAI2 redis keys.
+    
+    Frontend documentation:
+    GET to /redis/keys
+        > Response is a sorted JSON list of keys.
+    '''
     all_keys = [key for key in redis_client.scan_iter('sai2::*')]
     all_keys.sort()
     return jsonify(all_keys)
 
 @app.route('/logger/status', methods=['GET'])
 def handle_logger_status():
+    '''
+    Gets the status of the attached logger, if any.
+    There is only one logger per server.
+
+    Frontend documentation:
+    GET to /logger/status 
+        > Response is a JSON object { running: True|False }
+    '''
     return jsonify({'running': redis_logger.running})
 
 @app.route('/logger/start', methods=['POST'])
 def handle_logger_start():
+    '''
+    Starts the logger, if it is not already.
+
+    Frontend documentation:
+    POST to /logger/start with JSON object
+    {
+       'filename': <filename>,
+       'logger_period': <frequency in seconds>,
+       'keys': ['key1', 'key2', ...]
+    }
+
+    Returns 200 OK if successful start, 400 otherwise
+    '''
     data = request.get_json()
     filename = data['filename']
     redis_keys = data['keys']
@@ -85,15 +125,39 @@ def handle_logger_start():
 
 @app.route('/logger/stop', methods=['POST'])
 def handle_logger_stop():
+    '''
+    Stops the logger.
+
+    POST to /logger/stop
+    Always returns 200 OK. 
+    '''
     redis_logger.stop()
     return Response(status=200)
-    
-@app.route('/toggle', methods=['POST'])
-def handle_toggle_redis_key():
-    return redis_client.keys()
 
 @app.route('/trajectory/generate', methods=['POST'])
 def handle_trajectory_generate():
+    '''
+    Generates a trajectory and returns the points, timestamps, velocity, and
+    acceleration data. Does not issue any commands to the controller.
+
+    Frontend documentation:
+    POST to /trajectory/generate with JSON object
+    {
+        'tf': <final time>,
+        't_step': <time step>,
+        'points': [[x1, x2, ....], [y1, y2, ....], [z1, z2, ...]]
+    }
+
+    Returns JSON object of 
+    {
+        'time': [t1, t2, ....],
+        'pos':  [[x1, x2, ...], [y1, y2, ...], [z1, z2, ...]],
+        'vel': [[x1, x2, ...], [y1, y2, ...], [z1, z2, ...]],
+        'max_vel': { 'norm': n, 'x': x, 'y': y, 'z': z },
+        'accel': [[x1, x2, ...], [y1, y2, ...], [z1, z2, ...]],
+        'max_accel':  { 'norm': n, 'x': x, 'y': y, 'z': z },
+    }
+    '''
     data = request.get_json()
     tf = data['tf']
     t_step = data['t_step']
@@ -122,6 +186,18 @@ def handle_trajectory_generate():
 
 @app.route('/trajectory/run', methods=['POST'])
 def handle_trajectory_run():
+    '''
+    Executes/runs/issues commands to the controller for a
+    given trajectory.
+
+    POST to /trajectory/run with JSON object
+    {
+        'primitive_key': key, # which redis key contains which primitive is active
+        'primitive_value':  value, # what primitive to run under
+        'position_key': pos_key, # redis key to set desired pos
+        'velocity_key': vel_key, # redis key to set desired velocity
+    }
+    '''
     global trajectory_runner
 
     # parse request
@@ -152,10 +228,21 @@ def handle_trajectory_run():
 
 @app.route('/trajectory/run/status', methods=['GET'])
 def handle_trajectory_run_status():
+    ''' 
+    Gets the status of the trajectory runner.
+
+    GET to /trajectory/run/status, returns
+    { 'running': True|False }
+    '''
     return jsonify({'running': (trajectory_runner and trajectory_runner.running)})
 
 @app.route('/trajectory/run/stop', methods=['POST'])
 def handle_trajectory_run_stop():
+    '''
+    Stops the trajectory runner. 
+
+    GET to /trajectory/run/stop
+    '''
     trajectory_runner.stop()
     return Response(status=200)
 

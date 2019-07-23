@@ -3,8 +3,14 @@ import numpy as np
 
 def compute_catmullrom_spline_trajectory(tf, P, t_step, alpha=0.5):
     '''
-        P: np.array in the form of [P0, P1, ... ]. m x n, m = dim, n = # points
-        alpha: float. 0.5 = centripetal
+        Computes a Catmull-Rom spline trajectory. 
+
+        :param tf: The amount of time for the spline to take (final time).
+        :param P: A np.array in the form of [P0, P1, ... ] with dimension 
+            m x n. m is the space (so usually 2 or 3) and n = # points
+        :param t_step: The step time, i.e. the resolution.
+        :param alpha: Catmull-Rom parameter. Float. alpha = 0.5 = centripetal
+        :returns: A tuple (time, pos, vel, accel) of each trajectory at each time step. 
     '''
     # compute time for each control point
     m,n = np.shape(P)
