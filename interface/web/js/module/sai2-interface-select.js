@@ -1,3 +1,25 @@
+/**
+ * Defines a custom HTML element to select between "windows". Effectively a TabView,
+ * without the tabs and using a select element instead.
+ * 
+ * Sets a Redis key to the new tab name when the user switches tabs/selects a new item.
+ * The direct application is to switch between control primitives.
+ * 
+ * <pre>
+ * Example usage:
+ * &lt;sai2-interface-select key=""&gt;
+ *   &lt;option value="key_name_1"&gt;Friendly Name 1&lt;/option&gt;
+ *   &lt;option value="key_name_2"&gt;Friendly Name 2&lt;/option&gt;
+ * &lt;/sai2-interface-select&gt;
+ * 
+ * &lt;div class="key_name_1"&gt;&lt;/div&gt;
+ * &lt;div class="key_name_2"&gt;&lt;/div&gt;
+ * </pre>
+ * 
+ * So when key_name_2 is selected, the div .key_name_1 is hidden.
+ * @module ./module/sai2-interface-select 
+ */
+
 import { REDIS_KEY_CURRENT_PRIMITIVE, EVENT_NOT_READY, EVENT_READY } from '../const.js';
 import { get_redis_val, post_redis_key_val } from '../redis.js';
 

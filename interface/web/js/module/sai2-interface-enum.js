@@ -1,3 +1,18 @@
+/**
+ * Defines a custom HTML element to set a Redis key with
+ * a set of predefined values.
+ * <br>
+ * <pre>
+ * Example usage:
+ * <sai2-interface-enum key="long_key_name" display="friendly_key_name">
+ *   <option>A</option>
+ *   <option>B</option>
+ *   <option>C</option>
+ * </sai2-interface-enum>
+ * </pre>
+ * @module ./module/sai2-interface-enum
+ */
+
 import { EVENT_NOT_READY, EVENT_READY } from '../const.js';
 import { get_redis_val, post_redis_key_val } from '../redis.js';
 
@@ -59,6 +74,10 @@ customElements.define('sai2-interface-enum', class extends HTMLElement {
     this.appendChild(template_node);
   }
 
+  /**
+   * Fetches the latest value of the key attribute from 
+   * Redis, and updates the internal value of this enum.
+   */
   get_redis_val_and_update() {
     get_redis_val(this.key).then(option => {
       if (!(option in this.value_map)) {

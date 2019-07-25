@@ -1,4 +1,14 @@
+/**
+ * Helper functions to get/set Redis keys.
+ * @module ./redis
+ */
 
+/**
+ * Sets a Redis key to the specified value.
+ * @param {string} key The Redis key to set
+ * @param {*} val The value with which to set the Redis key
+ * @returns {Promise} A promise that returns no data on success.
+ */
 export function post_redis_key_val(key, val) {
   let fetchOptions = {
     method: 'POST',
@@ -11,6 +21,11 @@ export function post_redis_key_val(key, val) {
     .catch(data => alert('set redis error: ' + toString(data)));
 }
 
+/**
+ * Gets one or more Redis keys.
+ * @param {(string|string[])} key Redis key(s) to query
+ * @returns {Promise<Object>} A promise containing Redis key: value pairs.
+ */
 export function get_redis_val(key) {
   let fetchOptions = {
     method: 'GET',
@@ -25,6 +40,11 @@ export function get_redis_val(key) {
     .catch(data => alert('get redis error: ' + toString(data)));
 }
 
+/**
+ * Gets all Redis keys.
+ * @returns {Promise<string[]>} A promise that on resolution has a string[] 
+ * of all available Redis keys to query and set.
+ */
 export function get_redis_all_keys() {
   let fetchOptions = {
     method: 'GET',

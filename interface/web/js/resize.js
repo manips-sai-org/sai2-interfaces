@@ -1,6 +1,28 @@
+/**
+ * Helper module to allow multiple listeners to
+ * window.onresize(). You should be able to bypass
+ * this with window.onresize.addEventListener, but this needs to be tested.
+ * @deprecated
+ * @module ./resize
+ */
 
+ /**
+  * Global list of callbacks to execute when window.onResize is fired.
+  * @callback  onResizeCallback
+  * @type {onResizeCallback[]}
+  */
 var resize_callbacks = [];
+
+/**
+ * Next ID to assign when a callback is added.
+ * @type {number}
+ */
 var handle_id = 1;
+
+/**
+ * Global variable to signal if window.onresize has been initialized.
+ * @type {boolean}
+ */
 var init = false;
 
 /**
@@ -8,7 +30,7 @@ var init = false;
  * when the window resizes.
  * 
  * @param {function(void):void} callback Function to be called when window resizes
- * @return {int} A handle which identifies your callback. 
+ * @returns {int} A handle which identifies your callback. 
  *  You need this handle if you need to unregister your callback.
  */
 export function registerWindowResizeCallback(callback) {
@@ -30,6 +52,7 @@ export function registerWindowResizeCallback(callback) {
 /**
  * Removes a resize window callback.
  * @param {int} callback_handle The handle (int) given by registerWindowResizeCallback
+ * @returns {boolean} True on successful removal, false if not found or not initialized
  */
 export function removeWindowResizeCallback(callback_handle) {
   if (!init) 

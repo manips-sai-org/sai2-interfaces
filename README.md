@@ -36,6 +36,12 @@ cmake ..
 
 This project exports `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute path of the interface/ folder in this repository. You can then use cmake's `FILE(COPY)` macro to copy it with your binaries.
 
+### Generating documentation
+The UI documentation uses jsdoc. Install npm and jsdoc globally, and then run:
+```
+jsdoc -r interface/ -R README.md -d docs/
+```
+
 ## Project contributors
 * Keven Wang
 * Mikael Jorda
