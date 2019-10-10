@@ -3,19 +3,19 @@
  * a background logger.
  * <br>
  * Example usage:
- * &lt;sai2-interface-logger /&gt;
+ * &lt;sai2-interfaces-logger /&gt;
  * <br>
  * Note: there are no available attributes to set.
  * 
- * @module ./module/sai2-interface-logger
+ * @module ./module/sai2-interfaces-logger
  */
 
 
 import { get_redis_all_keys } from '../redis.js';
+import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 
 const template = document.createElement('template');
-
 template.innerHTML = `
   <style>
     .sai2-interface-logger-top {
@@ -46,20 +46,16 @@ template.innerHTML = `
   </div>
 `;
 
-customElements.define('sai2-interface-logger', class extends HTMLElement {
+class Sai2InterfacesLogger extends Sai2InterfacesComponent {
   constructor() {
-    super();
-    this.template = template;
-    this.getLoggerStatus = this.getLoggerStatus.bind(this);
+    super(template);
   }
 
-  connectedCallback() {
-    let template_node = this.template.content.cloneNode(true);
-    
-    let button = template_node.querySelector('button');
-    let logfile_input = template_node.querySelector('.logfile');
-    let logperiod_input = template_node.querySelector('.logperiod');
-    let keys_select = template_node.querySelector('select');
+  onMount() {
+    let button = this.template_node.querySelector('button');
+    let logfile_input = this.template_node.querySelector('.logfile');
+    let logperiod_input = this.template_node.querySelector('.logperiod');
+    let keys_select = this.template_node.querySelector('select');
 
     this.getLoggerStatus().then(status => {
       this.logging = status['running'];
@@ -109,12 +105,18 @@ customElements.define('sai2-interface-logger', class extends HTMLElement {
         });
       }
     };
-    
-    // append to document
-    this.appendChild(template_node);
   }
-  
-  /**
+
+  onUnmount() {
+  }
+
+  enableComponent() {
+  }
+
+  disableComponent() {
+  }
+
+    /**
    * Sends a HTTP request to the server to query logger status.
    * @returns {Promise<Object>} Promise with JSON object containig boolean key 'running'. 
    */
@@ -169,4 +171,7 @@ customElements.define('sai2-interface-logger', class extends HTMLElement {
     return fetch('/logger/stop', fetchOptions)
       .catch(data => alert('logger redis error: ' + toString(data)));
   }
-});
+}
+
+
+customElements.define('sai2-interface-logger', Sai2InterfacesLogger);

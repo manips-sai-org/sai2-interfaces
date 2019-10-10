@@ -13,7 +13,6 @@
  * @module ./module/sai2-interface-enum
  */
 
-import { EVENT_NOT_READY, EVENT_READY } from '../const.js';
 import { get_redis_val, post_redis_key_val } from '../redis.js';
 
 const template = document.createElement('template');
@@ -60,12 +59,6 @@ customElements.define('sai2-interface-enum', class extends HTMLElement {
         
       post_redis_key_val(this.key, option);
     }
-    
-    // do nothing on EVENT_NOT_READY, so no need to register callback
-    // register for controller ready
-    document.addEventListener(EVENT_READY, () => {
-      this.get_redis_val_and_update();
-    });
 
     // fetch initial value from redis
     this.get_redis_val_and_update();

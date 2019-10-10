@@ -1,19 +1,19 @@
 
 /** 
- * Defines a custom HTML element to periodically query a Redis key at a
- * certain frequency and displays it as a label. 
+ * Defines a custom HTML element to display the current value of a Redis key. 
  * <br>
  * <pre>
- * Element Tag: &lt;sai2-interface-trajectory-display&gt;
+ * Element Tag: &lt;sai2-interface-display&gt;
  * HTML attributes:
  *    key: string - Redis key to query
  *    refreshRate: number - How often, in seconds, to update
  *    decimalPlaces: number - How many decimal places to show
  * </pre>
- * @module ./module/sai2-interface-display 
+ * @module ./module/sai2-interfaces-display 
  */
 
 import { get_redis_val } from '../redis.js';
+import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 
 const template = document.createElement('template');
@@ -49,16 +49,13 @@ template.innerHTML = `
   </div>
 `;
 
-customElements.define('sai2-interface-display', class extends HTMLElement {
+class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
   constructor() {
-    super();
-    this.template = template;
-    this.connectedCallback = this.connectedCallback.bind(this);
-    this.update_value = this.update_value.bind(this);
+    super(template);
   }
 
   /**
-  * Executed when it is time to update the displayed value.
+   * Executed when it is time to update the displayed value.
    */
   update_value() {
     get_redis_val(this.key).then(value => {
@@ -69,7 +66,7 @@ customElements.define('sai2-interface-display', class extends HTMLElement {
     });
   }
 
-  connectedCallback() {
+  onMount() {
     let template_node = this.template.content.cloneNode(true);
     this.key = this.getAttribute('key');
     this.refreshRate = this.getAttribute('refreshRate');
@@ -85,7 +82,6 @@ customElements.define('sai2-interface-display', class extends HTMLElement {
 
     this.value_inputs = [];
 
-    // create sliders
     let container = template_node.querySelector('div');
     get_redis_val(this.key).then(value => {
       // determine iteration bounds: 1 if scalar key, array size if vector
@@ -131,11 +127,26 @@ customElements.define('sai2-interface-display', class extends HTMLElement {
         this.value_inputs.push(value_input);
       }
 
-      // TODO: find a way to call clearInterval when this element is not in view
       this.poll_handle = setInterval(this.update_value, this.refreshRate * 1000);
     });
 
     // append to document
     this.appendChild(template_node);
   }
-});
+
+  onUnmount() {
+    clearInterval(this.poll_handle);
+  }
+
+  enableComponent() {
+    clearInterval(this.poll_handle);
+    this.poll_handle = setInterval(this.update_value, this.refreshRate * 1000);
+  }
+
+  disableComponent() {
+    clearInterval(this.poll_handle);
+  }
+}
+
+
+customElements.define('sai2-interface-display', Sai2InterfacesDisplay);

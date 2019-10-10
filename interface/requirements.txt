@@ -1,3 +1,7 @@
-redis
 click
+redis
+hiredis
+eventlet
 flask
+flask-socketio
+linuxfd

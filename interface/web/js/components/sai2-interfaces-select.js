@@ -20,7 +20,7 @@
  * @module ./module/sai2-interface-select 
  */
 
-import { REDIS_KEY_CURRENT_PRIMITIVE, EVENT_NOT_READY, EVENT_READY } from '../const.js';
+import { REDIS_KEY_CURRENT_PRIMITIVE } from '../config.js';
 import { get_redis_val, post_redis_key_val } from '../redis.js';
 
 const template = document.createElement('template');
@@ -49,14 +49,10 @@ customElements.define('sai2-interface-select', class extends HTMLElement {
       this.selector_dom.onchange = e => {
         let option = e.target.value;
         post_redis_key_val(REDIS_KEY_CURRENT_PRIMITIVE, option);
-        this.show_module(option);
+        setTimeout(() => {
+          this.show_module(option);
+        }, 250);
       };
-
-      // do nothing on EVENT_NOT_READY, so no need to register callback
-      // register for controller ready
-      document.addEventListener(EVENT_READY, () => {
-        this.get_redis_val_and_update();
-      });
 
       // fetch initial value from redis
       this.get_redis_val_and_update();

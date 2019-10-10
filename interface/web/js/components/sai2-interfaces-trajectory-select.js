@@ -13,7 +13,6 @@
  * @module ./module/sai2-interface-trajectory-slider
  */
 
-import { registerWindowResizeCallback } from '../resize.js';
 import { get_redis_val } from '../redis.js';
 
 const template = document.createElement('template');
@@ -417,7 +416,7 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
     };
 
     // set up event listeners
-    registerWindowResizeCallback(() => {
+    window.addEventListener('resize', () => {
       this.xy_plot.resize();
       this.xz_plot.resize();
       initialize_graphics();

@@ -187,7 +187,7 @@ customElements.define('sai2-interface-slider', class extends HTMLElement {
       }
     });
 
-      // append to document
-      this.appendChild(template_node);
+    // append to document
+    this.appendChild(template_node);
   }
 });

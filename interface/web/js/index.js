@@ -1,27 +1,35 @@
-import { get_redis_val, post_redis_key_val } from './redis.js';
 import {
-  REDIS_KEY_CONTROLLER_STATE, 
-  REDIS_VAL_CONTROLLER_INITIALIZING,
-  REDIS_VAL_CONTROLLER_INITIALIZED,
-  REDIS_VAL_CONTROLLER_READY,
-  EVENT_NOT_READY,
-  EVENT_READY
-} from './const.js';
-/*
-// poll controller ready state every 0.5 seconds
-setInterval(() => {
-	get_redis_val(REDIS_KEY_CONTROLLER_STATE).then((val) => {
-		if (val === REDIS_VAL_CONTROLLER_INITIALIZING) {
-			// not ready, emit events to children to disable UI
-			let event = new Event(EVENT_NOT_READY);
-			document.dispatchEvent(event);
-		} else if (val === REDIS_VAL_CONTROLLER_INITIALIZED) {
-			// ready, emit events to children to refetch from redis
-			let event = new Event(EVENT_READY);
-      document.dispatchEvent(event);
-      
-			// clear this key value, so that we only fire this event once
-			post_redis_key_val(REDIS_KEY_CONTROLLER_STATE, REDIS_VAL_CONTROLLER_READY);
-		}
-	});
-}, 1000);*/
+  EVENT_CONTROLLER_STATUS,
+  REDIS_VAL_CONTROLLER_READY
+} from './config.js';
+
+// Import all ES6 modules here, so the HTML template only needs to load index.js.
+import './redis.js';
+import './components/sai2-interfaces-component.js';
+import './components/sai2-interfaces-logger.js';
+import './components/sai2-interfaces-slider.js';
+import './components/sai2-interfaces-select.js';
+import './components/sai2-interfaces-toggle.js';
+import './components/sai2-interfaces-plot.js';
+import './components/sai2-interfaces-enum.js';
+import './components/sai2-interfaces-display.js';
+import './components/sai2-interfaces-trajectory-select.js';
+
+
+var socket = io();
+socket.on('connect', () => {
+  // TODO: 
+});
+
+socket.on('controller-state', data => {
+  let controller_status = data === REDIS_VAL_CONTROLLER_READY;
+  document.dispatchEvent(new CustomEvent(EVENT_CONTROLLER_STATUS, {ready: controller_status}));
+})
+
+socket.on('disconnect', () => {
+  // TODO: disable components
+  document.dispatchEvent(new CustomEvent(EVENT_CONTROLLER_STATUS, {ready: false}));
+
+  // attempt to reconnect
+  socket.open();
+})

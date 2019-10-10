@@ -1,6 +1,9 @@
 from flask import Flask, jsonify, request, Response, send_file, send_from_directory
+from flask_socketio import SocketIO, send, emit
+from redis_cache import RedisCache
 from redis_logger import RedisLogger
 from trajectory_runner import TrajectoryRunner
+from plot import PlotManager
 import json 
 import click
 import redis
@@ -15,37 +18,29 @@ static_folder_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0]))
 # bypass Flask templating engine by serving our HTML as static pages
 example_to_serve = None
 app = Flask(__name__, static_folder=static_folder_path, static_url_path='')
-
+socketio = SocketIO(app)
 
 #### global variables, initialized in server start ####
 example_to_serve = None
 redis_client = None
+redis_cache = None
 redis_logger = None
 trajectory_runner = None
-
-###########    UTILITY     ################
-def get_redis_key(key):
-    ''' 
-    Retrieves a key from redis and attempts JSON parsing.
-    We don't want to send a JSON object hiding in a string to the
-    frontend, who would then be forced to double unwrap.
-
-    :param key: A string containing the Redis key to query
-    :returns: A string if Redis key is scalar, or a list/dict
-    '''
-    redis_str = redis_client.get(key)
-    try:
-        return json.loads(redis_str)
-    except:
-        return redis_str
 
 ########### ROUTE HANDLING ################
 
 @app.route('/')
 def get_home():
     ''' Gets the home page "/", which is the example passed in the CLI. '''
-    global example_to_serve
     return send_file(example_to_serve)
+
+
+@socketio.on('redis')
+def handle_socket_redis_call(data):
+    keys = json.loads(data)
+    if type(keys) == list:
+        return jsonify({key: redis_cache.key_cache.get(key) for key in keys})
+    return jsonify({keys: redis_cache.key_cache.get(keys)})
 
 @app.route('/redis', methods=['GET','POST'])
 def handle_redis_call():
@@ -62,9 +57,9 @@ def handle_redis_call():
     if request.method == 'GET':
         key_list = json.loads(request.args.get('key'))
         if type(key_list) == str:
-            return jsonify(get_redis_key(key_list))
+            return jsonify(redis_cache[key_list])
         else:
-            return jsonify({key: get_redis_key(key) for key in key_list})
+            return jsonify({key: redis_cache[key] for key in key_list})
     elif request.method == 'POST':
         data = request.get_json()
         if type(data['val']) == list:
@@ -83,9 +78,9 @@ def handle_get_all_redis_keys():
     GET to /redis/keys
         > Response is a sorted JSON list of keys.
     '''
-    all_keys = [key for key in redis_client.scan_iter('sai2::*')]
-    all_keys.sort()
-    return jsonify(all_keys)
+    keys = list(redis_cache.key_cache.keys())
+    keys.sort()
+    return jsonify(keys)
 
 @app.route('/logger/status', methods=['GET'])
 def handle_logger_status():
@@ -133,6 +128,34 @@ def handle_logger_stop():
     '''
     redis_logger.stop()
     return Response(status=200)
+
+@app.route('/plot/start', methods=['POST'])
+def handle_plot_start():
+    data = request.get_json()
+    keys = data['keys']
+    rate = data['rate']
+    return jsonify({
+        'plot_id': plot_manager.start_plot(keys, rate)
+    })
+
+@app.route('/plot/data', methods=['POST'])
+def handle_plot_get():
+    plot_id = request.get_json()['plot_id']
+    avail = plot_manager.get_available_data_from_plot(plot_id)
+    print(time.time(), len(avail))
+    return jsonify({
+        'plot_id': plot_id,
+        'running': plot_manager.is_plot_running(plot_id),
+        'data': avail
+    })
+
+@app.route('/plot/stop', methods=['POST'])
+def handle_plot_stop():
+    plot_id = request.get_json()['plot_id']
+    if plot_manager.stop_plot(plot_id):
+        return Response(status=200)
+    else:
+        return Response(status=500)
 
 @app.route('/trajectory/generate', methods=['POST'])
 def handle_trajectory_generate():
@@ -225,7 +248,6 @@ def handle_trajectory_run():
     else:
         return Response(status=500)
     
-
 @app.route('/trajectory/run/status', methods=['GET'])
 def handle_trajectory_run_status():
     ''' 
@@ -248,22 +270,23 @@ def handle_trajectory_run_stop():
 
 
 ############ CLI + Server Init ##############
-@click.group()
-def server():
-    pass
-
-@server.command()
+@click.command()
 @click.option("-hp", "--http_port", help="HTTP Port (default: 8000)", default=8000, type=click.INT)
 @click.option("-rh", "--redis_host", help="Redis hostname (default: localhost)", default="localhost", type=click.STRING)
 @click.option("-rp", "--redis_port", help="Redis port (default: 6379)", default=6379, type=click.INT)
 @click.option("-rd", "--redis_db", help="Redis database number (default: 0)", default=0, type=click.INT)
+@click.option("-rate", "--cache-refresh-rate", help="How often to load keys from Redis (default: 0.0333)", default=0.0333, type=click.FLOAT)
 @click.argument('example', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
-def start(http_port, redis_host, redis_port, redis_db, example):
-    global redis_client, redis_logger, example_to_serve
+def server(http_port, redis_host, redis_port, redis_db, cache_refresh_rate, example):
+    global redis_client, redis_cache, redis_logger, example_to_serve, plot_manager
     example_to_serve = os.path.realpath(example)
     redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
+    redis_cache = RedisCache(redis_client, refresh_rate=cache_refresh_rate)
     redis_logger = RedisLogger(redis_client)
-    app.run(port=http_port, debug=True)
+    plot_manager = PlotManager(redis_client)
+
+    redis_cache.start()
+    socketio.run(app, port=http_port, debug=True)
 
 
 if __name__ == "__main__":
