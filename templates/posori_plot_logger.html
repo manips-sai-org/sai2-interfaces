@@ -13,7 +13,7 @@
     <!-- External library includes -->
     <script src="./js/library/jquery-3.3.1.min.js" type="text/javascript"></script>
     <script src="./js/library/chosen.jquery.min.js" type="text/javascript"></script>
-    <script src="./js/library/echarts.min.js" type="text/javascript"></script>
+    <script src="./js/library/plotly.min.js" type="text/javascript"></script>
     <script src="./js/library/socket.io.js" type="text/javascript"></script>
 
     <!-- global execution scripts -->
@@ -66,66 +66,66 @@
       <div class="container-item left-container center">
         <div>
           <h2>Desired Position</h2>
-          <sai2-interface-slider 
+          <sai2-interfaces-slider 
             key="desired_position"
             display='["X", "Y", "Z"]'
             min="[-1,-1,-1]" max="[1,1,1]" step="0.01">
-          </sai2-interface-slider>
+          </sai2-interfaces-slider>
           <h2>Desired Orientation <br>(XYZ Fixed Angles)</h2>
-          <sai2-interface-slider
+          <sai2-interfaces-slider
             key="desired_orientation"
             display='["X (γ)", "Y (β)", "Z (α)"]'
             min="-6.28" max="6.28" step="0.01">
-          </sai2-interface-slider>
+          </sai2-interfaces-slider>
         </div>
         <div>
           <h2>Gains</h2>
-          <sai2-interface-slider 
+          <sai2-interfaces-slider 
             key="kp_pos"
             display="Kp Pos"
             min="0" max="400" step="0.01">
-          </sai2-interface-slider>
-          <sai2-interface-slider 
+          </sai2-interfaces-slider>
+          <sai2-interfaces-slider 
             key="kv_pos"
             display="Kv Pos"
             min="0" max="100" step="0.01">
-          </sai2-interface-slider>
-          <sai2-interface-slider 
+          </sai2-interfaces-slider>
+          <sai2-interfaces-slider 
             key="ki_pos"
             display="Ki Pos"
             min="0" max="100" step="0.01">
-          </sai2-interface-slider>
-          <sai2-interface-slider 
+          </sai2-interfaces-slider>
+          <sai2-interfaces-slider 
             key="kp_ori"
             display="Kp Ori"
             min="0" max="100" step="0.01">
-          </sai2-interface-slider>
-          <sai2-interface-slider 
+          </sai2-interfaces-slider>
+          <sai2-interfaces-slider 
             key="kv_ori"
             display="Kv Ori"
             min="0" max="100" step="0.01">
-          </sai2-interface-slider>
-          <sai2-interface-slider 
+          </sai2-interfaces-slider>
+          <sai2-interfaces-slider 
             key="ki_ori"
             display="Ki Ori"
             min="0" max="100" step="0.01">
-          </sai2-interface-slider>
+          </sai2-interfaces-slider>
           <h2>Toggleable Flags</h2>
-          <sai2-interface-toggle 
+          <sai2-interfaces-toggle 
             display="Use Interpolation"
             key="posori_use_interpolation">
-          </sai2-interface-toggle>
+          </sai2-interfaces-toggle>
         </div>
       </div>
 
       <div class="container-item right-container">
         <div class="plot">
           <h2 class="center">Plot</h2>
-          <sai2-interface-plot/>
+          <sai2-interfaces-plot/>
         </div>
         <div class="logger center">
           <h2>Logger</h2>
-          <sai2-interface-logger/>
+          <sai2-interfaces-logger/>
         </div>
       </div>
     </div>

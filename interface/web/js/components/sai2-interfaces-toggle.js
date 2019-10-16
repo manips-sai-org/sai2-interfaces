@@ -18,7 +18,7 @@ template.innerHTML = `
 `;
 
 
-customElements.define('sai2-interface-toggle', class extends HTMLElement {
+customElements.define('sai2-interfaces-toggle', class extends HTMLElement {
   constructor() {
     super();
     this.template = template;

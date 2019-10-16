@@ -8,6 +8,7 @@ import './redis.js';
 import './components/sai2-interfaces-component.js';
 import './components/sai2-interfaces-logger.js';
 import './components/sai2-interfaces-slider.js';
+import './components/sai2-interfaces-select-option.js';
 import './components/sai2-interfaces-select.js';
 import './components/sai2-interfaces-toggle.js';
 import './components/sai2-interfaces-plot.js';

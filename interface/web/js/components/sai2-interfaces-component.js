@@ -27,6 +27,9 @@ export default class Sai2InterfacesComponent extends HTMLElement {
     document.removeEventListener(EVENT_CONTROLLER_STATUS, this.controller_status_event);
     this.onUnmount();
   }
+  
+  refresh() {
+  }
 
   enableComponent() {
     throw new Error("Not implemented!");

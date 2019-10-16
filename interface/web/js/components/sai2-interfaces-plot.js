@@ -43,19 +43,26 @@ template.innerHTML = `
 `;
 
     
-customElements.define('sai2-interface-plot', class extends HTMLElement {
+customElements.define('sai2-interfaces-plot', class extends HTMLElement {
   constructor() {
     super();
     this.template = template;
 
-    this.chart = null;
-    this.chart_config = null;
+    this.plot = null;
+    this.layout = {
+      showLegend: true,
+    };
+    this.config = {
+      responsive: true,
+    };
     this.plotting = false;
     
     this.x_key = null;
     this.y_key_list = [];
-    this.plot_start_time = null;
+    this.data = {};
+    this.series = [];
 
+    this.cntr = 1;
     this.fetchDataCallback = this.fetchDataCallback.bind(this);
   }
 
@@ -63,58 +70,67 @@ customElements.define('sai2-interface-plot', class extends HTMLElement {
    * Called when the plot needs to poll the backend for new values.
    */
   fetchDataCallback() {
-    let keys_to_fetch = [];
-    if (this.x_key == 'Time')
-      keys_to_fetch = this.y_key_list;
-    else
-      keys_to_fetch = [this.x_key, ...this.y_key_list];
+    let fetchOptions = {
+      method: 'POST',
+      headers: new Headers({'Content-Type': 'application/json'}),
+      mode: 'same-origin',
+      body: JSON.stringify({
+        plot_id: this.plot_id
+      })
+    };
 
-    get_redis_val(keys_to_fetch).then(data => {
-      // assumption: x is scalar valued
-      let x_data = null;
-      if (this.x_key == 'Time') 
-        x_data = (performance.now() - this.plot_start_time) / 1000;
-      else 
-        x_data = data[this.x_key];
-
-      // helper function to add series for y if necessary
-      let add_data = (x_key, y_key, y_val) => {
-        if (!(y_key in this.chart_config.dataset.source)) {
-          this.chart_config.dataset.source[y_key] = [];
-          this.chart_config.series.push({
-            name: y_key,
-            type: 'line',
-            symbolSize: false,
-            encode: { x: x_key, y: y_key }
-          });
+    fetch('/plot/data', fetchOptions)
+      .then(response => response.json())
+      .then(raw_response => {
+        if (!raw_response.running) {
+          clearTimeout(this.plotIntervalID);
         }
-        this.chart_config.dataset.source[y_key].push(y_val);
-      };
 
-      // check if x is setup as a series
-      if (!(this.x_key in this.chart_config.dataset.source)) {
-        this.chart_config.xAxis.name = this.x_key;
-        this.chart_config.dataset.source[this.x_key] = [];
-      }
-
-      // add x point
-      this.chart_config.dataset.source[this.x_key].push(x_data);
-
-      // add y point(s)
-      for (let y_key of this.y_key_list) {
-        let y_data = data[y_key];
-        if (Array.isArray(y_data)) {
-          for (let i = 0; i < y_data.length; i++) {
-            let y_key_element = y_key + '[' + i + ']';
-            add_data(this.x_key, y_key_element, y_data[i]);
+        return raw_response.data;
+      })
+      .then(data_list => {
+        for (let data of data_list) {
+          let x_data =  data[this.x_key];
+          if (!(this.x_key in this.data)) {
+            this.data[this.x_key] = [];
           }
-        } else {
-          add_data(this.x_key, y_key, y_data);
-        }
-      }
+          this.data[this.x_key].push(x_data);
 
-      this.chart.setOption(this.chart_config);
-    });
+          for (let y_key of this.y_key_list) {
+            let y_data = data[y_key];
+            if (Array.isArray(y_data)) {
+              for (let i = 0; i < y_data.length; i++) {
+                let adj_y_key = y_key + '[' + i + ']';
+                if (!(adj_y_key in this.data)) {
+                  this.data[adj_y_key] = [];
+                  this.series.push({
+                    x: this.data[this.x_key],
+                    y: this.data[adj_y_key],
+                    type: 'scattergl',
+                    name: adj_y_key
+                  });
+                }
+
+                this.data[adj_y_key].push(y_data[i]);
+              }
+            } else {
+              if (!(y_key in this.data)) {
+                this.data[y_key] = [];
+                this.series.push({
+                  x: this.data[this.x_key],
+                  y: this.data[y_key],
+                  type: 'scattergl',
+                  name: y_key
+                });
+              }
+              this.data[y_key].push(y_data);
+            }
+          }
+        }
+
+        this.layout.datarevision++;
+        Plotly.react(this.plot, this.series, this.layout, this.config);
+      });
   }
 
   connectedCallback() {
@@ -127,8 +143,8 @@ customElements.define('sai2-interface-plot', class extends HTMLElement {
     let ykey_select = template_node.querySelector('.y_key');
     let query_rate_input = template_node.querySelector('.query_rate');
     let plot_button = template_node.querySelector('.plot_button');
-    let plot_div = template_node.querySelector('.plot-div');
     let error_label = template_node.querySelector('.error-label');
+    this.plot = template_node.querySelector('.plot-div');
 
     plot_button.innerHTML = this.plotting ? 'Stop' : 'Start';
     plot_button.className = 'button-enable';
@@ -159,32 +175,6 @@ customElements.define('sai2-interface-plot', class extends HTMLElement {
       $('.y_key').trigger("chosen:updated");
     });
 
-    // initialize empty plot & templates
-    this.chart = echarts.init(plot_div);
-    this.chart_config = {
-      dataset: { source: {} },
-      xAxis: { type:'value' },
-      yAxis: { type:'value' },
-      series: [],
-      tooltip: { trigger: 'axis' },
-      legend: { type: 'scroll' },
-      toolbox: {
-        top: 'bottom',
-        left: 'right',
-        feature: {
-          saveAsImage: { title: 'Save Plot'},
-          dataZoom: { title: { zoom: 'Box Zoom', back: 'Reset View' } }
-        }
-      },
-    };
-
-    this.chart.setOption(this.chart_config);
-    
-    // register event listeners
-    xkey_select.onchange = e => {
-      this.x_key = e.target.value;
-    };
-
     plot_button.onclick = () => {
       this.x_key = xkey_select.value;
       this.y_key_list = [];
@@ -205,42 +195,67 @@ customElements.define('sai2-interface-plot', class extends HTMLElement {
         xkey_select.disabled = true;
         ykey_select.disabled = true;
     
-        // reset chart config
-        this.chart_config.dataset.source = {};
-        this.chart_config.series = [];
-        this.chart_config.legend = { type: 'scroll' };
-        this.chart.setOption(this.chart_config);
+        // reset data & series
+        this.series.length = 0;
+        this.data = {};
+        Plotly.react(this.plot, this.series, this.layout, this.config);
+
+        // determine rate. convert from sec -> ms
+        let query_rate = parseFloat(query_rate_input.value);
 
         plot_button.innerHTML = 'Stop';
         plot_button.className = 'button-disable';
-
-        // determine rate. convert from sec -> ms
-        let query_rate = 1000 * parseFloat(query_rate_input.value);
-
-        // set up plot timer callback
-        this.plot_start_time = performance.now();
-        this.plotIntervalID = setInterval(this.fetchDataCallback, query_rate);
-      } else {
-        plot_button.innerHTML = 'Start';
-        plot_button.className = 'button-enable';
         xkey_select.disabled = false;
         ykey_select.disabled = false;
-            
-        // clear plot timer callback
-        clearInterval(this.plotIntervalID);
+
+        let fetchOptions = {
+          method: 'POST',
+          headers: new Headers({'Content-Type': 'application/json'}),
+          mode: 'same-origin',
+          body: JSON.stringify({
+            keys: [this.x_key, ...this.y_key_list],
+            rate: query_rate
+          })
+        };
+
+        fetch('/plot/start', fetchOptions)
+          .then(response => response.json())
+          .then(data => {
+            this.plot_id = data['plot_id'];
+            this.plotIntervalID = setInterval(this.fetchDataCallback, 100);
+          });
+      } else {
+        let fetchOptions = {
+          method: 'POST',
+          headers: new Headers({'Content-Type': 'application/json'}),
+          mode: 'same-origin',
+          body: JSON.stringify({
+            plot_id: this.plot_id
+          })
+        };
+
+        fetch('/plot/stop', fetchOptions)
+          .then(response => response.ok)
+          .then(ok => {
+            if (ok) {
+              plot_button.innerHTML = 'Start';
+              plot_button.className = 'button-enable';
+              xkey_select.disabled = false;
+              ykey_select.disabled = false;
+                  
+              // clear plot timer callback
+              clearInterval(this.plotIntervalID);
+            }
+          });
       }
     };
       
     // append to document
     this.appendChild(template_node);
 
-    // set up size listeners
-    window.addEventListener('resize', () => this.chart.resize());
-
-    // prime the pump: echarts plot needs to be
-    // manually told to resize, but echarts needs an initial size
-    // after we attach it to the DOM. so we wait a bit
-    // and then resize
-    setTimeout(() => this.chart.resize(), 250);
+    // plotly requires that we are attached to the main document root
+    // so we initialize it now
+    this.layout.datarevision = 1;
+    Plotly.newPlot(this.plot, this.series, this.layout, this.config);
   }
 });

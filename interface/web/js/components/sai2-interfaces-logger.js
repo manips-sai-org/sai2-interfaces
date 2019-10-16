@@ -174,4 +174,4 @@ class Sai2InterfacesLogger extends Sai2InterfacesComponent {
 }
 
 
-customElements.define('sai2-interface-logger', Sai2InterfacesLogger);
+customElements.define('sai2-interfaces-logger', Sai2InterfacesLogger);

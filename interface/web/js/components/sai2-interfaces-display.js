@@ -149,4 +149,4 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
 }
 
 
-customElements.define('sai2-interface-display', Sai2InterfacesDisplay);
+customElements.define('sai2-interfaces-display', Sai2InterfacesDisplay);

@@ -127,7 +127,7 @@ template.innerHTML = `
   </div>
 `;
     
-customElements.define('sai2-interface-trajectory-select', class extends HTMLElement {
+customElements.define('sai2-interfaces-trajectory-select', class extends HTMLElement {
   constructor() {
     super();
     this.template = template;
@@ -528,7 +528,7 @@ customElements.define('sai2-interface-trajectory-select', class extends HTMLElem
             this.xy_plot.setOption(this.xy_config);
             this.xz_plot.setOption(this.xz_config);
           });
-        }, t_step / 3);
+        }, 100);
 
         let id = setInterval(() => {
           let poll_fetch_options = {

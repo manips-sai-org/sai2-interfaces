@@ -11,6 +11,7 @@ import catmullrom
 import numpy as np
 import os 
 import sys
+import time
 
 # determine full, absolute path to web/
 static_folder_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), 'web')
@@ -142,7 +143,6 @@ def handle_plot_start():
 def handle_plot_get():
     plot_id = request.get_json()['plot_id']
     avail = plot_manager.get_available_data_from_plot(plot_id)
-    print(time.time(), len(avail))
     return jsonify({
         'plot_id': plot_id,
         'running': plot_manager.is_plot_running(plot_id),
@@ -188,6 +188,14 @@ def handle_trajectory_generate():
     (t_traj, P_traj, V_traj, A_traj) = catmullrom.compute_catmullrom_spline_trajectory(tf, P, t_step)
     V_traj_norm = np.linalg.norm(V_traj, axis=0)
     A_traj_norm = np.linalg.norm(A_traj, axis=0)
+
+    # since this is purely visualization, send only 50
+    MAX_POINTS = 50
+    if len(t_traj) > MAX_POINTS:
+        idx = np.round(np.linspace(0, len(t_traj) - 1, MAX_POINTS)).astype(int)
+        t_traj = t_traj[idx]
+        P_traj = P_traj[:, idx]
+
     return jsonify({
         'time': t_traj.tolist(),
         'pos': P_traj.tolist(),
@@ -283,7 +291,7 @@ def server(http_port, redis_host, redis_port, redis_db, cache_refresh_rate, exam
     redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
     redis_cache = RedisCache(redis_client, refresh_rate=cache_refresh_rate)
     redis_logger = RedisLogger(redis_client)
-    plot_manager = PlotManager(redis_client)
+    plot_manager = PlotManager(redis_cache)
 
     redis_cache.start()
     socketio.run(app, port=http_port, debug=True)

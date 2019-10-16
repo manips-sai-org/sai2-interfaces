@@ -22,7 +22,7 @@ template.innerHTML = `
   </select>
 `;
 
-customElements.define('sai2-interface-enum', class extends HTMLElement {
+customElements.define('sai2-interfaces-enum', class extends HTMLElement {
   constructor() {
     super();
     this.template = template;

@@ -18,6 +18,7 @@
   */
 
 import { get_redis_val, post_redis_key_val } from '../redis.js';
+import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 
 const template = document.createElement('template');
@@ -54,14 +55,12 @@ template.innerHTML = `
   </div>
 `;
 
-customElements.define('sai2-interface-slider', class extends HTMLElement {
+class Sai2InterfacesSlider extends Sai2InterfacesComponent {
   constructor() {
-    super();
-    this.template = template;
+    super(template);
   }
 
-  connectedCallback() {
-    let template_node = this.template.content.cloneNode(true);
+  onMount() {
     this.key = this.getAttribute('key');
     this.min = this.getAttribute('min');
     this.max = this.getAttribute('max');
@@ -78,7 +77,7 @@ customElements.define('sai2-interface-slider', class extends HTMLElement {
     }
 
     // create sliders
-    let container = template_node.querySelector('div');
+    let container = this.template_node.querySelector('div');
     get_redis_val(this.key).then(value => {
       // determine iteration bounds: 1 if scalar key, array size if vector
       let len = (Array.isArray(value)) ? value.length : 1;
@@ -186,8 +185,29 @@ customElements.define('sai2-interface-slider', class extends HTMLElement {
         container.append(slider_div);
       }
     });
-
-    // append to document
-    this.appendChild(template_node);
   }
-});
+
+  refresh() {
+    // clear old nodes
+    while (this.firstChild) {
+      this.removeChild(this.firstChild);
+    }
+
+    this.template_node = this.template.content.cloneNode(true);
+    this.onMount();
+    this.appendChild(this.template_node);
+  }
+
+  onUnmount() {
+  }
+
+  enableComponent() {
+  }
+
+  disableComponent() {
+  }
+}
+
+
+
+customElements.define('sai2-interfaces-slider', Sai2InterfacesSlider);
