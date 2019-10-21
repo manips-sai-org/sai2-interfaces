@@ -6,16 +6,17 @@ import util
 
 
 class RedisCache(object):
-    def __init__(self, redis_client, refresh_rate=0.0333, keys=[], key_patterns=[]):
+    def __init__(self, redis_client, refresh_rate=0.0333, keys=[], key_patterns=[], key_refresh_cycles=10):
         self.refresh_rate = refresh_rate
         self.redis_client = redis_client
         self.refresh_keys = threading.Event()
+        self.key_refresh_cycles = key_refresh_cycles
         self.pipe_keys = keys 
         self.key_patterns = key_patterns
         self.key_cache = {}
         self.running = False
 
-        ctx = { 'first_run': True }
+        ctx = { 'first_run': True, 'refresh_counter': 0 }
         self.periodic_timer = periodic_timer.PeriodicTimer(
             period=refresh_rate,
             func=self._update_cache,
@@ -50,8 +51,9 @@ class RedisCache(object):
     def _update_cache(self, ctx):
         pipe = self.redis_client.pipeline(transaction=True)
         first_run = ctx['first_run']
+        ctx['refresh_counter'] += 1
 
-        if first_run or self.refresh_keys.is_set():
+        if first_run or self.refresh_keys.is_set() or ctx['refresh_counter'] > self.key_refresh_cycles:
             self._key_list = []
             self._key_list += self.pipe_keys
             for pattern in self.key_patterns:
@@ -60,6 +62,7 @@ class RedisCache(object):
 
             ctx['first_run'] = False
             self.refresh_keys.clear()
+            ctx['refresh_counter'] = 0
 
         # rebuild pipeline
         for key in self._key_list:
