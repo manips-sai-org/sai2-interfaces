@@ -54,7 +54,7 @@ customElements.define('sai2-interfaces-enum', class extends HTMLElement {
 
       // attempt to parse as number
       let option = parseFloat(raw_option);
-      if (option == NaN)
+      if (isNaN(option))
         option = raw_option;
         
       post_redis_key_val(this.key, option);

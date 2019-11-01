@@ -16,6 +16,7 @@ import './components/sai2-interfaces-enum.js';
 import './components/sai2-interfaces-display.js';
 import './components/sai2-interfaces-trajectory-select.js';
 import './components/sai2-interfaces-accordion.js';
+import './components/sai2-interfaces-toggle-group.js';
 
 
 var socket = io();
