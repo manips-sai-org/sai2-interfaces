@@ -591,25 +591,40 @@ customElements.define('sai2-interfaces-trajectory-select', class extends HTMLEle
     }
 
     pointSelect.onchange = e => {
+      let new_points = { x: [], y: [], z: [], idx: [] };
+
       let options = [];
       for (let option of e.target.selectedOptions) {
         options.push(parseInt(option.value));
       }
 
-      // work on all points not the EE pos
-      for (let i = this.points.idx.length - 1; i >= 1; i--) {
-        if (options.includes(this.points.idx[i]))
-          continue;
-        
-        // instruct echarts to remove the appropriate draggable element
+      // idea: wipe old set by marking each to remove
+      // recreate a new point list
+      for (let i = 0; i < this.points.idx.length; i++) {
         this.xy_config.graphic[i].$action = 'remove'; 
         this.xz_config.graphic[i].$action = 'remove';
-        this.points.x.splice(i, 1);
-        this.points.y.splice(i, 1);
-        this.points.z.splice(i, 1);
-        this.points.idx.splice(i, 1);
+
+        if (i == 0 || options.includes(this.points.idx[i])) {
+          new_points.idx.push(this.points.idx[i]);
+          new_points.x.push(this.points.x[i]);
+          new_points.y.push(this.points.y[i]);
+          new_points.z.push(this.points.z[i]);
+        }
       }
 
+      // setOption will wipe the old points
+      this.xy_plot.setOption(this.xy_config);
+      this.xz_plot.setOption(this.xz_config);
+
+      // this will reassign the new point list
+      this.points = new_points;
+      this.xy_config.dataset[0].source = this.points;
+      this.xz_config.dataset[0].source = this.points;
+      this.xy_plot.setOption(this.xy_config);
+      this.xz_plot.setOption(this.xz_config);
+
+      // redraw draggable circles
+      initialize_graphics();
       this.xy_plot.setOption(this.xy_config);
       this.xz_plot.setOption(this.xz_config);
     };
