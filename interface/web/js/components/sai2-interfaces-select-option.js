@@ -3,11 +3,11 @@
  * a background logger.
  * <br>
  * Example usage:
- * &lt;sai2-interfaces-logger /&gt;
+ * &lt;sai2-interfaces-select-option /&gt;
  * <br>
  * Note: there are no available attributes to set.
  * 
- * @module ./module/sai2-interfaces-logger
+ * @module ./module/sai2-interfaces-select-option
  */
 
 

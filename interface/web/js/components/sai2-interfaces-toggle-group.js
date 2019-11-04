@@ -66,12 +66,28 @@ class Sai2InterfacesToggleGroup extends Sai2InterfacesComponent {
   }
 
   updateGroups() {
+    let enabled_group = $(this).find('sai2-interfaces-toggle-group-enabled');
+    let disabled_group = $(this).find('sai2-interfaces-toggle-group-disabled');
     if (this.enabled) {
-      $(this).find('sai2-interfaces-toggle-group-enabled').show();
-      $(this).find('sai2-interfaces-toggle-group-disabled').hide();
+      enabled_group.each(function() {
+        for (let child of this.children) {
+          if (typeof child.refresh == 'function') {
+            child.refresh();
+          }
+        }
+      });
+      enabled_group.show();
+      disabled_group.hide();
     } else {
-      $(this).find('sai2-interfaces-toggle-group-enabled').hide();
-      $(this).find('sai2-interfaces-toggle-group-disabled').show();
+      enabled_group.hide();
+      disabled_group.show();
+      disabled_group.each(function() {
+        for (let child of this.children) {
+          if (typeof child.refresh == 'function') {
+            child.refresh();
+          }
+        }
+      });
     }
   }
 
