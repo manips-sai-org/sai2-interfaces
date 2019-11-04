@@ -91,6 +91,7 @@ template.innerHTML = `
       <div class="trajectory-buttons">
         <button class="trajectory-add-pt-btn">Add Point</button>
         <button class="trajectory-get-btn">Get Trajectory</button>
+        <button class="trajectory-clear-all-btn">Clear All Points</button>
         <button class="trajectory-clear-btn">Clear Trajectory</button>
         <button class="trajectory-run-btn">Run Trajectory</button>
       </div>
@@ -153,6 +154,7 @@ customElements.define('sai2-interfaces-trajectory-select', class extends HTMLEle
     // top level UI items
     let addPointButton = template_node.querySelector('.trajectory-add-pt-btn');
     let getTrajectoryButton = template_node.querySelector('.trajectory-get-btn');
+    let clearAllPointsTrajectoryButton = template_node.querySelector('.trajectory-clear-all-btn');
     let clearTrajectoryButton = template_node.querySelector('.trajectory-clear-btn');
     let runTrajectoryButton = template_node.querySelector('.trajectory-run-btn');
     let pointSelect = template_node.querySelector('.point-remover');
@@ -579,6 +581,46 @@ customElements.define('sai2-interfaces-trajectory-select', class extends HTMLEle
           });
       }
     };
+
+    clearAllPointsTrajectoryButton.onclick = () => {
+      this.trajectory.x.length = 0;
+      this.trajectory.y.length = 0;
+      this.trajectory.z.length = 0;
+      this.trajectory.t.length = 0;
+      this.trajectory.v.length = 0;
+      
+      let new_points = { x: [], y: [], z: [], idx: [] };
+      for (let i = 0; i < this.points.idx.length; i++) {
+        this.xy_config.graphic[i].$action = 'remove'; 
+        this.xz_config.graphic[i].$action = 'remove';
+
+        if (i == 0) {
+          new_points.idx.push(this.points.idx[i]);
+          new_points.x.push(this.points.x[i]);
+          new_points.y.push(this.points.y[i]);
+          new_points.z.push(this.points.z[i]);
+        }
+      }
+
+      // setOption will wipe the old points
+      this.xy_plot.setOption(this.xy_config);
+      this.xz_plot.setOption(this.xz_config);
+
+      // this will reassign the new point list
+      this.points = new_points;
+      this.xy_config.dataset[0].source = this.points;
+      this.xz_config.dataset[0].source = this.points;
+      this.xy_plot.setOption(this.xy_config);
+      this.xz_plot.setOption(this.xz_config);
+
+      // redraw draggable circles
+      initialize_graphics();
+      this.xy_plot.setOption(this.xy_config);
+      this.xz_plot.setOption(this.xz_config);
+
+      $(".point-remover").val('').trigger("chosen:updated");
+      $(".point-remover").empty();
+    }
 
     clearTrajectoryButton.onclick = () => {
       this.trajectory.x.length = 0;
