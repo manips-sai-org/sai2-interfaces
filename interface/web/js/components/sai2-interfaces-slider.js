@@ -146,15 +146,9 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
         }
 
         // wait for 250ms for user to stop typing before issuing redis write
-        slider_value_input.onkeyup = e => {
-          if (e.key == 'Enter') {
-            sliding_value_input_callback();
-          } else {
-            clearTimeout(typingTimer);
-            if (slider_value_input.value)
-              typingTimer = setTimeout(sliding_value_input_callback, 500);
-          }
-        };
+        slider_value_input.onchange = () => {
+          sliding_value_input_callback();
+        }; 
 
         // set up drag slider
         slider.type = 'range';
