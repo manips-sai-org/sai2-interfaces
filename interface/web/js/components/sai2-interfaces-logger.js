@@ -37,7 +37,7 @@ template.innerHTML = `
   </style>
   <div class="sai2-interface-logger-top">
     <input type="text" class="logfile" placeholder="log filename">
-    <input type="number" step="0.01" min="0" placeholder="1"
+    <input type="number" step="0.01" min="0" placeholder="0.01"
       class="logperiod" placeholder="(period, in seconds)">
     <div>
       <select multiple class="chosen_select" data-placeholder="Select keys to log..."></select>
@@ -91,8 +91,12 @@ class Sai2InterfacesLogger extends Sai2InterfacesComponent {
           if (option.selected)
             selected_keys.push(option.value);
 
-        // get logger period. default to 0.1s
-        let logger_period = logperiod_input.value || 0.1;
+        // get logger period. default to 0.01s
+        let logger_period = parseFloat(logperiod_input.value)
+        if (isNaN(logger_period) || logger_period < 0) {
+          logger_period = 0.01;
+          logperiod_input.value = 0.01;
+        }
 
         this.start_logging(filename, selected_keys, logger_period).then(() => {
           button.innerHTML = 'stop logging';
