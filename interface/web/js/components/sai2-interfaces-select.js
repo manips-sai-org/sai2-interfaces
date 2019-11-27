@@ -74,10 +74,10 @@ customElements.define('sai2-interfaces-select', class extends HTMLElement {
           // TODO: timing hack 
           setTimeout(() => {
             if (typeof child.refresh === 'function') {
-              child.refresh();
+              $(child).show();
 
               setTimeout(() => {
-                $(child).show();
+                child.refresh();
               }, 100);
             }
           }, 100);

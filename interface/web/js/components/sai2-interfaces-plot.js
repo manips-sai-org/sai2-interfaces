@@ -201,7 +201,12 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
         Plotly.react(this.plot, this.series, this.layout, this.config);
 
         // determine rate. convert from sec -> ms
+
         let query_rate = parseFloat(query_rate_input.value);
+        if (isNaN(query_rate) || query_rate < 0) {
+          query_rate = 0.1;
+          query_rate_input.value = 0.1;
+        }
 
         plot_button.innerHTML = 'Stop';
         plot_button.className = 'button-disable';

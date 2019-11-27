@@ -695,4 +695,8 @@ customElements.define('sai2-interfaces-trajectory-select', class extends HTMLEle
       this.xz_plot.resize();  
     });
   }
+
+  refresh() {
+    window.dispatchEvent(new Event('resize'));
+  }
 });
