@@ -51,6 +51,7 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
     this.plot = null;
     this.layout = {
       showLegend: true,
+      legend: { x: 0, y: -0.25, orientation: 'h' }
     };
     this.config = {
       responsive: true,

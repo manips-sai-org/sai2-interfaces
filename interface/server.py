@@ -1,9 +1,10 @@
 from flask import Flask, jsonify, request, Response, send_file, send_from_directory
 from flask_socketio import SocketIO, send, emit
 from redis_cache import RedisCache
-from redis_logger import RedisLogger
+from redis_logger import RedisLogger, display_log_file
 from trajectory_runner import TrajectoryRunner
 from plot import PlotManager
+from werkzeug.utils import secure_filename
 import json 
 import click
 import redis
@@ -19,6 +20,7 @@ static_folder_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0]))
 # bypass Flask templating engine by serving our HTML as static pages
 example_to_serve = None
 app = Flask(__name__, static_folder=static_folder_path, static_url_path='')
+app.config['UPLOAD_FOLDER'] = '/tmp'
 socketio = SocketIO(app)
 
 #### global variables, initialized in server start ####
@@ -111,7 +113,7 @@ def handle_logger_start():
     Returns 200 OK if successful start, 400 otherwise
     '''
     data = request.get_json()
-    filename = data['filename']
+    filename = os.path.join(static_folder_path, data['filename'])
     redis_keys = data['keys']
     logger_period = float(data['logger_period'])
     if redis_logger.start(filename, redis_keys, logger_period):
@@ -128,6 +130,21 @@ def handle_logger_stop():
     Always returns 200 OK. 
     '''
     redis_logger.stop()
+    return Response(status=200)
+
+@app.route('/logger/offline', methods=['POST'])
+def handle_logger_offline_plot():
+    if 'file' not in request.files:
+        return Response(status=200)
+
+    file = request.files['file']
+    if not file or not file.filename:
+        return Response(status=200)
+    
+    filename = secure_filename(file.filename)
+    local_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(local_path)
+    display_log_file(local_path)
     return Response(status=200)
 
 @app.route('/plot/start', methods=['POST'])

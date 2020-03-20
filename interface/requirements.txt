@@ -5,3 +5,4 @@ eventlet
 flask
 flask-socketio
 linuxfd
+matplotlib

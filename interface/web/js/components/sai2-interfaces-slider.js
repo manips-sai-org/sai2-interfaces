@@ -124,7 +124,6 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
         slider_value_input.value = (Array.isArray(value)) ? value[i] : value;
 
         // set up typing event
-        let typingTimer;
         let sliding_value_input_callback = () => {
           let slider_val = parseFloat(slider_value_input.value);
           if (slider_val < slider_value_input.min)
@@ -145,10 +144,19 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
           post_redis_key_val(this.key, this.value);
         }
 
-        // wait for 250ms for user to stop typing before issuing redis write
+        // issue redis write when value manually changed
         slider_value_input.onchange = () => {
           sliding_value_input_callback();
         }; 
+
+        // set up mousewheel event for manual input
+        slider_value_input.addEventListener('wheel', e => {
+          e.preventDefault();
+          let offset = (e.deltaY > 0 ? 1 : -1) * slider_value_input.step;
+          let val = parseFloat(slider_value_input.value);
+          slider_value_input.value = (val + offset).toFixed(3);
+          sliding_value_input_callback();
+        });
 
         // set up drag slider
         slider.type = 'range';
@@ -168,6 +176,14 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 
           post_redis_key_val(this.key, this.value);
         };
+
+        slider.addEventListener('wheel', e => {
+          e.preventDefault();
+          let offset = (e.deltaY > 0 ? 1 : -1) * slider.step;
+          let val = parseFloat(slider.value);
+          slider.value = (val + offset).toFixed(3);
+          slider.oninput();
+        });
 
         // append label + manual value input to slider_value_div
         slider_value_div.appendChild(slider_display);

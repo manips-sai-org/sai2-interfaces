@@ -4,7 +4,10 @@ import json
 import util
 from threading import Thread
 import periodic_timer
-
+import numpy as np
+import matplotlib.pyplot as plt 
+import os
+import re
 
 class RedisLogger(object):
     '''
@@ -115,6 +118,61 @@ class RedisLogger(object):
             self.periodic_timer.stop()
             self.file_fd.close()
         
+def display_log_file(log_file):
+    '''
+    Parses and displays a valid log file from the RedisLogger class. Spins off
+    a new thread so that it won't block the main server thread. 
+
+    :param log_file: The log file output from RedisLogger.
+    :returns: The thread object that was created for the new plot
+    '''
+    def _display_this_thread(log_file):
+        keys = []
+        data = []
+        with open(log_file, 'r') as f:
+            for idx, line in enumerate(f):
+                if idx == 0: 
+                    # frequency line
+                    continue 
+                elif idx == 1:
+                    # keys line. assumption: no brackets in key name.
+                    raw_keys = line.split()
+                    assert(raw_keys[0].lower() == 'time')
+                    keys.append(raw_keys[0])
+
+                    for raw_key in raw_keys[1:]:
+                        match = re.match(r'(.*)\[(\d.*)\]', raw_key)
+                        if match:
+                            name = match.group(1)
+                            size = int(match.group(2))
+                            for i in range(size):
+                                keys.append('{}[{}]'.format(name, i))
+                        else:
+                            keys.append(raw_key)
+                else:
+                    # generic data line
+                    data.append([float(val) for val in line.split()])
+
+        # file is parsed, show in pyplot window
+        data = np.array(data)
+        _, m = data.shape
+        plt.figure()
+        ax = plt.subplot(111)
+        plt.xlabel(keys[0] + ' (s)')
+        for i in range(1, m):
+            ax.plot(data[:, 0], data[:, i], label=keys[i])
+
+        # move legend to the bottom of the plot
+        # See https://stackoverflow.com/a/4701285
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0 + box.height * 0.1, 
+                        box.width, box.height * 0.9]) 
+        ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.11), ncol=2)
+        plt.show()
+
+    t = Thread(target=_display_this_thread, args=[log_file])
+    t.start()
+    return t
 
 # If you want to run this script directly instead of importing it
 # write your code here
@@ -124,4 +182,3 @@ if __name__ == "__main__":
     rl.start('test.log', ['sai2::examples::current_ee_pos', 'sai2::examples::kp_pos'], logger_period=1)
     time.sleep(5.5)
     rl.stop()
-    

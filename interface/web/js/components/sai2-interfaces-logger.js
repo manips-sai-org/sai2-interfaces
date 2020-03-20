@@ -42,7 +42,9 @@ template.innerHTML = `
     <div>
       <select multiple class="chosen_select" data-placeholder="Select keys to log..."></select>
     </div>
-    <button></button>
+    <button class="log_start_stop"></button><br>
+    <input type=file class="logger_offline_plot">
+    <button class="log_offline_btn">Offline Plot</button>
   </div>
 `;
 
@@ -52,10 +54,12 @@ class Sai2InterfacesLogger extends Sai2InterfacesComponent {
   }
 
   onMount() {
-    let button = this.template_node.querySelector('button');
+    let button = this.template_node.querySelector('.log_start_stop');
     let logfile_input = this.template_node.querySelector('.logfile');
     let logperiod_input = this.template_node.querySelector('.logperiod');
     let keys_select = this.template_node.querySelector('select');
+    let log_offline_input = this.template_node.querySelector('.logger_offline_plot');
+    let log_offline_button = this.template_node.querySelector('.log_offline_btn');
 
     this.getLoggerStatus().then(status => {
       this.logging = status['running'];
@@ -75,16 +79,17 @@ class Sai2InterfacesLogger extends Sai2InterfacesComponent {
         keys_select.append(opt);
       }
 
-      $('.chosen_select').chosen({width: '100%'});
+      $('.chosen_select').chosen({width: '100%', search_contains: true});
     });
 
     // set up listeners
     button.onclick = () => {
       this.logging = !this.logging;
-      if (this.logging) {
-        // default to log.txt
-        let filename = logfile_input.value || 'log.txt';
 
+      // default to log.txt
+      let filename = logfile_input.value || 'log.txt';
+
+      if (this.logging) {
         // get selected keys
         let selected_keys = [];
         for (let option of keys_select.options)
@@ -103,11 +108,26 @@ class Sai2InterfacesLogger extends Sai2InterfacesComponent {
           button.className = "button-disable";
         });
       } else {
+        // prompt user for log file download
+        let link = document.createElement('a');
+        link.download = filename;
+        link.href = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
         this.stop_logging().then(() => {
           button.innerHTML = 'start logging';
           button.className = "button-enable"
         });
       }
+    };
+  
+    // offline plotting initialization
+    log_offline_button.onclick = () => {
+      let data = new FormData();
+      data.append('file', log_offline_input.files[0]);
+      fetch('/logger/offline', { method: 'POST', body: data });
     };
   }
 
