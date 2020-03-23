@@ -40,7 +40,7 @@ customElements.define('sai2-interfaces-enum', class extends HTMLElement {
     this.label_node = template_node.querySelector('label');
     this.selector_dom = template_node.querySelector('select');
 
-    this.label_node.innerHTML = this.display;
+    this.label_node.innerHTML = this.display || this.key;
 
     // insert children from parent index.html into <select>
     while (this.children.length) {
