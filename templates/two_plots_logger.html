@@ -29,6 +29,11 @@
         text-align: center;
       }
 
+      /**
+       * Defines the overall grid layout
+       * A leftplot region, a rightplot region,
+       * and logger region that spans the bottom row.
+       */
       .container {
         display: grid;
         justify-content: center;
@@ -40,20 +45,35 @@
           "logger logger"
       }
 
+      /**
+       * Defines the leftplot grid region with a height of 80% of the normal
+       * window height.
+       */
       .leftplot {
         grid-area: leftplot;
         height: 80vh;
       }
 
+      /**
+       * Defines the rightplot grid region with a height of 80% of the normal
+       * window height.
+       */
       .rightplot {
         grid-area: rightplot;
         height: 80vh;
       }
 
+      /**
+       * Defines the logger grid region.
+       */
       .logger {
         grid-area: logger;
       }
 
+      /**
+       * This represents a single item within each grid area - gives a solid
+       * black border and some padding. Set to 80% of the window height.
+       */
       .container-item {
         border-style: solid;
         border-radius: 1em;
@@ -63,6 +83,7 @@
         padding: 0.25em;
       }
 
+      /** Sets internal elements to use CSS flexbox */
       .container-item-content {
         flex: 1;
       }
