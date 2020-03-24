@@ -64,7 +64,7 @@ customElements.define('sai2-interfaces-select', class extends HTMLElement {
 
     show_module(option) {
       // hide all modules
-      $('.module').hide();
+      $('sai2-interfaces-select-option').hide();
 
       // find & reshow
       for (let child of this.children) {

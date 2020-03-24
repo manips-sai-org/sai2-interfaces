@@ -4,7 +4,8 @@ The `sai2-interfaces-toggle` element allows you to toggle a Redis key between 0 
 
 ## Usage
 ```
-<sai2-interfaces-toggle></sai2-interfaces-toggle>
+<sai2-interfaces-toggle key="...">
+</sai2-interfaces-toggle>
 ```
 
 ## Attributes

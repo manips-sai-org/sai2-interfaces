@@ -4,10 +4,11 @@ The `sai2-interfaces-enum` element lets you set specific values into a Redis key
 
 ## Usage
 ```
-<sai2-interfaces-enum>
+<sai2-interfaces-enum key="...">
   <option>A</option>
   <option>B</option>
   <option>C</option>
+  ...
 <sai2-interfaces-enum>
 ```
 
