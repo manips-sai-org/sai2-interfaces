@@ -72,6 +72,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
       this.display = JSON.parse(raw_disp);
       this.min = JSON.parse(this.min);
       this.max = JSON.parse(this.max);
+      this.step = JSON.parse(this.step);
     } catch (e) {
       this.display = raw_disp;
     }

@@ -178,10 +178,10 @@ customElements.define('sai2-interfaces-trajectory-select', class extends HTMLEle
     let zLim = JSON.parse(this.getAttribute('zLim'));
     let current_ee_pos_key = this.getAttribute('current_pos_key');
 
-    let primitive_key = "sai2::examples::primitive";
-    let primitive_value = "primitive_trajectory_task";
-    let position_key = "sai2::examples::desired_position";
-    let velocity_key = "sai2::examples::desired_velocity";
+    let primitive_key = this.getAttribute("primitive_key");
+    let primitive_value = this.getAttribute("primitive_value")
+    let position_key = this.getAttribute("position_key");
+    let velocity_key = this.getAttribute("velocity_key");
 
     // initialize template
     this.default_config = {
