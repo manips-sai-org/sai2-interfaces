@@ -12,6 +12,9 @@ except:
     print('usage: python3 {} <# of joints>'.format(sys.argv[0]))
     exit(0)
 
+# mode key
+MODE_KEY = 'sai2::interfaces::tutorial::mode'
+
 # joint task keys
 JOINT_KEY = 'sai2::interfaces::tutorial::q'
 KP_GAIN_KEY = 'sai2::interfaces::tutorial::joint_kp'
@@ -30,6 +33,9 @@ initial_pos_values = 3 * np.random.rand(3)
 initial_ori_values = 2 * np.pi * np.random.rand(3)
 
 r = redis.Redis()
+
+# mode
+r.set(MODE_KEY, 'joint')
 
 # joint task
 r.set(JOINT_KEY, str(initial_joint_values.tolist()))
