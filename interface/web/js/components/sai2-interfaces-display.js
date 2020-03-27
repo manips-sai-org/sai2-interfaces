@@ -46,12 +46,40 @@ template.innerHTML = `
 
   </style>
   <div class="sai2-interface-display-top">
+    <label></label>
+    <table></table>
   </div>
 `;
 
 class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
   constructor() {
     super(template);
+
+    this.rows = 0;
+    this.cols = 0;
+  }
+
+  /**
+   * Gets the shape (rows, cols) of a Redis value. Scalar will be (1, 1),
+   * Vector will be (n, 1), and Matrix will be (n, m).
+   * 
+   * @param {Number|Number[]|Number[][]} value 
+   * @returns (n, m) where n is the number of rows and m is number of cols
+   */
+  get_shape(value) {
+    let rows = 1;
+    let cols = 1;
+    if (Array.isArray(value)) {
+      // vector or matrix: fix # rows
+      rows = value.length;
+
+      if (Array.isArray(value[0])) {
+        // matrix: fix # cols
+        cols = value[0].length;
+      }
+    }
+
+    return [rows, cols];
   }
 
   /**
@@ -59,10 +87,35 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
    */
   update_value() {
     get_redis_val(this.key).then(value => {
-      for (let i = 0; i < this.value_inputs.length; i++) {
-        let current_value = (Array.isArray(value)) ? value[i] : value;
-        this.value_inputs[i].value = current_value.toFixed(this.decimalPlaces);
+      [this.rows, this.cols] = this.get_shape(value);
+      let tbl_body = document.createElement('tbody');
+      for (let i = 0; i < this.rows; i++) {
+        let tbl_row = document.createElement('tr');
+
+        for (let j = 0; j < this.cols; j++) {
+          let tbl_cell = document.createElement('td');
+          let tbl_cell_text; 
+          
+          if (this.rows == 1 && this.cols == 1) {
+            // scalar
+            tbl_cell_text = document.createTextNode('' + value.toFixed(this.decimalPlaces));
+          } else if (this.cols == 1) {
+            // vector
+            tbl_cell_text = document.createTextNode(value[i].toFixed(this.decimalPlaces) + '');
+          } else {
+            // matrix
+            tbl_cell_text = document.createTextNode(value[i][j].toFixed(this.decimalPlaces) + '');
+          }
+
+          tbl_cell.appendChild(tbl_cell_text);
+          tbl_row.appendChild(tbl_cell);
+        }
+
+        tbl_body.appendChild(tbl_row);
       }
+
+      this.table.innerHTML = '';
+      this.table.appendChild(tbl_body);
     });
   }
 
@@ -70,65 +123,16 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
     let template_node = this.template.content.cloneNode(true);
     this.key = this.getAttribute('key');
     this.refreshRate = this.getAttribute('refreshRate');
-    this.decimalPlaces = this.getAttribute('decimalPlaces');
+    this.decimalPlaces = this.getAttribute('decimalPlaces') || 3;
+    this.display_text = this.getAttribute('display') || this.key;
 
-    // if we can parse as a JSON array, attempt to do so
-    let raw_disp = this.getAttribute('display');
-    try {
-      this.display = JSON.parse(raw_disp);
-    } catch (e) {
-      this.display = raw_disp;
-    }
+    this.label = template_node.querySelector('label');
+    this.table = template_node.querySelector('table');
 
-    this.value_inputs = [];
+    this.label.innerHTML = this.display_text;
+    this.update_value();
 
-    let container = template_node.querySelector('div');
-    get_redis_val(this.key).then(value => {
-      // determine iteration bounds: 1 if scalar key, array size if vector
-      let len = (Array.isArray(value)) ? value.length : 1;
-      
-      for (let i = 0; i < len; i++) {
-        /** 
-         * The following js should be equivalent of this:
-         * <div>
-         * 	 <label>item name</label>
-         *   <label>item value</label>
-         * <div>
-         */
-
-        let key_value_div = document.createElement('div');
-        let key_label = document.createElement('label');
-        let value_input = document.createElement('input');
-
-        // assign key name based on display attribute
-        if (Array.isArray(value)) {
-          if (Array.isArray(this.display)) {
-            key_label.innerHTML = this.display[i];
-          } else {
-            key_label.innerHTML = (this.display || this.key) + "[" + i + "]";
-          }
-        } else {
-            key_label.innerHTML = this.display || this.key;
-        }
-
-        // set display value
-        let current_value = (Array.isArray(value)) ? value[i] : value;
-        value_input.type = 'number';
-        value_input.className = 'value';
-        value_input.disabled = true;
-        value_input.value = current_value.toFixed(this.decimalPlaces);
-
-        // add them all together
-        key_value_div.append(key_label);
-        key_value_div.append(value_input);
-        container.append(key_value_div);
-
-        // add to value_labels for later update
-        this.value_inputs.push(value_input);
-      }
-
-      this.poll_handle = setInterval(this.update_value, this.refreshRate * 1000);
-    });
+    this.poll_handle = setInterval(() => this.update_value(), this.refreshRate * 1000);
 
     // append to document
     this.appendChild(template_node);
@@ -140,7 +144,7 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
 
   enableComponent() {
     clearInterval(this.poll_handle);
-    this.poll_handle = setInterval(this.update_value, this.refreshRate * 1000);
+    this.poll_handle = setInterval(() => this.update_value(), this.refreshRate * 1000);
   }
 
   disableComponent() {
