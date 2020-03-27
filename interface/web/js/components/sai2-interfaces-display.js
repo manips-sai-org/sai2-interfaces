@@ -23,25 +23,24 @@ template.innerHTML = `
       display: flex;
       flex-direction: row;
       flex-wrap: wrap;
-      width: 100%;
-    }
-
-    .sai2-interface-display-top div {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      width: 100%;
       align-items: center;
+      padding: 
     }
 
-    .sai2-interface-display-top div label {
+    .sai2-interface-display-top label {
+      text-align: center;
       flex: 1;
-      text-align: left;
     }
 
-    .sai2-interface-display-top div input[type=number] {
+    .sai2-interface-display-top table {
+      border: 1px;
+      border-style: solid;
       flex: 1;
-      width: inherit;
+    }
+
+    .sai2-interface-display-top tr:nth-child(even), tbody, tr, td {
+      text-align: center;
+      background: transparent;
     }
 
   </style>
@@ -120,22 +119,18 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
   }
 
   onMount() {
-    let template_node = this.template.content.cloneNode(true);
     this.key = this.getAttribute('key');
     this.refreshRate = this.getAttribute('refreshRate');
     this.decimalPlaces = this.getAttribute('decimalPlaces') || 3;
     this.display_text = this.getAttribute('display') || this.key;
 
-    this.label = template_node.querySelector('label');
-    this.table = template_node.querySelector('table');
+    this.label = this.template_node.querySelector('label');
+    this.table = this.template_node.querySelector('table');
 
     this.label.innerHTML = this.display_text;
     this.update_value();
 
     this.poll_handle = setInterval(() => this.update_value(), this.refreshRate * 1000);
-
-    // append to document
-    this.appendChild(template_node);
   }
 
   onUnmount() {

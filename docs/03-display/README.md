@@ -1,6 +1,7 @@
 The `sai2-interfaces-display` Element
 =====================================
-The `sai2-interfaces-display` element allows you to see the value of a single scalar-valued, vector-valued, or matrix-valued Redis key at the specified refresh rate.
+The `sai2-interfaces-display` element allows you to see the value of a single 
+scalar-valued, vector-valued, or matrix-valued Redis key at the specified refresh rate.
 
 ## Usage
 ```
@@ -9,8 +10,12 @@ The `sai2-interfaces-display` element allows you to see the value of a single sc
 ```
 
 ## Attributes
-* `key`: Required. This is what Redis key to display.
-* `refreshRate`: Required. How often to refresh the display in seconds.
+* `key`: Required. This is what Redis key to display. If this key does not exist
+within Redis, then an error will be thrown.
+* `refreshRate`: Required. How often to refresh the display in seconds. 
+Don't make this too fast - if you want to observe key values at a 
+faster rate, use the [plot](../09-plot/README.md) or 
+[logger](../08-logger) elements.
 * `decimalPlaces`: Required. How many decimal places to display.
 
 ## Example
@@ -27,18 +32,20 @@ Writing keys...
 ```
 
 Since this Python script will generate random floats between 0 and 10 at 10Hz,
-let's set our refresh rate also to 10Hz (every 0.1 seconds) and the number of 
+let's set our refresh rate also to 1 refresh per second and the number of 
 decimal places to 2 for nicer output.
 
 Now let's write the HTML to display these keys:
 ```
 <sai2-interfaces-display key="sai2::interfaces::tutorial::scalar_key" 
-  refreshRate="0.01" decimalPlaces="2">
+  refreshRate="1" decimalPlaces="2">
 </sai2-interfaces-display>
 <sai2-interfaces-display key="sai2::interfaces::tutorial::vector_key" 
-  refreshRate="0.01" decimalPlaces="2">
+  refreshRate="1" decimalPlaces="2">
 </sai2-interfaces-display>
 <sai2-interfaces-display key="sai2::interfaces::tutorial::matrix_key" 
-  refreshRate="0.01" decimalPlaces="2">
+  refreshRate="1" decimalPlaces="2">
 </sai2-interfaces-display>
 ```
+
+![initial display](./display-initial.png)

@@ -14,7 +14,7 @@ in detail and provide an example on how to use it.
 ## Containers 
 * [Accordion](./05-accordion/README.md) 
 * [Toggle Group](./06-toggle-group/README.md)
-* [Select](./07-select/07-select.md)
+* [Select](./07-select/README.md)
 
 ## Specialized Components
 * [Logger](./08-logger/README.md)
