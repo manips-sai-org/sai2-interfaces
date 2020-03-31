@@ -73,7 +73,18 @@ template.innerHTML = `
 
     .sai2-interface-trajectory-select-top .plots {
       flex: 9;
-    }  
+    }
+
+    .sai2-interface-trajectory-select-top-grid-half {
+      flex: auto;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .sai2-interface-trajectory-select-top-col {
+      width: 48%;
+    }
   </style>
 	<div class="sai2-interface-trajectory-select-top">
     <div class="metadata">
@@ -121,9 +132,9 @@ template.innerHTML = `
         </div>
       </div>
     </div>
-    <div class="grid-half">
-      <div class="col traj-xy"></div>
-      <div class="col traj-xz"></div>
+    <div class="sai2-interface-trajectory-select-top-grid-half">
+      <div class="sai2-interface-trajectory-select-top-col traj-xy"></div>
+      <div class="sai2-interface-trajectory-select-top-col traj-xz"></div>
     </div>
   </div>
 `;

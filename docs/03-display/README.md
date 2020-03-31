@@ -17,7 +17,8 @@ Don't make this too fast - if you want to observe key values at a
 faster rate, use the [plot](../09-plot/README.md) or 
 [logger](../08-logger) elements.
 * `decimalPlaces`: Required. How many decimal places to display.
-
+* `displayAsRowVector`: Optional. If the key is a vector, it will be shown as a
+row vector.
 ## Example
 
 We have provided a Python script that will write to three keys called 
@@ -49,3 +50,12 @@ Now let's write the HTML to display these keys:
 ```
 
 ![initial display](./display-initial.png)
+
+
+You can optionally show the vector as a row-vector. You can show turn it into a
+row vector below:
+```
+<sai2-interfaces-display key="sai2::interfaces::tutorial::vector_key" 
+  refreshRate="1" decimalPlaces="2" displayAsRowVector>
+</sai2-interfaces-display>
+```

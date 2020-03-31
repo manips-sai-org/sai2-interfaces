@@ -90,6 +90,24 @@
                 display="Kv"
                 min="0" max="100" step="0.01">
               </sai2-interfaces-slider>
+              <sai2-interfaces-accordion key="sai2::interfaces::tutorial::joint_use_interpolation"
+                displayName="Use Interpolation">
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::joint_interpolation_max_vel"
+                  display="Max Velocity" min="0.1" max="5" step="0.01">
+                </sai2-interfaces-slider>
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::joint_interpolation_max_accel"
+                  display="Max Acceleration" min="0.1" max="5" step="0.01">
+                </sai2-interfaces-slider>
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::joint_interpolation_max_jerk"
+                  display="Max Jerk" min="0.1" max="5" step="0.01">
+                </sai2-interfaces-slider>
+              </sai2-interfaces-accordion>
+              <sai2-interfaces-enum  key="sai2::interfaces::tutorial::joint_dynamic_decoupling" 
+                display="Dynamic Decoupling">
+                <option value="full">Full</option>
+                <option value="inertia_saturation">Inertia Saturation</option>
+                <option value="none">None</option>
+              </sai2-interfaces-enum>
             </div>
           </sai2-interfaces-select-option>
           <sai2-interfaces-select-option name="PosOri" key="posori" class="left-container">
@@ -130,6 +148,42 @@
                 display="Kv"
                 min="0" max="100" step="0.01">
               </sai2-interfaces-slider>
+              <sai2-interfaces-accordion displayName="Use Interpolation" key="sai2::interfaces::tutorial::posori_use_interpolation">
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::posori_interpolation_max_linear_vel" 
+                  display="Max Linear Vel" min="0", max="5", step="0.01">
+                </sai2-interfaces-slider>
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::posori_interpolation_max_linear_accel" 
+                  display="Max Linear Accel" min="0", max="5", step="0.01">
+                </sai2-interfaces-slider>
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::posori_interpolation_max_linear_jerk" 
+                  display="Max Linear Jerk" min="0", max="5", step="0.01">
+                </sai2-interfaces-slider>
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::posori_interpolation_max_angular_vel" 
+                  display="Max Angular Vel" min="0", max="5", step="0.01">
+                </sai2-interfaces-slider>
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::posori_interpolation_max_angular_accel" 
+                  display="Max Angular Accel" min="0", max="5", step="0.01">
+                </sai2-interfaces-slider>
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::posori_interpolation_max_angular_jerk" 
+                  display="Max Angular Jerk" min="0", max="5", step="0.01">
+                </sai2-interfaces-slider>
+              </sai2-interfaces-accordion><br>
+              <sai2-interfaces-accordion displayName="Velocity Saturation"
+                key="sai2::interfaces::tutorials::use_posori_velocity_saturation">
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::posori_linear_velocity_saturation"
+                  display='Max Linear Velocity' min="0" max="5" step="0.01">
+                </sai2-interfaces-slider>
+                <sai2-interfaces-slider key="sai2::interfaces::tutorial::posori_angular_velocity_saturation"
+                  display='Max Angular Velocity' min="0" max="5" step="0.01">
+                </sai2-interfaces-slider>
+              </sai2-interfaces-accordion>
+              <sai2-interfaces-enum key="sai2::interfaces::tutorial::posori_dynamic_decoupling" 
+                display="Dynamic Decoupling">
+                <option value="full">Full</option>
+                <option value="partial">Partial</option>
+                <option value="inertia_saturation">Inertia Saturation</option>
+                <option value="none">None</option>
+              </sai2-interfaces-enum>
             </div>
           </sai2-interfaces-select-option>
         </sai2-interfaces-select>

@@ -1,8 +1,10 @@
 Joint Space Control Tutorial
 ============================
 
-In this tutorial, we will be building an interface that can set the joint 
-angles of a robot and also set the Kp and Kv gains for joint space control.
+In this tutorial, we will be building an interface that can set the desired 
+joint angles of a robot and also set the Kp and Kv gains for joint space control.
+We will also simulate the delay from setting desired joint angles to actual 
+joint angless.
 
 We define the following keys:
 * `sai2::interfaces::tutorial::q`: The robot joint angles - a vector.
@@ -13,7 +15,7 @@ Use the provided [writekeys.py](./writekeys.py) script to initialize random
 values for these Redis keys. You will need to specify how many links your robot
 has.
 
-For example, if your robot has 3 links, you can invoke the script as follows:
+For example, if your robot has 4 links, you can invoke the script as follows:
 ```
 wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ python3 tutorials/01-joint/writekeys.py 4
 sai2::interfaces::tutorial::q set to b'[6.189100504827702, 3.5546098337738115, 5.678968756270388, 1.6111227671168307]'
@@ -278,7 +280,7 @@ each column.
 ```
 <div class="left-container container-item">
   <div>
-    <h2>Joint Angles</h2>
+    <h2>Desired Joint Angles</h2>
   </div>
   <div>
     <h2>Gains</h2>
@@ -319,7 +321,7 @@ Putting the left container together, we get:
 ```
 <div class="container-item left-container center">
   <div>
-    <h2>Joint Angles</h2>
+    <h2>Desired Joint Angles</h2>
     <sai2-interfaces-slider 
       key="sai2::interfaces::tutorial::q"
       display="Joint"
@@ -343,21 +345,17 @@ Putting the left container together, we get:
 ```
 
 ### The Right Container
-The right container is much simpler: we define a `sai2-interfaces-display` element for each of the three keys in this example and just throw them into the right container div.
+The right container is much simpler: we define a `sai2-interfaces-display` 
+element for the joint angles key. We arbitrarily choose a refresh rate of 1 
+refresh per second. We also round to two decimal places since our slider step 
+resolution is 0.01.
 
-
-We arbitrarily choose a refresh rate of 1 refresh per second. We also 
-round to two decimal places since our slider step resolution is 0.01.
+The `sai2-interfaces-display` only fires once per second, which serves as our 
+simulated delay from desired joint angles to the robot's actual joint angles.
 ```
 <div class="container-item right-container">
   <sai2-interfaces-display key="sai2::interfaces::tutorial::q" 
-    refreshRate="1" display="Joint Angles" decimalPlaces="2">
-  </sai2-interfaces-display>
-  <sai2-interfaces-display key="sai2::interfaces::tutorial::joint_kp" 
-    refreshRate="1" display="Kp" decimalPlaces="2">
-  </sai2-interfaces-display>
-  <sai2-interfaces-display key="sai2::interfaces::tutorial::joint_kv" 
-    refreshRate="1" display="Kv" decimalPlaces="2">
+    refreshRate="1" display="Actual Joint Angles" decimalPlaces="2">
   </sai2-interfaces-display>
 </div>
 ```

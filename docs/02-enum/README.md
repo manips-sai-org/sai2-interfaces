@@ -6,14 +6,16 @@ key, i.e. an `enum` type in most languages.
 ## Usage
 ```
 <sai2-interfaces-enum key="...">
-  <option>A</option>
-  <option>B</option>
-  <option>C</option>
+  <option value="a">A</option>
+  <option value="b">B</option>
+  <option value="c">C</option>
   ...
 <sai2-interfaces-enum>
 ```
 
-Specify each valid option as child HTML `<option></option>` tags.
+Specify each valid option as child HTML `<option></option>` tags. The `value`
+attribute is used as the value put into the Redis database, and the text 
+between the tags is the friendly display text.
 
 ## Attributes
 * `key`: Required. Specifies which Redis key to get/set to the user-specified 
@@ -68,9 +70,9 @@ We can also change the associated text next to the dropdown by using the
 `display` attribute:
 ```
 <sai2-interfaces-enum display="My Favorite Fruit"  key="sai2::interfaces::tutorial::enum_key">
-  <option>Apples</option>
-  <option>Bananas</option>
-  <option>Oranges</option>
+  <option value="Apples">Apples</option>
+  <option value="Bananas">Bananas</option>
+  <option value="Oranges">Oranges</option>
 </sai2-interfaces-enum>
 ```
 

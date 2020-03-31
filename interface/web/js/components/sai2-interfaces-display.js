@@ -87,6 +87,12 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
   update_value() {
     get_redis_val(this.key).then(value => {
       [this.rows, this.cols] = this.get_shape(value);
+
+      // default vector is column vector. swap to row if user requests
+      if (this.display_row_vector && this.rows > 1 && this.cols == 1) {
+        [this.rows, this.cols] = [this.cols, this.rows];
+      }
+
       let tbl_body = document.createElement('tbody');
       for (let i = 0; i < this.rows; i++) {
         let tbl_row = document.createElement('tr');
@@ -98,12 +104,12 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
           if (this.rows == 1 && this.cols == 1) {
             // scalar
             tbl_cell_text = document.createTextNode('' + value.toFixed(this.decimalPlaces));
-          } else if (this.cols == 1) {
-            // vector
-            tbl_cell_text = document.createTextNode(value[i].toFixed(this.decimalPlaces) + '');
-          } else {
+          } else if (this.rows > 1 && this.cols > 1) {
             // matrix
             tbl_cell_text = document.createTextNode(value[i][j].toFixed(this.decimalPlaces) + '');
+          } else {
+            // vector 
+            tbl_cell_text = document.createTextNode(value[i].toFixed(this.decimalPlaces) + '');
           }
 
           tbl_cell.appendChild(tbl_cell_text);
@@ -123,6 +129,7 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
     this.refreshRate = this.getAttribute('refreshRate');
     this.decimalPlaces = this.getAttribute('decimalPlaces') || 3;
     this.display_text = this.getAttribute('display') || this.key;
+    this.display_row_vector = this.hasAttribute('displayAsRowVector');
 
     this.label = this.template_node.querySelector('label');
     this.table = this.template_node.querySelector('table');

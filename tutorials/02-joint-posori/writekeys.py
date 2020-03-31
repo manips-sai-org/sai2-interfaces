@@ -1,6 +1,26 @@
 import redis 
 import sys
 import numpy as np
+import time
+import json
+
+def rot_x(theta):
+    c_theta = np.cos(theta)
+    s_theta = np.sin(theta)
+    return np.array([[1, 0, 0], [0, c_theta, -s_theta], [0, s_theta, c_theta]])
+
+def rot_y(theta):
+    c_theta = np.cos(theta)
+    s_theta = np.sin(theta)
+    return np.array([[c_theta, 0, s_theta], [0, 1, 0], [-s_theta, 0, c_theta]])
+
+def rot_z(theta):
+    c_theta = np.cos(theta)
+    s_theta = np.sin(theta)
+    return np.array([[c_theta, -s_theta, 0], [s_theta, c_theta, 0], [0, 0, 1]])
+    
+def zyx_euler_angles_to_mat(alpha, beta, gamma):
+    return rot_z(alpha) @ rot_y(beta) @ rot_x(gamma)
 
 if len(sys.argv) != 2:
     print('usage: python3 {} <# of joints>'.format(sys.argv[0]))
@@ -27,6 +47,7 @@ EE_POS_KP_KEY = 'sai2::interfaces::tutorial::ee_pos_kp'
 EE_POS_KV_KEY = 'sai2::interfaces::tutorial::ee_pos_kv'
 EE_ORI_KP_KEY = 'sai2::interfaces::tutorial::ee_ori_kp'
 EE_ORI_KV_KEY = 'sai2::interfaces::tutorial::ee_ori_kv'
+EE_ROTMAT_KEY = 'sai2::interfaces::tutorial::ee_rotmat'
 
 initial_joint_values = 2 * np.pi * np.random.rand(num_joints)
 initial_pos_values = 3 * np.random.rand(3)
@@ -62,3 +83,10 @@ print('{} set to {}'.format(EE_POS_KP_KEY, r.get(EE_POS_KP_KEY)))
 print('{} set to {}'.format(EE_POS_KV_KEY, r.get(EE_POS_KV_KEY)))
 print('{} set to {}'.format(EE_ORI_KP_KEY, r.get(EE_ORI_KP_KEY)))
 print('{} set to {}'.format(EE_ORI_KV_KEY, r.get(EE_ORI_KV_KEY)))
+
+while True:
+    raw_ori = r.get(EE_ORI_KEY)
+    gamma, beta, alpha = json.loads(raw_ori)
+    rmat = zyx_euler_angles_to_mat(alpha, beta, gamma)
+    r.set(EE_ROTMAT_KEY, str(rmat.tolist()))
+    time.sleep(0.5)

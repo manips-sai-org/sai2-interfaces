@@ -153,7 +153,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
         // set up mousewheel event for manual input
         slider_value_input.addEventListener('wheel', e => {
           e.preventDefault();
-          let offset = (e.deltaY > 0 ? 1 : -1) * slider_value_input.step;
+          let offset = (e.deltaY > 0 ? -1 : 1) * slider_value_input.step;
           let val = parseFloat(slider_value_input.value);
           slider_value_input.value = (val + offset).toFixed(3);
           sliding_value_input_callback();
@@ -180,7 +180,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 
         slider.addEventListener('wheel', e => {
           e.preventDefault();
-          let offset = (e.deltaY > 0 ? 1 : -1) * slider.step;
+          let offset = (e.deltaY > 0 ? -1 : 1) * slider.step;
           let val = parseFloat(slider.value);
           slider.value = (val + offset).toFixed(3);
           slider.oninput();

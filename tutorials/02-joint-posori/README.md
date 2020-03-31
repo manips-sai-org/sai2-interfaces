@@ -1,5 +1,5 @@
 Joint Space & PosOri Control Tutorial
-============================
+=====================================
 
 In this tutorial, we will be improving the previous [joint space controller interface ](../01-joint/README.md) by adding end-effector position and orientation control. We will use `sai2-interfaces-select` to switch between the joint space interface and the position and orientation interface.
 
@@ -10,7 +10,8 @@ We define the same joint space keys:
 
 We define new keys for position and orientation control:
 * `sai2::interfaces::tutorial::ee_pos`: The desired end effector position
-* `sai2::interfaces::tutorial::ee_ori`: The desired end effector orientation, in euler angles. Not important which one in this tutorial.
+* `sai2::interfaces::tutorial::ee_ori`: The desired end effector orientation, in ZYX Euler angles.
+* `sai2::interfaces::tutorial::ee_rotmat`: The end-effector rotation matrix from its default orientation.
 * `sai2::interfaces::tutorial::ee_pos_kp`: The end-effector position proportional gain.
 * `sai2::interfaces::tutorial::ee_pos_kv`: The end-effector position velocity gain.
 * `sai2::interfaces::tutorial::ee_ori_kp`: The end-effector orientation proportional gain.
@@ -33,7 +34,7 @@ sai2::interfaces::tutorial::ee_pos_kp set to b'100'
 sai2::interfaces::tutorial::ee_pos_kv set to b'2'
 sai2::interfaces::tutorial::ee_ori_kp set to b'75'
 sai2::interfaces::tutorial::ee_ori_kv set to b'3'
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ 
+
 ```
 
 Like the previous tutorial, you should be able to see and drag sliders for each of these values. On the right side of the interface, you should see the Redis keys update. 
@@ -151,8 +152,7 @@ and the right column will be our position and orientation gains.
 </sai2-interfaces-select-option>
 ```
 
-We have
-one key for the end effector position and another for orientation, so we need two sliders for the first column/div. We have a Kp and Kv for both position and orientation gains, so we have a total of four sliders for the second column.
+We have one key for the end effector position and another for orientation, so we need two sliders for the first column/div. We have a Kp and Kv for both position and orientation gains, so we have a total of four sliders for the second column.
 
 Bringing this all together:
 ```
@@ -199,36 +199,19 @@ Bringing this all together:
 ```
 
 ## Adding More Display Elements
-We have six new keys for the posori task, so we need another six `sai2-interface-display` elements in the right container. We keep the refresh rate to be 1 refresh per second, and round to two decimal places:
+We will display the current joint angles and EE position as well as the rotation
+matrix of the EE orientation.
 ```
 <div class="container-item right-container">
   <sai2-interfaces-display key="sai2::interfaces::tutorial::q" 
-    refreshRate="1" display="Joint Angles" decimalPlaces="2">
-  </sai2-interfaces-display>
-  <sai2-interfaces-display key="sai2::interfaces::tutorial::joint_kp" 
-    refreshRate="1" display="Kp" decimalPlaces="2">
-  </sai2-interfaces-display>
-  <sai2-interfaces-display key="sai2::interfaces::tutorial::joint_kv" 
-    refreshRate="1" display="Kv" decimalPlaces="2">
+    refreshRate="1" display="Actual Joint Angles" decimalPlaces="2">
   </sai2-interfaces-display>
 
   <sai2-interfaces-display key="sai2::interfaces::tutorial::ee_pos" 
-    refreshRate="1" display="EE Pos" decimalPlaces="2">
+    refreshRate="1" display="Actual EE Pos" decimalPlaces="2">
   </sai2-interfaces-display>
   <sai2-interfaces-display key="sai2::interfaces::tutorial::ee_ori" 
-    refreshRate="1" display="EE Orientation" decimalPlaces="2">
-  </sai2-interfaces-display>
-  <sai2-interfaces-display key="sai2::interfaces::tutorial::ee_pos_kp" 
-    refreshRate="1" display="Kp Pos" decimalPlaces="2">
-  </sai2-interfaces-display>
-  <sai2-interfaces-display key="sai2::interfaces::tutorial::ee_pos_kv" 
-    refreshRate="1" display="Kv Ori" decimalPlaces="2">
-  </sai2-interfaces-display>
-  <sai2-interfaces-display key="sai2::interfaces::tutorial::ee_ori_kp" 
-    refreshRate="1" display="Kp Ori" decimalPlaces="2">
-  </sai2-interfaces-display>
-  <sai2-interfaces-display key="sai2::interfaces::tutorial::ee_ori_kv" 
-    refreshRate="1" display="Kv Ori" decimalPlaces="2">
+    refreshRate="1" display="Rotation Matrix" decimalPlaces="2">
   </sai2-interfaces-display>
 </div>
 ```
