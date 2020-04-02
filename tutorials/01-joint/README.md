@@ -170,13 +170,15 @@ So we replicate most of the same styling for the parent container:
 Recall that the right container is to hold `sai2-interface-display` elements
 to verify that we created the joint space interface elements/sliders correctly.
 Since we don't need extra columns, we just define a single column and thus 
-each element we place in the right container will be on its own row.
+each element we place in the right container will be on its own row. We also 
+don't really care about the specific sizing of each elements, so we leave 
+the `grid-template-columns` property as `auto` to spread the container size
+evenly among the children elements.
 
 ```
 .right-container {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+  grid-template-columns: auto;
 }
 ```
 

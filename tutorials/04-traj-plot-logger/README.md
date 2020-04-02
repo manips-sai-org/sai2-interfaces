@@ -64,6 +64,28 @@ to implement:
 </div>
 ```
 
+However, if you haven't changed the `.right-container` CSS class from the prior
+tutorials, you'll get something that looks like this:
+
+![](./right-broken-css.png)
+
+This happens because back in the [first tutorial](../01-joint/README.md), we
+said the `.right-container` CSS class would spread the space evenly among all
+children elements in the right container. The problem is that the logger element
+itself doesn't need that much space. Instead, we want to maximize the amount of
+space to the plot and the minimum required for the logger. We revise our CSS
+class to the following:
+
+```
+.right-container {
+  display: grid;
+  grid-template-rows: 1fr;
+  gap: 1em;
+}
+```
+
+The gap is an extra padding between the elements.
+
 ## The Finished Interface
 See [04-traj-plot-logger.html](./04-traj-plot-logger.html) for the completed interface. If you run the server, you should get the following:
 
