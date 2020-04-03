@@ -350,7 +350,51 @@ Additional information from [W3C](https://www.w3schools.com/css/css3_flexbox.asp
 
 Additional information from [W3C](https://www.w3schools.com/css/css_grid.asp)
 
-### Additional Resources
+## Debugging
+
+### HTML and CSS
+As with any programing language, you will always have some bugs that you will
+need to fix. Usually, say in Python or C++, you'll have print statements,
+asserts, exceptions, etc. However, if your webpage or interface doesn't look 
+right, a print statement isn't going to help.
+
+Luckily, a HTML/CSS debugger is bundled within your browser! If you hit F12 on
+Firefox or Chrome, a subwindow will open, exposing the HTML and CSS. If you 
+hover over an element, the debugger will show the relevant CSS and shade where
+the element is on the actual webpage. You can also edit the CSS directly on
+the page, which can help you iterate faster.
+
+![](./debugger1.png)
+
+
+### The Network
+You may run into issues where a Redis key might not be found or returning the
+correct value in your interface. In this case, you may want to look at the network
+request that the UI makes to Redis. You can do this by switching to the Network
+tab and looking for a URL like `redis?key=%22sai2%3A%3Aexamples%3A%3Aposori_velocity_saturation%22`.
+The interface queries Redis keys in the URL format like `localhost:8000/redis?key=<your key here>`.
+The below image is looking at a query for the Redis key `sai2::examples::posori_velocity_saturation`.
+
+![](./debugger-ntwk.png)
+
+### JavaScript
+If you find yourself in a position where you need to jump into the internals of
+sai2-interfaces, you will find the JavaScript debugger helpful. You will need to 
+navigate to the Sources tab and look for the relevant JavaScript file(s). From
+here, it is a standard debugger that you would normally find, like gdb. Set
+breakpoints, step, continue, etc. Please see additional debugging resources
+on how to use the JavaScript debugger as it is out of scope of this tutorial.
+
+### Additional Debugging Resources
+* [Mozilla Firefox Dev Tools: Page Inspector](https://developer.mozilla.org/en-US/docs/Tools/Page_Inspector)
+* [Mozilla Firefox Dev Tools: JavaScript Debugger](https://developer.mozilla.org/en-US/docs/Tools/Debugger)
+* [Mozilla Firefox Dev Tools: NetworkMonitor](https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor)
+* [Google Chrome Dev Tools: CSS](https://developers.google.com/web/tools/chrome-devtools/css)
+* [Google Chrome Dev Tools: Network](https://developers.google.com/web/tools/chrome-devtools/network)
+* [Google Chrome Dev Tools: JavaScript](https://developers.google.com/web/tools/chrome-devtools/javascript)
+
+
+## Additional Resources
 If you would like to learn more about these technologies, there are a plethora of
 tutorials and references online. A couple of recommended tutorials/references
 are below.
