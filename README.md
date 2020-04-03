@@ -8,13 +8,13 @@ We currently fully support Chrome/Chromium, and have partial support for Firefox
 ### Installing Dependencies
 The backend server depends on [redis](https://pypi.org/project/redis/), [Flask](https://pypi.org/project/Flask/), and [click](https://pypi.org/project/click/). You can install them as below:
 ```
-pip install -r requirements.txt
+pip3 install -r interface/requirements.txt
 ```
 
 ### Running a template
 sai2-interfaces provides a set of simple, universal templates. In our case, we're going to bring up an interface with a plot and a logger. From the top level of our repo:
 ```
-python interface/server.py start templates/plot_logger.html
+python3 interface/server.py templates/plot_logger.html
 ```
 
 Let's open up `localhost:8000`, and if you see this:
