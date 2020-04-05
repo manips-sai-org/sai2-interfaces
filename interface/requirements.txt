@@ -4,5 +4,9 @@ hiredis
 eventlet
 flask
 flask-socketio
-linuxfd
+multitimer
 matplotlib
+
+# if using periodic_timer (linux only)
+# uncomment following dependency
+#linuxfd

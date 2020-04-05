@@ -3,7 +3,7 @@ import time
 import json
 import util
 from threading import Thread
-import periodic_timer
+import multitimer
 import numpy as np
 import matplotlib.pyplot as plt 
 import os
@@ -99,11 +99,10 @@ class RedisLogger(object):
         self.running = True
         self.file_fd = open(filename, 'w+')
         context = { 'header_written': False }
-        self.periodic_timer = periodic_timer.PeriodicTimer(
+        self.periodic_timer = multitimer.MultiTimer(
             logger_period, 
-            self._logger_loop, 
-            func_args=[context],
-            new_thread_for_task=False
+            function=self._logger_loop, 
+            kwargs={'ctx': context}
         )
         self.periodic_timer.start()
 
@@ -179,6 +178,6 @@ def display_log_file(log_file):
 if __name__ == "__main__":
     r = redis.Redis()
     rl = RedisLogger(r)
-    rl.start('test.log', ['sai2::examples::current_ee_pos', 'sai2::examples::kp_pos'], logger_period=1)
+    rl.start('test.log', ['sai2::examples::current_ee_pos', 'sai2::examples::kp_pos'], logger_period=1e-3)
     time.sleep(5.5)
     rl.stop()

@@ -1,7 +1,7 @@
 import threading 
 import signal 
 import time
-import periodic_timer
+import multitimer
 import util
 
 
@@ -17,10 +17,10 @@ class RedisCache(object):
         self.running = False
 
         ctx = { 'first_run': True, 'refresh_counter': 0 }
-        self.periodic_timer = periodic_timer.PeriodicTimer(
-            period=refresh_rate,
-            func=self._update_cache,
-            func_args=[ctx]
+        self.periodic_timer = multitimer.MultiTimer(
+            refresh_rate,
+            function=self._update_cache,
+            kwargs={'ctx': ctx}
         )
 
         if not keys and not key_patterns:
