@@ -28,8 +28,6 @@ template.innerHTML = `
   </style>
   <button class="sai2-interfaces-accordion-btn">
   </button>
-  <div class="sai2-interfaces-accordion-content">
-  </div>
 `;
 
 customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
@@ -45,9 +43,11 @@ customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
       let toggleKey = this.getAttribute('key');
       let displayName = this.getAttribute('displayName');
 
-      let button = template_node.querySelector('button');
-      let panel = template_node.querySelector('div');
+      let button = template_node.querySelector('.sai2-interfaces-accordion-btn');
       
+      // direct children that is not the button & styling
+      let direct_children = this.querySelectorAll(':scope > :not(.sai2-interfaces-accordion-btn), :not(style)');
+
       button.innerHTML = displayName;
       button.addEventListener('click', () => {
         post_redis_key_val(toggleKey, this.active ? 0 : 1);
@@ -57,13 +57,14 @@ customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
         {
           button.classList.remove("button-disable");
           button.classList.add("button-enable");
-          $(panel).show();
+          this.refresh();
+          $(direct_children).show();
         }
         else
         {
           button.classList.add("button-disable");
           button.classList.remove("button-enable");
-          $(panel).hide();
+          $(direct_children).hide();
         }
       });
 
@@ -73,23 +74,26 @@ customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
         {
           button.classList.remove("button-disable");
           button.classList.add("button-enable");
-          $(panel).show();
+          this.refresh();
+          $(direct_children).show();
         }
         else
         {
           button.classList.add("button-disable");
           button.classList.remove("button-enable");
-          $(panel).hide();
+          $(direct_children).hide();
         }
       });
 
-      // warning: event handlers are not torn down
-      panel.innerHTML = this.innerHTML;
-      while (this.firstChild)
-        this.firstChild.remove();
-
-
       // append to document
       this.prepend(template_node);
+    }
+
+    refresh() {
+      for (let child of this.children) {
+        if (typeof child.refresh == 'function') {
+          child.refresh();
+        }
+      }
     }
 });

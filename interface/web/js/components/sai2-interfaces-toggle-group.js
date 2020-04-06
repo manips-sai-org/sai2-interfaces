@@ -12,27 +12,29 @@ template.innerHTML = `
     }
   </style>
   <div class="sai2-interfaces-toggle-group-top">
-  <label>
-    <input type="checkbox">
-    <span class="checkable"></span>
-  </label>
-    <div class="sai2-interfaces-toggle-group-container"></div>
+    <label>
+      <input type="checkbox">
+      <span class="checkable"></span>
+    </label>
   </div>
 `;
 
-class Sai2InterfacesToggleGroup extends Sai2InterfacesComponent {
+class Sai2InterfacesToggleGroup extends HTMLElement {
   constructor() {
-    super(template);
+    super();
+    this.template = template;
     this.enabled = false;
   }
 
-  onMount() {
+  connectedCallback() {
+    let template_node = this.template.content.cloneNode(true);
+
     this.key = this.getAttribute("key");
     this.display = this.getAttribute("name");
 
-    this.container = this.template_node.querySelector(".sai2-interfaces-toggle-group-container");
-    this.checkbox = this.template_node.querySelector("input");
-    this.label = this.template_node.querySelector("span");
+    this.container = template_node.querySelector(".sai2-interfaces-toggle-group-container");
+    this.checkbox = template_node.querySelector("input");
+    this.label = template_node.querySelector("span");
     this.label.innerHTML = this.display;
 
     if (this.key) {
@@ -42,12 +44,6 @@ class Sai2InterfacesToggleGroup extends Sai2InterfacesComponent {
         this.updateGroups();
       });
     }
-    
-    // move all children to internal container
-    // warning: event handlers not torn down
-    this.container.innerHTML = this.innerHTML;
-    while (this.firstChild)
-      this.firstChild.remove();
 
     this.checkbox.onchange = e => {
       this.enabled = e.target.checked;
@@ -63,6 +59,8 @@ class Sai2InterfacesToggleGroup extends Sai2InterfacesComponent {
     if (!this.key) {
       setTimeout(() => this.updateGroups(), 100);
     }
+
+    this.prepend(template_node);
   }
 
   updateGroups() {
@@ -91,16 +89,25 @@ class Sai2InterfacesToggleGroup extends Sai2InterfacesComponent {
     }
   }
 
-  onUnmount() {
+  refresh() {
+    for (let child of this.children) {
+      if (typeof child.refresh == 'function') {
+        child.refresh();
+      }
+    }
   }
+}
 
-  enableComponent() {
-  }
-
-  disableComponent() {
+class ToggleGroupChild extends HTMLElement {
+  refresh() {
+    for (let child of this.children) {
+      if (typeof child.refresh == 'function') {
+        child.refresh();
+      }
+    }
   }
 }
 
 customElements.define('sai2-interfaces-toggle-group', Sai2InterfacesToggleGroup);
-customElements.define('sai2-interfaces-toggle-group-enabled', class extends HTMLDivElement{}, { extends: 'div' });
-customElements.define('sai2-interfaces-toggle-group-disabled', class extends HTMLDivElement{}, { extends: 'div' })
+customElements.define('sai2-interfaces-toggle-group-enabled', ToggleGroupChild);
+customElements.define('sai2-interfaces-toggle-group-disabled', ToggleGroupChild);
