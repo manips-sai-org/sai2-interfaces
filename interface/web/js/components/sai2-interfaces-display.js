@@ -86,6 +86,8 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
    */
   update_value() {
     get_redis_val(this.key).then(value => {
+      this.value = value;
+      
       [this.rows, this.cols] = this.get_shape(value);
 
       // default vector is column vector. swap to row if user requests

@@ -98,7 +98,17 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
   }
 }
 
-class ToggleGroupChild extends HTMLElement {
+class ToggleGroupChildEnabled extends HTMLElement {
+  refresh() {
+    for (let child of this.children) {
+      if (typeof child.refresh == 'function') {
+        child.refresh();
+      }
+    }
+  }
+}
+
+class ToggleGroupChildDisabled extends HTMLElement {
   refresh() {
     for (let child of this.children) {
       if (typeof child.refresh == 'function') {
@@ -109,5 +119,5 @@ class ToggleGroupChild extends HTMLElement {
 }
 
 customElements.define('sai2-interfaces-toggle-group', Sai2InterfacesToggleGroup);
-customElements.define('sai2-interfaces-toggle-group-enabled', ToggleGroupChild);
-customElements.define('sai2-interfaces-toggle-group-disabled', ToggleGroupChild);
+customElements.define('sai2-interfaces-toggle-group-enabled', ToggleGroupChildEnabled);
+customElements.define('sai2-interfaces-toggle-group-disabled', ToggleGroupChildDisabled);
