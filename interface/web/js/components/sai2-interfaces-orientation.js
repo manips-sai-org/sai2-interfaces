@@ -4,29 +4,29 @@ import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
-.sai2-interfaces-orientation-top {
-  display: flex;
-  flex-direction: row;
-}
+  .sai2-interfaces-orientation-top {
+    display: flex;
+    flex-direction: column;
+  }
 
-.sai2-interfaces-orientation-left {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  align-items: center;
-}
+  .sai2-interfaces-orientation-left {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    align-items: center;
+  }
 
-.sai2-interfaces-orientation-left sai2-interfaces-slider {
-  width: 100%;
-}
+  .sai2-interfaces-orientation-left sai2-interfaces-slider {
+    width: 100%;
+  }
 
-.sai2-interfaces-orientation-left button {
-  width: max-content;
-}
+  .sai2-interfaces-orientation-left button {
+    width: max-content;
+  }
 
-.sai2-interfaces-orientation-right {
-  flex: 1;
-}
+  .sai2-interfaces-orientation-right {
+    flex: 1;
+  }
 </style>
 <div class="sai2-interfaces-orientation-top">
   <div class="sai2-interfaces-orientation-left">

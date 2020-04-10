@@ -13,8 +13,11 @@ If you specify a vector-valued key with `n` elements, `sai2-interfaces-slider`
 will create `n` sliders, one for each element.
 
 ## Attributes
-* `key`: Required. The key for which to create a slider. Can be a scalar or 
-vector. If this Redis key does not exist, an error will be thrown.
+* `key`: Required if you are reading from Redis. The key for which to create a slider. 
+Can be a scalar or vector. If this Redis key does not exist, an error will be thrown.
+* `size`: Required if making a slider in memory. This is the number of sliders to
+generate; i.e. 1 for a scalar, 2 for a 2D vector etc. This is useful if you're
+creating a new sai2-interfaces component using a slider. See [sai2-interfaces-orientation](../11-orientation/README.md)
 * `display`: Optional. The friendly display name. If omitted, the default will 
 be the `key`. If you have a vector-valued key, the name will be the value 
 provided `display` plus an index, e.g. `display_name[0]`.

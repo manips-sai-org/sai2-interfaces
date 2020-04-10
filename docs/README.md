@@ -5,6 +5,10 @@ Welcome to the SAI2-Interfaces documentation! We have divided the documentation
 into various sections. We describe each available SAI2-Interfaces component
 in detail and provide an example on how to use it.
 
+
+## Fundamentals
+* [Fundamentals](./00-fundamentals/README.md)
+
 ## Core Components
 * [Toggle](./01-toggle/README.md)
 * [Enum](./02-enum/README.md)
@@ -20,3 +24,4 @@ in detail and provide an example on how to use it.
 * [Logger](./08-logger/README.md)
 * [Plot](./09-plot/README.md)
 * [Trajectory Select](./10-trajectory-select/README.md)
+* [Orientation](./11-orientation/README.md)
