@@ -6,7 +6,7 @@ import json
 MATRIX_KEY = 'sai2::interfaces::tutorial::matrix_key'
 
 
-def zyx_euler_angles_to_mat(alpha, beta, gamma):
+def xyz_fixed_angles_to_mat(alpha, beta, gamma):
     def rot_x(theta):
         return np.array([
             [1, 0, 0],
@@ -28,9 +28,9 @@ def zyx_euler_angles_to_mat(alpha, beta, gamma):
             [0, 0, 1]
         ])
 
-    return rot_z(alpha) @ rot_y(beta) @ rot_x(gamma)
+    return rot_z(gamma) @ rot_y(beta) @ rot_x(alpha)
 
-def mat_to_zyx_euler_angles(R):
+def mat_to_xyz_fixed_angles(R):
     c_beta = np.sqrt(R[0, 0] ** 2 + R[1, 0] ** 2)
     s_beta = -R[2, 0]
     if np.abs(c_beta ** 2) < 1e-10:
@@ -61,10 +61,10 @@ if __name__ == '__main__':
 
     theta = np.random.random((3,)) * (np.pi)
     print(theta)
-    orig_rot_mat = zyx_euler_angles_to_mat(*theta)
+    orig_rot_mat = xyz_fixed_angles_to_mat(*theta)
     r.set(MATRIX_KEY, str(orig_rot_mat.tolist()))
 
     while True:
         rot_mat = np.array(json.loads(r.get(MATRIX_KEY)))
-        print(mat_to_zyx_euler_angles(rot_mat))
+        print(mat_to_xyz_fixed_angles(rot_mat))
         time.sleep(1)

@@ -6,7 +6,10 @@ template.innerHTML = `
 <style>
   .sai2-interfaces-orientation-top {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    padding: 0.5em;
   }
 
   .sai2-interfaces-orientation-left {
@@ -42,7 +45,7 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
     super(template);
   }
 
-  zyx_euler_angles_to_mat(alpha, beta, gamma) {
+  xyz_fixed_angles_to_mat(alpha, beta, gamma) {
     // eq 1.41 in CS223A course reader
     let c_a = Math.cos(alpha); let s_a = Math.sin(alpha);
     let c_b = Math.cos(beta); let s_b = Math.sin(beta);
@@ -54,7 +57,7 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
     ];
   }
 
-  mat_to_zyx_euler_angles(R) {
+  mat_to_xyz_fixed_angles(R) {
     let alpha, beta, gamma;
 
     let c_beta = Math.sqrt(R[0][0] ** 2 + R[1][0] ** 2);
@@ -109,15 +112,15 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 
       // compute current euler angle from rot mat
       let alpha, beta, gamma;
-      [alpha, beta, gamma] = this.mat_to_zyx_euler_angles(rot_mat);
+      [alpha, beta, gamma] = this.mat_to_xyz_fixed_angles(rot_mat);
 
-      // add euler_angle_delta
-      alpha += euler_angle_delta[0];
+      // add delta, noting that slider repr is (gamma, beta, alpha)
+      alpha += euler_angle_delta[2];
       beta += euler_angle_delta[1];
-      gamma += euler_angle_delta[2];
+      gamma += euler_angle_delta[0];
 
       // compute new rot_mat
-      let new_rot_mat = this.zyx_euler_angles_to_mat(alpha, beta, gamma);
+      let new_rot_mat = this.xyz_fixed_angles_to_mat(alpha, beta, gamma);
       post_redis_key_val(this.key, new_rot_mat);
     };
 
