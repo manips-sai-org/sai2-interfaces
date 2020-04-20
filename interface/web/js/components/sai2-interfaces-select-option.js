@@ -26,7 +26,7 @@ class Sai2InterfacesSelectOption extends Sai2InterfacesComponent {
   }
 
   refresh() {
-    for (let child of this.querySelectorAll("*")) {
+    for (let child of this.querySelectorAll(":scope > *")) {
       if (typeof child.refresh === 'function') {
         child.refresh();
       }

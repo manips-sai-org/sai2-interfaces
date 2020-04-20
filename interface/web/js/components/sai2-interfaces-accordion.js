@@ -74,7 +74,6 @@ customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
         {
           button.classList.remove("button-disable");
           button.classList.add("button-enable");
-          this.refresh();
           $(direct_children).show();
         }
         else
