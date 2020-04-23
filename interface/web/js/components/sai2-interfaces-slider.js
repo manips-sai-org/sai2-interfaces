@@ -65,7 +65,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
     try {
       parsed_attr = JSON.parse(attr);
       for (let i = 0; i < parsed_attr.length; i++) {
-        parsed_attr[i] = parseFloat(parsed_attr);
+        parsed_attr[i] = parseFloat(parsed_attr[i]);
       }
     } catch (e) {
       parsed_attr = parseFloat(attr);

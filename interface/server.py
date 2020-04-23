@@ -21,6 +21,7 @@ static_folder_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0]))
 example_to_serve = None
 app = Flask(__name__, static_folder=static_folder_path, static_url_path='')
 app.config['UPLOAD_FOLDER'] = '/tmp'
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 socketio = SocketIO(app)
 
 #### global variables, initialized in server start ####
