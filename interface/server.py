@@ -38,6 +38,10 @@ def get_home():
     ''' Gets the home page "/", which is the example passed in the CLI. '''
     return send_file(example_to_serve)
 
+@app.route('/<string:imgname>', methods=['GET'])
+def get_image(imgname):
+    ''' Pulls a local image from the example output. '''
+    return send_from_directory(os.getcwd(), imgname)
 
 @socketio.on('redis')
 def handle_socket_redis_call(data):
