@@ -156,6 +156,8 @@ For more information on the commands covered in this section:
 * [MSET](https://redis.io/commands/mset)
 * [FLUSHALL](https://redis.io/commands/flushall)
 
+For the complete reference on Redis commands, see [this link](https://redis.io/commands).
+
 ### SAI Redis Conventions
 There are a couple of Redis conventions when writing a SAI program. Keys are typically namespaced, e.g. `sai2::interfaces::tutorial::key_name`. This avoids conflicts with other applications who may use the same key names.
 
