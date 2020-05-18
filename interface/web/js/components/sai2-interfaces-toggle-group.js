@@ -64,8 +64,12 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
   }
 
   updateGroups() {
-    let enabled_group = $(this).find('sai2-interfaces-toggle-group-enabled');
-    let disabled_group = $(this).find('sai2-interfaces-toggle-group-disabled');
+    let enabled_group = this.querySelectorAll(':scope > sai2-interfaces-toggle-group-enabled');
+    let disabled_group = this.querySelectorAll(':scope > sai2-interfaces-toggle-group-disabled');
+
+    enabled_group = $(enabled_group);
+    disabled_group = $(disabled_group);
+
     if (this.enabled) {
       enabled_group.each(function() {
         for (let child of this.children) {
