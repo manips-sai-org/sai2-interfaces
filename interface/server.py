@@ -38,10 +38,20 @@ def get_home():
     ''' Gets the home page "/", which is the example passed in the CLI. '''
     return send_file(example_to_serve)
 
-@app.route('/<string:imgname>', methods=['GET'])
-def get_image(imgname):
-    ''' Pulls a local image from the example output. '''
-    return send_from_directory(os.getcwd(), imgname)
+@app.route('/<string:filename>', methods=['GET'])
+def get_file(filename):
+    ''' 
+    Pulls a local file from either the launched directory or the static web
+    folder. 
+    '''
+    cwd = os.getcwd()
+    file_path_in_cwd = os.path.join(cwd, filename)
+
+    # try looking in cwd. since it's the user's data, it has priority.
+    # if the file isn't there, it might be in the web/ folder.
+    if os.path.exists(file_path_in_cwd):
+        return send_from_directory(cwd, filename)
+    return send_from_directory(static_folder_path, filename)
 
 @socketio.on('redis')
 def handle_socket_redis_call(data):
