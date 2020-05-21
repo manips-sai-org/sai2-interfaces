@@ -152,7 +152,13 @@ since there are a discrete set of values.
 
 ## The Finished Interface
 
-See [03-settings.html](./03-settings.html) for the completed interface. If you run the server, you should get the following:
+See [03-settings.html](./03-settings.html) for the completed interface. 
+Run the server:
+```
+python3 interface/server.py tutorials/03-settings/03-settings.html
+```
+
+You should see the following:
 
 ![](./joint-done.png)
 ![](./posori-done.png)

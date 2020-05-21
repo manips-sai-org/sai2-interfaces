@@ -267,9 +267,12 @@ Within the `<body></body>` tag, add the following:
 ```
 
 Here, we defined a centered title, and then created the parent container with
-the left and right containers as its children. If you run the server, you 
-should see this:
+the left and right containers as its children. Run the server by:
+```
+python3 interface/server.py tutorials/01-joint/01-joint.html
+```
 
+You should see something like this:
 ![blank layout](./layout.png)
 
 ## Creating the Interface
@@ -365,5 +368,10 @@ simulated delay from desired joint angles to the robot's actual joint angles.
 ## The Finished Interface
 You can view the completed HTML in [01-joint.html](./01-joint.html). If you run this file, you should be able to see and drag sliders for each of these values. On the 
 right side of the interface, you should see the Redis keys update. 
+
+Recall that you can run the server as follows:
+```
+python3 interface/server.py tutorials/01-joint/01-joint.html
+```
 
 ![](./joint.png)

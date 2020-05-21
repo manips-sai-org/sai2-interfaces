@@ -43,6 +43,12 @@ You should be able to use the top dropdown menu to switch between the joint spac
 
 This tutorial assumes you understand everything from the [Joint Space Tutorial](../01-joint/README.md).
 
+Just as a quick reference, remember that you can invoke the webserver as follows:
+```
+python3 interface/server.py YOUR_HTML_FILE_NAME_HERE
+```
+
+
 ## Switching Between Modes
 We will need the help of `sai2-interfaces-select` to switch modes. Let's wrap the current left container into a select element and see what happens:
 
@@ -218,8 +224,14 @@ matrix of the EE orientation.
 
 
 ## The Finished Interface
-See [02-joint-posori.html](./02-joint-posori.html) for the completed interface. If you run the server, you should get the following:
+See [02-joint-posori.html](./02-joint-posori.html) for the completed interface.
 
+You can run the server as follows:
+```
+python3 interface/server.py tutorials/02-joint-posori/02-joint-posori.html
+```
+
+You should see something like this:
 ![](./joint-done.png)
 ![](./posori-done.png)
 
