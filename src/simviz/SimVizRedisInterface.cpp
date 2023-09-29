@@ -53,7 +53,8 @@ SimVizRedisInterface::SimVizRedisInterface(const std::string& world_file)
 }
 
 void SimVizRedisInterface::reset() {
-	_ui_torques.clear();
+	_robot_ui_torques.clear();
+	_object_ui_torques.clear();
 	_redis_client.deleteSendGroup(group_name);
 	_redis_client.deleteReceiveGroup(group_name);
 	_redis_client.createNewSendGroup(group_name);
@@ -70,7 +71,7 @@ void SimVizRedisInterface::reset() {
 		_graphics->updateRobotGraphics(
 			robot_name, _simulation->getJointPositions(robot_name));
 		_graphics->addUIForceInteraction(robot_name);
-		_ui_torques[robot_name] = Eigen::VectorXd::Zero(robot_dof);
+		_robot_ui_torques[robot_name] = Eigen::VectorXd::Zero(robot_dof);
 
 		_robot_control_torques[robot_name] = VectorXd::Zero(robot_dof);
 		_robot_q[robot_name] = VectorXd::Zero(robot_dof);
@@ -93,6 +94,9 @@ void SimVizRedisInterface::reset() {
 									 _object_pose.at(object_name), group_name);
 		_redis_client.addToSendGroup(OBJECT_VELOCITY_PREFIX + object_name,
 									 _object_vel.at(object_name), group_name);
+
+		_graphics->addUIForceInteraction(object_name);
+		_object_ui_torques[object_name] = Eigen::VectorXd::Zero(6);
 	}
 }
 
@@ -126,8 +130,14 @@ void SimVizRedisInterface::vizLoopRun() {
 		_graphics->renderGraphicsWorld();
 		for (auto& robot_name : _simulation->getRobotNames()) {
 			std::lock_guard<std::mutex> lock(_mutex_torques);
-			_ui_torques.at(robot_name) = _graphics->getUITorques(robot_name);
+			_robot_ui_torques.at(robot_name) = _graphics->getUITorques(robot_name);
 		}
+		for (auto& object_name : _simulation->getObjectNames()) {
+			std::lock_guard<std::mutex> lock(_mutex_torques);
+			_object_ui_torques.at(object_name) = _graphics->getUITorques(object_name);
+		}
+
+
 	}
 	should_stop = true;
 }
@@ -156,9 +166,16 @@ void SimVizRedisInterface::simLoopRun() {
 			for (auto& robot_name : _simulation->getRobotNames()) {
 				std::lock_guard<std::mutex> lock(_mutex_torques);
 				_simulation->setJointTorques(
-					robot_name, _ui_torques.at(robot_name) +
+					robot_name, _robot_ui_torques.at(robot_name) +
 									_robot_control_torques.at(robot_name));
 			}
+			for (auto& object_name : _simulation->getObjectNames()) {
+				std::lock_guard<std::mutex> lock(_mutex_torques);
+				_simulation->setObjectForceTorque(
+					object_name, _object_ui_torques.at(object_name));
+			}
+
+
 			_simulation->integrate();
 			for (auto& robot_name : _simulation->getRobotNames()) {
 				_robot_q.at(robot_name) =

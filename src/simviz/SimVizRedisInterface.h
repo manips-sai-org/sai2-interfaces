@@ -43,7 +43,8 @@ private:
     std::unique_ptr<Sai2Graphics::Sai2Graphics> _graphics;
     std::unique_ptr<Sai2Simulation::Sai2Simulation> _simulation;
 
-    std::map<std::string, Eigen::VectorXd> _ui_torques;
+    std::map<std::string, Eigen::VectorXd> _robot_ui_torques;
+    std::map<std::string, Eigen::VectorXd> _object_ui_torques;
 
     std::map<std::string, Eigen::VectorXd> _robot_control_torques;
     std::map<std::string, Eigen::VectorXd> _robot_q;
