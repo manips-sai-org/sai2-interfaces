@@ -55,13 +55,6 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	// Extract simParameters
 	tinyxml2::XMLElement* simParams = root->FirstChildElement("simParameters");
 	if (simParams) {
-		// if (!simParams->QueryDoubleAttribute("timestep", &config.timestep) ==
-		// 	tinyxml2::XML_SUCCESS) {
-		// 	std::cout << "Timestep not found in config file." << std::endl;
-		// }
-
-		// tinyxml2::XMLElement* timestepElement =
-		// simParams->FirstChildElement("timestep");
 		if (simParams->FirstChildElement("timestep")) {
 			config.timestep =
 				simParams->FirstChildElement("timestep")->DoubleText();
@@ -72,9 +65,9 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 				simParams->FirstChildElement("enableJointLimits")->BoolText();
 		}
 
-		if (simParams->FirstChildElement("frictionCoefficient")) {
+		if (simParams->FirstChildElement("coeffFriction")) {
 			config.friction_coefficient =
-				simParams->FirstChildElement("frictionCoefficient")
+				simParams->FirstChildElement("coeffFriction")
 					->DoubleText();
 		}
 
@@ -83,82 +76,9 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 				simParams->FirstChildElement("collisionRestitution")
 					->DoubleText();
 		}
-
-		// tinyxml2::XMLElement* enable_join =
-		// simParams->FirstChildElement("timestep");
-
-		//     // Get the text value and convert it to a double
-		//     const char* timestepValue = timestepElement->GetText();
-		//     if (timestepValue) {
-		//         double timestep;
-		//         if (tinyxml2::XML_SUCCESS ==
-		//         timestepElement->QueryDoubleText(&timestep)) {
-		//             std::cout << "Timestep: " << timestep << std::endl;
-		//         } else {
-		//             std::cerr << "Invalid 'timestep' element text value." <<
-		//             std::endl;
-		//         }
-		//     } else {
-		//         std::cerr << "No text value found for 'timestep' element." <<
-		//         std::endl;
-		//     }
-		// } else {
-		//     std::cerr << "'timestep' element not found in 'simParameters'."
-		//     << std::endl;
-		// }
-
-		// config.timestep =
-		// simParams->FirstChildElement("timestep")->DoubleText();
-		// config.enable_joint_limits =
-		// simParams->FirstChildElement("enableJointLimits")->BoolText();
-		// config.friction_coefficient =
-		// simParams->FirstChildElement("frictionCoefficient")->DoubleText();
-		// config.collision_restitution =
-		// simParams->FirstChildElement("collisionRestitution")->DoubleText();
-
-		// // if (simParams) {
-		//         const char* timestepAttr = simParams->Attribute("timestep");
-		//         if (timestepAttr) {
-		//             double timestep;
-		//             if (tinyxml2::XML_SUCCESS ==
-		//             simParams->QueryDoubleAttribute("timestep", &timestep)) {
-		//                 std::cout << "Timestep: " << timestep << std::endl;
-		//             } else {
-		//                 std::cerr << "Invalid 'timestep' attribute value." <<
-		//                 std::endl;
-		//             }
-		//         } else {
-		//             std::cerr << "'timestep' attribute not found in
-		//             'simParameters'." << std::endl;
-		//         }
-		//     } else {
-		//         std::cerr << "'simParameters' element not found." <<
-		//         std::endl;
-		// // }
-
-		// if (!simParams->QueryBoolAttribute("enableJointLimits",
-		// 								   &config.enable_joint_limits) ==
-		// 	tinyxml2::XML_SUCCESS) {
-		// 	std::cout << "Enable Joint Limits not found in config file."
-		// 			  << std::endl;
-		// }
-
-		// if (!simParams->QueryDoubleAttribute("frictionCoefficient",
-		// 									 &config.friction_coefficient) ==
-		// 	tinyxml2::XML_SUCCESS) {
-		// 	std::cout << "Friction Coefficient not found in config file."
-		// 			  << std::endl;
-		// }
-
-		// if (!simParams->QueryDoubleAttribute("collisionRestitution",
-		// 									 &config.collision_restitution) ==
-		// 	tinyxml2::XML_SUCCESS) {
-		// 	std::cout << "Collision Restitution not found in config file."
-		// 			  << std::endl;
-		// }
 	}
 
-	// Extract forceSensor elements (assuming multiple)
+	// Extract forceSensor elements
 	for (tinyxml2::XMLElement* forceSensor =
 			 root->FirstChildElement("forceSensor");
 		 forceSensor;
@@ -175,11 +95,6 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 				forceSensor->FirstChildElement("linkName")->GetText();
 		}
 
-		// force_sensor_config.robot_name =
-		// 	forceSensor->FirstChildElement("robotName")->GetText();
-		// force_sensor_config.link_name =
-		// 	forceSensor->FirstChildElement("linkName")->GetText();
-
 		tinyxml2::XMLElement* origin = forceSensor->FirstChildElement("origin");
 		if (origin) {
 			force_sensor_config.transform_in_link = parsePoseLocal(origin);
@@ -187,11 +102,9 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 
 		if (forceSensor->FirstChildElement("filterCutoff")) {
 			force_sensor_config.cutoff_frequency =
-				forceSensor->FirstChildElement("linkName")->DoubleText();
+				forceSensor->FirstChildElement("filterCutoff")->DoubleText();
 		}
 
-		// forceSensor->QueryDoubleAttribute("filterCutoff",
-		// 								&force_sensor_config.cutoff_frequency);
 		config.force_sensors.push_back(force_sensor_config);
 	}
 

@@ -54,7 +54,7 @@ private:
     std::map<std::string, Eigen::VectorXd> _robot_q;
     std::map<std::string, Eigen::VectorXd> _robot_dq;
     std::map<std::string, Eigen::Matrix4d> _object_pose;
-    std::map<std::string, Eigen::VectorXd> _object_vel;
+    std::map<std::string, Eigen::Vector6d> _object_vel;
 
     std::vector<Sai2Model::ForceSensorData> _force_sensor_data;
 

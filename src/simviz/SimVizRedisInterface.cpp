@@ -102,7 +102,7 @@ void SimVizRedisInterface::reset() {
 
 	for (auto& object_name : _simulation->getObjectNames()) {
 		_object_pose[object_name] = Affine3d::Identity().matrix();
-		_object_vel[object_name] = VectorXd::Zero(6);
+		_object_vel[object_name] = Vector6d::Zero();
 
 		_redis_client.addToSendGroup(OBJECT_POSE_PREFIX + object_name,
 									 _object_pose.at(object_name), group_name);
@@ -159,8 +159,9 @@ void SimVizRedisInterface::vizLoopRun() {
 			_graphics->updateRobotGraphics(robot_name, _robot_q.at(robot_name));
 		}
 		for (auto& object_name : _simulation->getObjectNames()) {
-			_graphics->updateObjectGraphics(object_name,
-											Eigen::Affine3d(_object_pose.at(object_name)));
+			_graphics->updateObjectGraphics(
+				object_name, Eigen::Affine3d(_object_pose.at(object_name)),
+				_object_vel.at(object_name));
 		}
 		for (auto& force_sensor_data : _force_sensor_data) {
 			_graphics->updateDisplayedForceSensor(force_sensor_data);
@@ -190,6 +191,9 @@ void SimVizRedisInterface::simLoopRun() {
 			timer.reinitializeTimer();
 		}
 		processSimParametrization();
+
+		_reset = false;
+		_redis_client.setInt(SIM_RESET_KEY, _reset);
 
 		if (_pause) {
 			timer.stop();
@@ -248,8 +252,6 @@ void SimVizRedisInterface::getSimParametrization() {
 void SimVizRedisInterface::processSimParametrization() {
 	if (_reset) {
 		std::lock_guard<mutex> lock(_mutex_parametrization);
-		_reset = false;
-		_redis_client.setInt(SIM_RESET_KEY, _reset);
 		_config = _config_parser.parseConfig(_config_file);
 		_simulation->resetWorld(_config.world_file);
 		_graphics->resetWorld(_config.world_file);

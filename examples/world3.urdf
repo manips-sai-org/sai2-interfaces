@@ -8,7 +8,7 @@
 	</robot>
 
 	<static_object name="Floor">
-		<origin xyz="0.0 0.0 -0.5" rpy="0 0 0" />
+		<origin xyz="0.0 0.0 -1.5" rpy="0 0 0" />
 	    <visual>
 	        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 	        <geometry>
