@@ -11,6 +11,7 @@
 #include "Sai2Graphics.h"
 #include "Sai2Simulation.h"
 #include "timer/LoopTimer.h"
+#include "SimVizConfigParser.h"
 
 namespace Sai2Interfaces
 {
@@ -19,7 +20,7 @@ namespace Sai2Interfaces
 class SimVizRedisInterface
 {
 public:
-    SimVizRedisInterface(const std::string& world_file);
+    SimVizRedisInterface(const std::string& config_file);
     ~SimVizRedisInterface() = default;
 
     void run();
@@ -36,7 +37,10 @@ private:
     void readInputs();
     void writeOutputs();
 
-    std::string _current_world_file;
+    std::string _config_file;
+
+    SimVizConfigParser _config_parser;
+    SimVizConfig _config;
 
     Sai2Common::RedisClient _redis_client;
 
@@ -52,14 +56,14 @@ private:
     std::map<std::string, Eigen::Matrix4d> _object_pose;
     std::map<std::string, Eigen::VectorXd> _object_vel;
 
+    std::vector<Sai2Model::ForceSensorData> _force_sensor_data;
+
     std::mutex _mutex_parametrization;
     std::mutex _mutex_torques;
 
     bool _pause;
     bool _reset;
     bool _enable_grav_comp;
-    std::string _redis_world_file;
-
 };
 
 } // namespace Sai2Interfaces
