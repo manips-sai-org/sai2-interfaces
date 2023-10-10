@@ -10,6 +10,8 @@ import './components/sai2-interfaces-logger.js';
 import './components/sai2-interfaces-slider.js';
 import './components/sai2-interfaces-select-option.js';
 import './components/sai2-interfaces-select.js';
+import './components/sai2-interfaces-setkey.js';
+import './components/sai2-interfaces-config-selector.js';
 import './components/sai2-interfaces-toggle.js';
 import './components/sai2-interfaces-plot.js';
 import './components/sai2-interfaces-enum.js';

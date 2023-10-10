@@ -1,5 +1,5 @@
 <configuration>
-    <worldFilePath>resources/world1.urdf</worldFilePath>
+    <worldFilePath>resources/urdf/world_files/world_panda.urdf</worldFilePath>
 
     <simParameters>
         <timestep>0.001</timestep>
@@ -9,9 +9,9 @@
     </simParameters>
 
     <forceSensor>
-        <robotName>RBot</robotName>
-        <linkName>link0</linkName>
-        <origin xyz="0 0 -1" rpy="0 0 0" />
+        <robotName>Panda</robotName>
+        <linkName>end-effector</linkName>
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <filterCutoff>5.0</filterCutoff>
     </forceSensor>
 

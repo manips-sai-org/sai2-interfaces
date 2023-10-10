@@ -1,25 +1,18 @@
 <configuration>
-    <worldFilePath>resources/world2.urdf</worldFilePath>
+    <worldFilePath>resources/urdf/world_files/world_pendulums.urdf</worldFilePath>
 
     <simParameters>
         <timestep>0.001</timestep>
         <enableJointLimits>true</enableJointLimits>
         <coeffFriction>0.5</coeffFriction>
-        <collisionRestitution>0.5</collisionRestitution>
+        <collisionRestitution>0.0</collisionRestitution>
     </simParameters>
 
     <forceSensor>
-        <robotName>RBot1</robotName>
+        <robotName>RBot</robotName>
         <linkName>link0</linkName>
         <origin xyz="0 0 -1" rpy="0 0 0" />
         <filterCutoff>5.0</filterCutoff>
-    </forceSensor>
-
-    <forceSensor>
-        <robotName>RBot2</robotName>
-        <linkName>link0</linkName>
-        <origin xyz="0 0 -1" rpy="0 0 0" />
-        <filterCutoff>10.0</filterCutoff>
     </forceSensor>
 
 </configuration>

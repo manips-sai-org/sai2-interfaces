@@ -1,5 +1,4 @@
 <?xml version="1.0" ?>
-<!--simple pbot-->
 
 <robot name="RBot_description">
     <link name="base_link">

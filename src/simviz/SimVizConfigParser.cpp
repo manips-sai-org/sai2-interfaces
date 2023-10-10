@@ -1,8 +1,7 @@
 #include "SimVizConfigParser.h"
 
 #include <tinyxml2.h>
-// #include <urdf/urdfdom_headers/urdf_model/include/urdf_model/pose.h>
-// #include <urdf/urdfdom_headers/urdf_model/include/urdf_model/pose.h>
+
 #include <iostream>
 #include <urdf/urdfdom/urdf_parser/src/pose.cpp>
 
@@ -67,8 +66,7 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 
 		if (simParams->FirstChildElement("coeffFriction")) {
 			config.friction_coefficient =
-				simParams->FirstChildElement("coeffFriction")
-					->DoubleText();
+				simParams->FirstChildElement("coeffFriction")->DoubleText();
 		}
 
 		if (simParams->FirstChildElement("collisionRestitution")) {

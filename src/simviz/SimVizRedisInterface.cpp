@@ -35,7 +35,7 @@ SimVizRedisInterface::SimVizRedisInterface(const std::string& config_file)
 	: _config_file(config_file),
 	  _pause(false),
 	  _reset(false),
-	  _enable_grav_comp(false){
+	  _enable_grav_comp(true){
 
 	_config = _config_parser.parseConfig(_config_file);
 	_graphics = std::make_unique<Sai2Graphics::Sai2Graphics>(
@@ -82,14 +82,13 @@ void SimVizRedisInterface::reset() {
 		}
 
 		const int robot_dof = _simulation->dof(robot_name);
-		_graphics->updateRobotGraphics(
-			robot_name, _simulation->getJointPositions(robot_name));
 		_graphics->addUIForceInteraction(robot_name);
 		_robot_ui_torques[robot_name] = Eigen::VectorXd::Zero(robot_dof);
 
 		_robot_control_torques[robot_name] = VectorXd::Zero(robot_dof);
-		_robot_q[robot_name] = VectorXd::Zero(robot_dof);
-		_robot_dq[robot_name] = VectorXd::Zero(robot_dof);
+
+		_robot_q[robot_name] = _simulation->getJointPositions(robot_name);
+		_robot_dq[robot_name] = _simulation->getJointVelocities(robot_name);
 
 		_redis_client.addToReceiveGroup(
 			ROBOT_COMMAND_TORQUES_PREFIX + robot_name,
@@ -101,8 +100,8 @@ void SimVizRedisInterface::reset() {
 	}
 
 	for (auto& object_name : _simulation->getObjectNames()) {
-		_object_pose[object_name] = Affine3d::Identity().matrix();
-		_object_vel[object_name] = Vector6d::Zero();
+		_object_pose[object_name] = _simulation->getObjectPose(object_name).matrix();
+		_object_vel[object_name] = _simulation->getObjectVelocity(object_name);
 
 		_redis_client.addToSendGroup(OBJECT_POSE_PREFIX + object_name,
 									 _object_pose.at(object_name), group_name);
@@ -148,7 +147,7 @@ void SimVizRedisInterface::run() {
 }
 
 void SimVizRedisInterface::vizLoopRun() {
-	Sai2Common::LoopTimer timer(60.0);
+	Sai2Common::LoopTimer timer(30.0);
 
 	while (!should_stop && _graphics->isWindowOpen()) {
 		usleep(10);
@@ -156,7 +155,8 @@ void SimVizRedisInterface::vizLoopRun() {
 
 		std::lock_guard<std::mutex> lock(_mutex_parametrization);
 		for (auto& robot_name : _simulation->getRobotNames()) {
-			_graphics->updateRobotGraphics(robot_name, _robot_q.at(robot_name));
+			_graphics->updateRobotGraphics(robot_name, _robot_q.at(robot_name),
+										   _robot_dq.at(robot_name));
 		}
 		for (auto& object_name : _simulation->getObjectNames()) {
 			_graphics->updateObjectGraphics(
