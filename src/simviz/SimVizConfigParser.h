@@ -1,5 +1,5 @@
-#ifndef SIMVIZ_CONFIG_PARSER_H__
-#define SIMVIZ_CONFIG_PARSER_H__
+#ifndef SAI2_INTERFACES_SIMVIZ_CONFIG_PARSER_H
+#define SAI2_INTERFACES_SIMVIZ_CONFIG_PARSER_H
 
 #include "SimVizConfig.h"
 
@@ -17,4 +17,4 @@ public:
 
 } // namespace Sai2Interfaces
 
-#endif // SIMVIZ_CONFIG_PARSER_H__
+#endif // SAI2_INTERFACES_SIMVIZ_CONFIG_PARSER_H

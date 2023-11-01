@@ -205,7 +205,6 @@ void SimVizRedisInterface::simLoopRun() {
 			}
 			timer.waitForNextLoop();
 			_redis_client.receiveAllFromGroup(group_name);
-			// readInputs();
 			for (auto& robot_name : _simulation->getRobotNames()) {
 				std::lock_guard<std::mutex> lock(_mutex_torques);
 				_simulation->setJointTorques(
@@ -234,7 +233,6 @@ void SimVizRedisInterface::simLoopRun() {
 			}
 			_force_sensor_data = _simulation->getAllForceSensorData();
 			_redis_client.sendAllFromGroup(group_name);
-			// writeOutputs();
 		}
 	}
 	timer.stop();
@@ -262,8 +260,5 @@ void SimVizRedisInterface::processSimParametrization() {
 		_simulation->enableGravityCompensation(_enable_grav_comp);
 	}
 }
-
-void SimVizRedisInterface::readInputs() {}
-void SimVizRedisInterface::writeOutputs() {}
 
 }  // namespace Sai2Interfaces

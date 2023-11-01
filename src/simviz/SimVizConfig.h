@@ -1,5 +1,5 @@
-#ifndef SIMVIZ_CONFIG_H
-#define SIMVIZ_CONFIG_H
+#ifndef SAI2_INTERFACES_SIMVIZ_CONFIG_H
+#define SAI2_INTERFACES_SIMVIZ_CONFIG_H
 
 #include <string>
 #include <Eigen/Dense>
@@ -27,4 +27,4 @@ struct SimVizConfig
 
 } // namespace Sai2Interfaces
 
-#endif // SIMVIZ_CONFIG_H
+#endif // SAI2_INTERFACES_SIMVIZ_CONFIG_H

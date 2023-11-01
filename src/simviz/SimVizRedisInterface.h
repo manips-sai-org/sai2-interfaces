@@ -1,5 +1,5 @@
-#ifndef SIMVIZ_REDIS_INTERFACE_H_
-#define SIMVIZ_REDIS_INTERFACE_H_
+#ifndef SAI2_INTERFACES_SIMVIZ_REDIS_INTERFACE_H
+#define SAI2_INTERFACES_SIMVIZ_REDIS_INTERFACE_H
 
 #include <memory>
 #include <string>
@@ -34,8 +34,6 @@ private:
     void simLoopRun();
     void getSimParametrization();
     void processSimParametrization();
-    void readInputs();
-    void writeOutputs();
 
     std::string _config_file;
 
@@ -68,4 +66,4 @@ private:
 
 } // namespace Sai2Interfaces
 
-#endif /* SIMVIZ_REDIS_INTERFACE_H_ */
+#endif /* SAI2_INTERFACES_SIMVIZ_REDIS_INTERFACE_H */
