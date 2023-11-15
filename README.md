@@ -39,6 +39,9 @@ This project exports `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute p
 ### Documentation
 For additional resources on how to use sai2-interfaces, see the documentation [here](docs/README.md).
 
+## License
+Currently pending licensing. PLEASE DO NOT DISTRIBUTE.
+
 ## Project contributors
 * Keven Wang
 * Mikael Jorda
