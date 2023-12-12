@@ -10,8 +10,8 @@
 
     <forceSensor>
         <robotName>RBot</robotName>
-        <linkName>link0</linkName>
-        <origin xyz="0 0 -1" rpy="0 0 0" />
+        <linkName>eef</linkName>
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <filterCutoff>5.0</filterCutoff>
     </forceSensor>
 

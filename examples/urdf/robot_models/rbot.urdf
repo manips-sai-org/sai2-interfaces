@@ -26,7 +26,7 @@
     <link name="link0">
         <inertial>
             <origin xyz="0.0 0.0 -1.0" rpy="0 0 0" />
-            <mass value="1" />
+            <mass value="0.5" />
             <inertia ixx="0.1" iyy="0.1" izz="0.1" ixy="0" ixz="0" iyz="0" />
         </inertial>
         <visual>
@@ -36,13 +36,20 @@
             </geometry>
         </visual>
         <collision>
-            <origin xyz="0.0 0.0 -1.0" rpy="0 0 0" />
+            <origin xyz="0.0 0.0 -0.895" rpy="0 0 0" />
             <geometry>
-                <cylinder radius="0.07" length="1.0" />
+                <cylinder radius="0.07" length="0.79" />
             </geometry>
         </collision>
+    </link>
+    <link name="eef">
+        <inertial>
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+            <mass value="1" />
+            <inertia ixx="0.1" iyy="0.1" izz="0.1" ixy="0" ixz="0" iyz="0" />
+        </inertial>
         <visual>
-            <origin xyz="0.0 0.0 -1.0" rpy="0 0 0" />
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
             <geometry>
                 <sphere radius="0.1" />
             </geometry>
@@ -51,7 +58,7 @@
             </material>
         </visual>
         <collision>
-            <origin xyz="0.0 0.0 -1.0" rpy="0 0 0" />
+            <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
             <geometry>
                 <sphere radius="0.1" />
             </geometry>
@@ -66,6 +73,11 @@
         <calibration rising="2.0" />
         <limit lower="-2.967" upper="2.967" effort="176" velocity="1.7104" />
     </joint>
+	<joint name='jfixed' type='fixed'>
+		<parent link='link0'/>
+		<child link='eef'/>
+		<origin xyz='0.0 0.0 -1.0' rpy='0 0 0'/>
+	</joint>
     
 </robot>
 

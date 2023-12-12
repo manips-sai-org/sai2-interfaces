@@ -1,35 +1,28 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.10)
 
 PROJECT (SAI2-INTERFACES)
 SET (PROJECT_VERSION 0.1.0)
 
-SET(CMAKE_CXX_FLAGS "-std=c++17 -I/usr/include -I/usr/local/include")
-IF(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  MESSAGE(STATUS "Setting build type to 'RelWithDebInfo' as none was specified.")
-  # Set the default build, and also the possible values of build type for cmake-gui
-  SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "Choose the type of build." FORCE)
-  SET_PROPERTY(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
-ENDIF()
+set(CMAKE_CXX_FLAGS "-std=c++17 -I/usr/include -I/usr/local/include -fPIC")
+if(${CMAKE_SYSTEM_NAME} MATCHES Darwin)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/homebrew/include")
+endif()
 
-SET (SAI2-INTERFACES_UI_DIR
-    ${PROJECT_SOURCE_DIR}/interface
-)
+# set default build to release
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to 'Release' as none was specified.")
+  set(CMAKE_BUILD_TYPE Release)
+endif()
 
 # include Eigen
-find_package(Eigen3 QUIET)
+find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-# include Chai3d 
-# -- this is required by Chai3d to pick the correct path for OpenGL headers
-FIND_PACKAGE(CHAI3D REQUIRED)
-ADD_DEFINITIONS(${CHAI3D_DEFINITIONS})
-if (CMAKE_SYSTEM_NAME MATCHES Darwin) 
-  ADD_DEFINITIONS(-D_MACOSX -DMACOSX)
-elseif (CMAKE_SYSTEM_NAME MATCHES Linux)
-  ADD_DEFINITIONS(-D_LINUX -DLINUX)
-endif () #NOTE: Windows is currently unsupported
-LINK_DIRECTORIES(${CHAI3D_LIBRARY_DIRS})
-INCLUDE_DIRECTORIES(${CHAI3D_INCLUDE_DIRS})
+# include Chai3d
+find_package(CHAI3D REQUIRED)
+include_directories(${CHAI3D_INCLUDE_DIRS})
+add_definitions(${CHAI3D_DEFINITIONS})
+link_directories(${CHAI3D_LIBRARY_DIRS})
 
 # - SAI2-MODEL
 find_package(SAI2-MODEL REQUIRED)
@@ -38,10 +31,12 @@ include_directories(${SAI2-MODEL_INCLUDE_DIRS})
 # - SAI2-SIMULATION
 find_package(SAI2-SIMULATION REQUIRED)
 include_directories(${SAI2-SIMULATION_INCLUDE_DIRS})
+add_definitions(${SAI2-SIMULATION_DEFINITIONS})
 
 # - SAI2-GRAPHICS
 FIND_PACKAGE(SAI2-GRAPHICS REQUIRED)
 include_directories(${SAI2-GRAPHICS_INCLUDE_DIRS})
+add_definitions(${SAI2-GRAPHICS_DEFINITIONS})
 
 # - SAI2-PRIMITIVES
 FIND_PACKAGE(SAI2-PRIMITIVES REQUIRED)
@@ -54,11 +49,6 @@ include_directories(${SAI2-COMMON_INCLUDE_DIRS})
 # - SAI2-URDF
 FIND_PACKAGE(SAI2-URDF REQUIRED)
 include_directories(${SAI2-URDF_INCLUDE_DIRS})
-
-# - glfw3
-find_package(glfw3 QUIET)
-find_library(GLFW_LIBRARY glfw)
-
 
 # add redis interface classes
 SET(SAI2_INTERFACES_SOURCE
@@ -83,7 +73,6 @@ SET(SAI2-INTERFACES_LIBRARIES
 	${SAI2-COMMON_LIBRARIES}
 	${SAI2-URDF_LIBRARIES}
 	${CHAI3D_LIBRARIES}
-	${GLFW_LIBRARY}
 	)
 
 ADD_SUBDIRECTORY(examples)

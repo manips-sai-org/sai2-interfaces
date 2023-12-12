@@ -17,8 +17,7 @@ const std::string SIM_PAUSE_KEY = "sai2::interfaces::simviz::pause";
 const std::string SIM_RESET_KEY = "sai2::interfaces::simviz::reset";
 const std::string GRAV_COMP_ENABLED_KEY =
 	"sai2::interfaces::simviz::gravity_comp_enabled";
-const std::string CONFIG_FILE_KEY =
-	"sai2::interfaces::simviz::config_file";
+const std::string CONFIG_FILE_KEY = "sai2::interfaces::simviz::config_file";
 
 const std::string ROBOT_COMMAND_TORQUES_PREFIX =
 	"sai2::interfaces::simviz::robot_command_torques::";
@@ -35,8 +34,7 @@ SimVizRedisInterface::SimVizRedisInterface(const std::string& config_file)
 	: _config_file(config_file),
 	  _pause(false),
 	  _reset(false),
-	  _enable_grav_comp(true){
-
+	  _enable_grav_comp(true) {
 	_config = _config_parser.parseConfig(_config_file);
 	_graphics = std::make_unique<Sai2Graphics::Sai2Graphics>(
 		_config.world_file, "sai2 world", false);
@@ -55,7 +53,6 @@ SimVizRedisInterface::SimVizRedisInterface(const std::string& config_file)
 }
 
 void SimVizRedisInterface::reset() {
-
 	_simulation->setTimestep(_config.timestep);
 	_simulation->setCollisionRestitution(_config.collision_restitution);
 	_simulation->setCoeffFrictionStatic(_config.friction_coefficient);
@@ -75,7 +72,7 @@ void SimVizRedisInterface::reset() {
 	_force_sensor_data.clear();
 
 	for (auto& robot_name : _simulation->getRobotNames()) {
-		if(_config.enable_joint_limits) {
+		if (_config.enable_joint_limits) {
 			_simulation->enableJointLimits(robot_name);
 		} else {
 			_simulation->disableJointLimits(robot_name);
@@ -100,7 +97,8 @@ void SimVizRedisInterface::reset() {
 	}
 
 	for (auto& object_name : _simulation->getObjectNames()) {
-		_object_pose[object_name] = _simulation->getObjectPose(object_name).matrix();
+		_object_pose[object_name] =
+			_simulation->getObjectPose(object_name).matrix();
 		_object_vel[object_name] = _simulation->getObjectVelocity(object_name);
 
 		_redis_client.addToSendGroup(OBJECT_POSE_PREFIX + object_name,
@@ -113,10 +111,10 @@ void SimVizRedisInterface::reset() {
 	}
 
 	for (const auto& force_sensor_config : _config.force_sensors) {
-		_simulation->addSimulatedForceSensor(force_sensor_config.robot_name,
-									force_sensor_config.link_name,
-									force_sensor_config.transform_in_link,
-									force_sensor_config.cutoff_frequency);
+		_simulation->addSimulatedForceSensor(
+			force_sensor_config.robot_name, force_sensor_config.link_name,
+			force_sensor_config.transform_in_link,
+			force_sensor_config.cutoff_frequency);
 	}
 
 	_force_sensor_data = _simulation->getAllForceSensorData();
@@ -150,7 +148,7 @@ void SimVizRedisInterface::vizLoopRun() {
 	Sai2Common::LoopTimer timer(30.0);
 
 	while (!should_stop && _graphics->isWindowOpen()) {
-		usleep(10);
+		this_thread::sleep_for(chrono::microseconds(50));
 		timer.waitForNextLoop();
 
 		std::lock_guard<std::mutex> lock(_mutex_parametrization);
@@ -169,14 +167,14 @@ void SimVizRedisInterface::vizLoopRun() {
 		_graphics->renderGraphicsWorld();
 		for (auto& robot_name : _simulation->getRobotNames()) {
 			std::lock_guard<std::mutex> lock(_mutex_torques);
-			_robot_ui_torques.at(robot_name) = _graphics->getUITorques(robot_name);
+			_robot_ui_torques.at(robot_name) =
+				_graphics->getUITorques(robot_name);
 		}
 		for (auto& object_name : _simulation->getObjectNames()) {
 			std::lock_guard<std::mutex> lock(_mutex_torques);
-			_object_ui_torques.at(object_name) = _graphics->getUITorques(object_name);
+			_object_ui_torques.at(object_name) =
+				_graphics->getUITorques(object_name);
 		}
-
-
 	}
 	should_stop = true;
 }
