@@ -1,18 +1,24 @@
-<configuration>
-    <worldFilePath>resources/urdf/world_files/world_panda.urdf</worldFilePath>
+<simvizConfiguration>
+	<worldFilePath>resources/urdf/world_files/world_panda.urdf</worldFilePath>
 
-    <simParameters>
-        <timestep>0.001</timestep>
-        <enableJointLimits>true</enableJointLimits>
-        <coeffFriction>0.5</coeffFriction>
-        <collisionRestitution>0.0</collisionRestitution>
-    </simParameters>
+	<simParameters>
+		<timestep>0.001</timestep>
+		<enableJointLimits>true</enableJointLimits>
+		<coeffFriction>0.5</coeffFriction>
+		<collisionRestitution>0.0</collisionRestitution>
+	</simParameters>
 
-    <forceSensor>
-        <robotName>Panda</robotName>
-        <linkName>end-effector</linkName>
-        <origin xyz="0 0 0" rpy="0 0 0" />
-        <filterCutoff>5.0</filterCutoff>
-    </forceSensor>
+	<logger>
+		<logFolderName>logs_panda_config</logFolderName>
+		<logFrequency>100</logFrequency>
+		<startWithSimulation>true</startWithSimulation>
+	</logger>
 
-</configuration>
+	<forceSensor>
+		<robotName>Panda</robotName>
+		<linkName>end-effector</linkName>
+		<origin xyz="0 0 0" rpy="0 0 0" />
+		<filterCutoff>5.0</filterCutoff>
+	</forceSensor>
+
+</simvizConfiguration>

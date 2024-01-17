@@ -14,6 +14,12 @@ struct SimForceSensorConfig
     double cutoff_frequency = 0.0;
 };
 
+struct SimLoggerConfig {
+	std::string folder_name = "log_files";
+	double frequency = 100.0;
+	bool start_with_logger_on = false;
+};
+
 struct SimVizConfig
 {
     std::string world_file = "";
@@ -23,6 +29,8 @@ struct SimVizConfig
     double timestep = 0.001;
 
     std::vector<SimForceSensorConfig> force_sensors = {};
+
+	SimLoggerConfig logger_config;
 };
 
 } // namespace Sai2Interfaces

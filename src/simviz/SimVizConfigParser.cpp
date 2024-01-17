@@ -10,8 +10,8 @@ namespace {
 Eigen::Affine3d parsePoseLocal(tinyxml2::XMLElement* xml) {
 	Eigen::Affine3d pose = Eigen::Affine3d::Identity();
 
-	urdf::Pose pose_urdf;
-	urdf::parsePose(pose_urdf, xml);
+	Sai2Urdfreader::Pose pose_urdf;
+	Sai2Urdfreader::parsePose(pose_urdf, xml);
 
 	pose.translation() << pose_urdf.position.x, pose_urdf.position.y,
 		pose_urdf.position.z;
@@ -36,20 +36,21 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 								 config_file);
 	}
 
-	tinyxml2::XMLElement* root = doc.FirstChildElement("configuration");
+	tinyxml2::XMLElement* root = doc.FirstChildElement("simvizConfiguration");
 	if (!root) {
 		throw std::runtime_error(
-			"No 'configuration' element found in config file: " + config_file);
+			"No 'simvizConfiguration' element found in config file: " +
+			config_file);
 	}
 
 	// Extract the worldFilePath
-	const char* worldFilePath =
-		root->FirstChildElement("worldFilePath")->GetText();
+	tinyxml2::XMLElement* worldFilePath =
+		root->FirstChildElement("worldFilePath");
 	if (!worldFilePath) {
 		throw std::runtime_error(
 			"No 'worldFilePath' element found in config file: " + config_file);
 	}
-	config.world_file = worldFilePath;
+	config.world_file = worldFilePath->GetText();
 
 	// Extract simParameters
 	tinyxml2::XMLElement* simParams = root->FirstChildElement("simParameters");
@@ -104,6 +105,25 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 		}
 
 		config.force_sensors.push_back(force_sensor_config);
+	}
+
+	// extract logger config
+	tinyxml2::XMLElement* logger = root->FirstChildElement("logger");
+	if (logger) {
+		if (logger->FirstChildElement("logFolderName")) {
+			config.logger_config.folder_name =
+				logger->FirstChildElement("logFolderName")->GetText();
+		}
+
+		if (logger->FirstChildElement("logFrequency")) {
+			config.logger_config.frequency =
+				logger->FirstChildElement("logFrequency")->DoubleText();
+		}
+
+		if (logger->FirstChildElement("startWithSimulation")) {
+			config.logger_config.start_with_logger_on =
+				logger->FirstChildElement("startWithSimulation")->BoolText();
+		}
 	}
 
 	return config;
