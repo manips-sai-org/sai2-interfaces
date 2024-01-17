@@ -54,6 +54,8 @@ include_directories(${SAI2-URDF_INCLUDE_DIRS})
 SET(SAI2_INTERFACES_SOURCE
   ${PROJECT_SOURCE_DIR}/src/simviz/SimVizRedisInterface.cpp
   ${PROJECT_SOURCE_DIR}/src/simviz/SimVizConfigParser.cpp
+  ${PROJECT_SOURCE_DIR}/src/controller/RobotControllerRedisInterface.cpp
+  ${PROJECT_SOURCE_DIR}/src/controller/RobotControllerConfigParser.cpp
 )
 
 SET(SAI2-INTERFACES_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/src)
