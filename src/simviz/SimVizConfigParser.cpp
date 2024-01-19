@@ -124,6 +124,11 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 			config.logger_config.start_with_logger_on =
 				logger->FirstChildElement("startWithSimulation")->BoolText();
 		}
+
+		if (logger->FirstChildElement("timestampInFilename")) {
+			config.logger_config.add_timestamp_to_filename =
+				logger->FirstChildElement("timestampInFilename")->BoolText();
+		}
 	}
 
 	return config;

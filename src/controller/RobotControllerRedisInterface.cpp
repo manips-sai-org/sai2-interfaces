@@ -14,6 +14,8 @@ namespace {
 bool should_stop = false;
 void stop(int i) { should_stop = true; }
 
+const std::string reset_inputs_redis_group = "reset_input_group";
+
 const std::string ACTIVE_CONTROLLER_KEY =
 	"sai2::interfaces::active_controller_name";
 
@@ -68,9 +70,6 @@ void RobotControllerRedisInterface::run() {
 			<< _robot_controllers.at(_active_controller_name)
 				   ->computeControlTorques();
 
-		const auto& joint_task = _robot_controllers.at(_active_controller_name)
-									 ->getJointTaskByName("joint_task");
-
 		// write to redis
 		_redis_client.sendAllFromGroup();
 	}
@@ -85,6 +84,24 @@ void RobotControllerRedisInterface::initialize() {
 	_robot_model = make_shared<Sai2Model::Sai2Model>(_config.robot_model_file);
 	_robot_model->setTRobotBase(_config.robot_base_in_world);
 	_robot_model->setWorldGravity(_config.world_gravity);
+
+	_robot_q.setZero(_robot_model->dof());
+	_robot_dq.setZero(_robot_model->dof());
+	_robot_command_torques.setZero(_robot_model->dof());
+
+	_redis_client.addToSendGroup(
+		ROBOT_COMMAND_TORQUES_PREFIX + _config.robot_name,
+		_robot_command_torques);
+
+	_redis_client.addToReceiveGroup(ROBOT_Q_PREFIX + _config.robot_name,
+									_robot_q);
+	_redis_client.addToReceiveGroup(ROBOT_DQ_PREFIX + _config.robot_name,
+									_robot_dq);
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	_redis_client.receiveAllFromGroup();
+	_robot_model->setQ(_robot_q);
+	_robot_model->updateModel();
 
 	for (const auto& pair : _config.controllers_configs) {
 		vector<shared_ptr<Sai2Primitives::TemplateTask>> ordered_tasks_list;
@@ -166,27 +183,10 @@ void RobotControllerRedisInterface::initialize() {
 			"the config file");
 	}
 
-	_robot_q.setZero(_robot_model->dof());
-	_robot_dq.setZero(_robot_model->dof());
-	_robot_command_torques.setZero(_robot_model->dof());
-
-	_redis_client.addToSendGroup(
-		ROBOT_COMMAND_TORQUES_PREFIX + _config.robot_name,
-		_robot_command_torques);
-
-	_redis_client.addToReceiveGroup(ROBOT_Q_PREFIX + _config.robot_name,
-									_robot_q);
-	_redis_client.addToReceiveGroup(ROBOT_DQ_PREFIX + _config.robot_name,
-									_robot_dq);
-
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-	_redis_client.receiveAllFromGroup();
+	initializeRedisTasksIO();
 
 	switchController(_config.initial_active_controller_name);
 	_redis_client.set(ACTIVE_CONTROLLER_KEY, _active_controller_name);
-
-	initializeRedisTasksIO();
 }
 
 void RobotControllerRedisInterface::switchController(
@@ -206,9 +206,11 @@ void RobotControllerRedisInterface::switchController(
 	_robot_model->setDq(_robot_dq);
 	_robot_model->updateModel();
 	_robot_controllers.at(_active_controller_name)->reinitializeTasks();
+	_redis_client.sendAllFromGroup(reset_inputs_redis_group);
 }
 
 void RobotControllerRedisInterface::initializeRedisTasksIO() {
+	_redis_client.createNewSendGroup(reset_inputs_redis_group);
 	for (auto& pair : _config.controllers_configs) {
 		const string& controller_name = pair.first;
 
@@ -317,12 +319,16 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				JointTaskInput& joint_task_input = std::get<JointTaskInput>(
 					_controller_inputs.at(controller_name)
 						.at(joint_task_config.task_name));
-				joint_task_input.goal_position =
-					joint_task->getDesiredPosition();
-				joint_task_input.goal_velocity =
-					joint_task->getDesiredVelocity();
-				joint_task_input.goal_acceleration =
-					joint_task->getDesiredAcceleration();
+				joint_task_input.setFromTask(joint_task);
+				_redis_client.addToSendGroup(key_prefix + "goal_position",
+											 joint_task_input.goal_position,
+											 reset_inputs_redis_group);
+				_redis_client.addToSendGroup(key_prefix + "goal_velocity",
+											 joint_task_input.goal_velocity,
+											 reset_inputs_redis_group);
+				_redis_client.addToSendGroup(key_prefix + "goal_acceleration",
+											 joint_task_input.goal_acceleration,
+											 reset_inputs_redis_group);
 				_redis_client.addToReceiveGroup(key_prefix + "goal_position",
 												joint_task_input.goal_position,
 												controller_name);
@@ -607,18 +613,49 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					std::get<MotionForceTaskInput>(
 						_controller_inputs.at(controller_name)
 							.at(motion_force_task_config.task_name));
-				motion_force_task_input.goal_position =
-					motion_force_task->getDesiredPosition();
-				motion_force_task_input.goal_linear_velocity =
-					motion_force_task->getDesiredVelocity();
-				motion_force_task_input.goal_linear_acceleration =
-					motion_force_task->getDesiredAcceleration();
-				motion_force_task_input.goal_orientation =
-					motion_force_task->getDesiredOrientation();
-				motion_force_task_input.goal_angular_velocity =
-					motion_force_task->getDesiredAngularVelocity();
-				motion_force_task_input.goal_angular_acceleration =
-					motion_force_task->getDesiredAngularAcceleration();
+				motion_force_task_input.setFromTask(motion_force_task);
+				_redis_client.addToSendGroup(
+					key_prefix + "goal_position",
+					motion_force_task_input.goal_position,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					key_prefix + "goal_linear_velocity",
+					motion_force_task_input.goal_linear_velocity,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					key_prefix + "goal_linear_acceleration",
+					motion_force_task_input.goal_linear_acceleration,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					key_prefix + "goal_orientation",
+					motion_force_task_input.goal_orientation,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					key_prefix + "goal_angular_velocity",
+					motion_force_task_input.goal_angular_velocity,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					key_prefix + "goal_angular_acceleration",
+					motion_force_task_input.goal_angular_acceleration,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					key_prefix + "desired_force",
+					motion_force_task_input.desired_force,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					key_prefix + "desired_moment",
+					motion_force_task_input.desired_moment,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					FORCE_SENSOR_PREFIX + _config.robot_name +
+						"::" + motion_force_task_config.link_name + "::force",
+					motion_force_task_input.sensed_force,
+					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					FORCE_SENSOR_PREFIX + _config.robot_name +
+						"::" + motion_force_task_config.link_name + "::moment",
+					motion_force_task_input.sensed_moment,
+					reset_inputs_redis_group);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "goal_position",
 					motion_force_task_input.goal_position, controller_name);
@@ -695,10 +732,12 @@ void RobotControllerRedisInterface::processInputs() {
 			} else {
 				const auto& velocity_saturation_config =
 					joint_task_config.velocity_saturation_config.value();
-				if (velocity_saturation_config.enabled) {
+				if (velocity_saturation_config.enabled &&
+					!joint_task->getVelocitySaturationEnabled()) {
 					joint_task->enableVelocitySaturation(
 						velocity_saturation_config.velocity_limits);
-				} else {
+				} else if (!velocity_saturation_config.enabled &&
+						   joint_task->getVelocitySaturationEnabled()) {
 					joint_task->disableVelocitySaturation();
 				}
 			}
@@ -718,13 +757,20 @@ void RobotControllerRedisInterface::processInputs() {
 				joint_task_config.otg_config = otg_config;
 			} else {
 				const auto& otg_config = joint_task_config.otg_config.value();
-				if (!otg_config.enabled) {
+				if (joint_task->getInternalOtgEnabled() &&
+					!otg_config.enabled) {
 					joint_task->disableInternalOtg();
-				} else if (!otg_config.jerk_limited) {
+				} else if (otg_config.enabled && !otg_config.jerk_limited &&
+						   (!joint_task->getInternalOtgEnabled() ||
+							joint_task->getInternalOtg()
+								.getJerkLimitEnabled())) {
 					joint_task->enableInternalOtgAccelerationLimited(
 						otg_config.limits.velocity_limit,
 						otg_config.limits.acceleration_limit);
-				} else {
+				} else if (otg_config.enabled && otg_config.jerk_limited &&
+						   (!joint_task->getInternalOtgEnabled() ||
+							!joint_task->getInternalOtg()
+								 .getJerkLimitEnabled())) {
 					joint_task->enableInternalOtgJerkLimited(
 						otg_config.limits.velocity_limit,
 						otg_config.limits.acceleration_limit,
@@ -834,11 +880,13 @@ void RobotControllerRedisInterface::processInputs() {
 			} else {
 				const auto& velocity_saturation_config =
 					motion_force_task_config.velocity_saturation_config.value();
-				if (velocity_saturation_config.enabled) {
+				if (velocity_saturation_config.enabled &&
+					!motion_force_task->getVelocitySaturationEnabled()) {
 					motion_force_task->enableVelocitySaturation(
 						velocity_saturation_config.linear_velocity_limits,
 						velocity_saturation_config.angular_velocity_limits);
-				} else {
+				} else if (!velocity_saturation_config.enabled &&
+						   motion_force_task->getVelocitySaturationEnabled()) {
 					motion_force_task->disableVelocitySaturation();
 				}
 			}
@@ -869,15 +917,22 @@ void RobotControllerRedisInterface::processInputs() {
 			} else {
 				const auto& otg_config =
 					motion_force_task_config.otg_config.value();
-				if (!otg_config.enabled) {
+				if (!otg_config.enabled &&
+					motion_force_task->getInternalOtgEnabled()) {
 					motion_force_task->disableInternalOtg();
-				} else if (!otg_config.jerk_limited) {
+				} else if (otg_config.enabled && !otg_config.jerk_limited &&
+						   (!motion_force_task->getInternalOtgEnabled() ||
+							motion_force_task->getInternalOtg()
+								.getJerkLimitEnabled())) {
 					motion_force_task->enableInternalOtgAccelerationLimited(
 						otg_config.linear_velocity_limit,
 						otg_config.angular_velocity_limit,
 						otg_config.linear_acceleration_limit,
 						otg_config.angular_acceleration_limit);
-				} else {
+				} else if (otg_config.enabled && otg_config.jerk_limited &&
+						   (!motion_force_task->getInternalOtgEnabled() ||
+							!motion_force_task->getInternalOtg()
+								 .getJerkLimitEnabled())) {
 					motion_force_task->enableInternalOtgJerkLimited(
 						otg_config.linear_velocity_limit,
 						otg_config.angular_velocity_limit,

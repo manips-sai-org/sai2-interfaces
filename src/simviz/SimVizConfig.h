@@ -18,6 +18,7 @@ struct SimLoggerConfig {
 	std::string folder_name = "log_files";
 	double frequency = 100.0;
 	bool start_with_logger_on = false;
+	bool add_timestamp_to_filename = true;
 };
 
 struct SimVizConfig

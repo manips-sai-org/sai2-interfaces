@@ -8,17 +8,18 @@
 		<collisionRestitution>0.0</collisionRestitution>
 	</simParameters>
 
+	<logger>
+		<logFolderName>logs</logFolderName>
+		<logFrequency>100</logFrequency>
+		<startWithSimulation>false</startWithSimulation>
+		<timestampInFilename>true</timestampInFilename>
+	</logger>
+
 	<forceSensor>
 		<robotName>Panda</robotName>
 		<linkName>end-effector</linkName>
 		<origin xyz="0 0 0" rpy="0 0 0" />
 		<filterCutoff>5.0</filterCutoff>
 	</forceSensor>
-
-	<logger>
-		<logFolderName>logs</logFolderName>
-		<logFrequency>100</logFrequency>
-		<startWithSimulation>true</startWithSimulation>
-	</logger>
 
 </simvizConfiguration>

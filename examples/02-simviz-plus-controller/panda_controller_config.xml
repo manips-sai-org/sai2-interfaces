@@ -36,8 +36,8 @@
 				<direction xyz="1 0 0" />
 			</momentSpaceParametrization>
 
-			<velocitySaturation enabled="true" linear_velocity_limit="0.35" angular_velocity_limit="0.78" />
-			<otg type="disabled" max_linear_velocity="0.35" max_linear_acceleration="35.0" max_linear_jerk="350.0" max_angular_velocity="0.78" max_angular_acceleration="78.0" max_angular_jerk="780" />
+			<velocitySaturation enabled="false" linear_velocity_limit="0.35" angular_velocity_limit="0.78" />
+			<otg type="jerk" max_linear_velocity="0.35" max_linear_acceleration="1.5" max_linear_jerk="5.0" max_angular_velocity="1.0" max_angular_acceleration="3.0" max_angular_jerk="100" />
 
 			<positionGains kp="100.0" kv="20.0" ki="0.0" />
 			<orientationGains kp="100.0" kv="20.0" ki="0.0" />
@@ -45,17 +45,18 @@
 			<momentGains kp="1.0" kv="20.0" ki="1.5" />
 		</task>
 
-		<task name="joint_task" type="joint_task"/>
+		<task name="joint_task" type="joint_task">
+			<velocitySaturation enabled="true" velocity_limit="0.20"/>
+			<otg type="disabled" />
+		</task>
 	</controller>
-
 
 	<controller name="joint_controller">
 		<task name="joint_task" type="joint_task">
 			<controlledJointNames></controlledJointNames>
 			<useDynamicDecoupling>true</useDynamicDecoupling>
 			<gains kp="100.0" kv="20.0" ki="0.0" />
-			<velocitySaturation enabled="false" velocity_limit="0.78"/>
-			<otg type="disabled" max_velocity="0.78" max_acceleration="15.0" max_jerk="3000.0"/>
+			<otg type="acceleration" max_velocity="1.04" max_acceleration="3.14" max_jerk="10.0"/>
 		</task>
 	</controller>
 

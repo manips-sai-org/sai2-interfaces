@@ -34,6 +34,12 @@ private:
 			goal_velocity.setZero(dofs);
 			goal_acceleration.setZero(dofs);
 		}
+
+		void setFromTask(const std::shared_ptr<Sai2Primitives::JointTask>& task) {
+			goal_position = task->getDesiredPosition();
+			goal_velocity = task->getDesiredVelocity();
+			goal_acceleration = task->getDesiredAcceleration();
+		}
 	};
 
 	struct MotionForceTaskInput {
@@ -59,6 +65,19 @@ private:
 			desired_moment.setZero();
 			sensed_force.setZero();
 			sensed_moment.setZero();
+		}
+
+		void setFromTask(const std::shared_ptr<Sai2Primitives::MotionForceTask>& task) {
+			goal_position = task->getDesiredPosition();
+			goal_linear_velocity = task->getDesiredVelocity();
+			goal_linear_acceleration = task->getDesiredAcceleration();
+			goal_orientation = task->getDesiredOrientation();
+			goal_angular_velocity = task->getDesiredAngularVelocity();
+			goal_angular_acceleration = task->getDesiredAngularAcceleration();
+			desired_force = task->getDesiredForce();
+			desired_moment = task->getDesiredMoment();
+			sensed_force = task->getSensedForce();
+			sensed_moment = task->getSensedMoment();
 		}
 	};
 

@@ -112,7 +112,8 @@ void SimVizRedisInterface::reset() {
 
 		// logger
 		_loggers[robot_name] = std::make_unique<Sai2Common::Logger>(
-			_config.logger_config.folder_name + "/" + robot_name + ".csv");
+			_config.logger_config.folder_name + "/" + robot_name,
+			_config.logger_config.add_timestamp_to_filename);
 		_loggers.at(robot_name)->addToLog(_robot_q.at(robot_name), "q");
 		_loggers.at(robot_name)->addToLog(_robot_dq.at(robot_name), "dq");
 		_loggers.at(robot_name)
@@ -136,7 +137,8 @@ void SimVizRedisInterface::reset() {
 		_object_ui_torques[object_name] = Eigen::VectorXd::Zero(6);
 
 		_loggers[object_name] = std::make_unique<Sai2Common::Logger>(
-			_config.logger_config.folder_name + "/" + object_name + ".csv");
+			_config.logger_config.folder_name + "/" + object_name,
+			_config.logger_config.add_timestamp_to_filename);
 		_loggers.at(object_name)
 			->addToLog(_object_pose.at(object_name), "pose");
 		_loggers.at(object_name)
