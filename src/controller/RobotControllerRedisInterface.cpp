@@ -16,6 +16,8 @@ void stop(int i) { should_stop = true; }
 
 const std::string reset_inputs_redis_group = "reset_input_group";
 
+const std::string LOGGING_ON_KEY = "sai2::interfaces::controller::logging_on";
+
 const std::string ACTIVE_CONTROLLER_KEY =
 	"sai2::interfaces::active_controller_name";
 
@@ -31,6 +33,9 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 	_config_file = config_file;
 	_config_parser = RobotControllerConfigParser();
 	_config = _config_parser.parseConfig(_config_file);
+
+	_logging_on = _config.logger_config.start_with_logger_on;
+	_logging_state = _logging_on ? LoggingState::START : LoggingState::OFF;
 
 	_redis_client.connect();
 
@@ -102,9 +107,12 @@ void RobotControllerRedisInterface::initialize() {
 	_redis_client.receiveAllFromGroup();
 	_robot_model->setQ(_robot_q);
 	_robot_model->updateModel();
+	_robot_M = _robot_model->M();
 
 	for (const auto& pair : _config.controllers_configs) {
 		vector<shared_ptr<Sai2Primitives::TemplateTask>> ordered_tasks_list;
+
+		_is_active_controller[pair.first] = false;
 
 		for (const auto& tasks : pair.second) {
 			if (holds_alternative<JointTaskConfig>(tasks)) {
@@ -200,7 +208,11 @@ void RobotControllerRedisInterface::switchController(
 			 << endl;
 		return;
 	}
+	if (_active_controller_name != "") {
+		_is_active_controller.at(_active_controller_name) = false;
+	}
 	_active_controller_name = controller_name;
+	_is_active_controller.at(_active_controller_name) = true;
 
 	_robot_model->setQ(_robot_q);
 	_robot_model->setDq(_robot_dq);
@@ -211,30 +223,60 @@ void RobotControllerRedisInterface::switchController(
 
 void RobotControllerRedisInterface::initializeRedisTasksIO() {
 	_redis_client.createNewSendGroup(reset_inputs_redis_group);
+
+	if (!std::filesystem::exists(_config.logger_config.folder_name)) {
+		std::filesystem::create_directory(_config.logger_config.folder_name);
+	}
+
+	_robot_logger = std::make_unique<Sai2Common::Logger>(
+		_config.logger_config.folder_name + '/' + _config.robot_name,
+		_config.logger_config.add_timestamp_to_filename);
+
+	_robot_logger->addToLog(_robot_q, "q");
+	_robot_logger->addToLog(_robot_dq, "dq");
+	_robot_logger->addToLog(_robot_command_torques, "command_torques");
+	_robot_logger->addToLog(_robot_M, "Mass_Matrix");
+
 	for (auto& pair : _config.controllers_configs) {
 		const string& controller_name = pair.first;
 
 		_controller_inputs[controller_name] = {};
 		_redis_client.createNewReceiveGroup(controller_name);
 
+		std::map<std::string, std::unique_ptr<Sai2Common::Logger>> task_loggers;
+		if (!std::filesystem::exists(_config.logger_config.folder_name + '/' +
+									 controller_name)) {
+			std::filesystem::create_directory(
+				_config.logger_config.folder_name + '/' + controller_name);
+		}
+
 		auto& task_configs = pair.second;
 
 		for (auto& task_config : task_configs) {
 			if (holds_alternative<JointTaskConfig>(task_config)) {
 				auto& joint_task_config = get<JointTaskConfig>(task_config);
-				auto joint_task =
-					_robot_controllers.at(controller_name)
-						->getJointTaskByName(joint_task_config.task_name);
-				_controller_inputs.at(
-					controller_name)[joint_task_config.task_name] =
+				const string task_name = joint_task_config.task_name;
+				auto joint_task = _robot_controllers.at(controller_name)
+									  ->getJointTaskByName(task_name);
+				_controller_inputs.at(controller_name)[task_name] =
 					JointTaskInput(joint_task->getTaskDof());
+
+				// _task_loggers.at(controller_name)[task_name] =
+				task_loggers[task_name] = std::make_unique<Sai2Common::Logger>(
+					_config.logger_config.folder_name + '/' + controller_name +
+						'/' + task_name,
+					_config.logger_config.add_timestamp_to_filename);
+				auto task_logger = task_loggers.at(task_name).get();
+				task_logger->addToLog(_is_active_controller.at(controller_name),
+									  "is_active");
 
 				const string& key_prefix =
 					"sai2::interfaces::controller::" + _config.robot_name +
-					"::" + controller_name +
-					"::" + joint_task_config.task_name + "::";
+					"::" + controller_name + "::" + task_name + "::";
 
 				// dynamic decoupling
+				task_logger->addToLog(joint_task_config.use_dynamic_decoupling,
+									  "use_dynamic_decoupling");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "use_dynamic_decoupling",
 					joint_task_config.use_dynamic_decoupling, controller_name);
@@ -250,6 +292,9 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 						joint_task->getGains());
 					joint_task_config.gains_config = gains_config;
 				}
+				task_logger->addToLog(joint_task_config.gains_config->kp, "kp");
+				task_logger->addToLog(joint_task_config.gains_config->kv, "kv");
+				task_logger->addToLog(joint_task_config.gains_config->ki, "ki");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "kp", joint_task_config.gains_config->kp,
 					controller_name);
@@ -271,6 +316,13 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					joint_task_config.velocity_saturation_config =
 						velocity_saturation_config;
 				}
+				task_logger->addToLog(
+					joint_task_config.velocity_saturation_config->enabled,
+					"velocity_saturation_enabled");
+				task_logger->addToLog(
+					joint_task_config.velocity_saturation_config
+						->velocity_limits,
+					"velocity_saturation_limits");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
 					joint_task_config.velocity_saturation_config->enabled,
@@ -295,6 +347,20 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 						joint_task->getInternalOtg().getMaxJerk();
 					joint_task_config.otg_config = otg_config;
 				}
+				task_logger->addToLog(joint_task_config.otg_config->enabled,
+									  "otg_enabled");
+				task_logger->addToLog(
+					joint_task_config.otg_config->jerk_limited,
+					"otg_jerk_limited");
+				task_logger->addToLog(
+					joint_task_config.otg_config->limits.velocity_limit,
+					"otg_velocity_limit");
+				task_logger->addToLog(
+					joint_task_config.otg_config->limits.acceleration_limit,
+					"otg_acceleration_limit");
+				task_logger->addToLog(
+					joint_task_config.otg_config->limits.jerk_limit,
+					"otg_jerk_limit");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_enabled",
 					joint_task_config.otg_config->enabled, controller_name);
@@ -317,9 +383,14 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 				// inputs
 				JointTaskInput& joint_task_input = std::get<JointTaskInput>(
-					_controller_inputs.at(controller_name)
-						.at(joint_task_config.task_name));
+					_controller_inputs.at(controller_name).at(task_name));
 				joint_task_input.setFromTask(joint_task);
+				task_logger->addToLog(joint_task_input.goal_position,
+									  "goal_position");
+				task_logger->addToLog(joint_task_input.goal_velocity,
+									  "goal_velocity");
+				task_logger->addToLog(joint_task_input.goal_acceleration,
+									  "goal_acceleration");
 				_redis_client.addToSendGroup(key_prefix + "goal_position",
 											 joint_task_input.goal_position,
 											 reset_inputs_redis_group);
@@ -341,21 +412,32 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 			} else if (holds_alternative<MotionForceTaskConfig>(task_config)) {
 				auto& motion_force_task_config =
 					get<MotionForceTaskConfig>(task_config);
+				const string task_name = motion_force_task_config.task_name;
+
 				auto motion_force_task =
 					_robot_controllers.at(controller_name)
-						->getMotionForceTaskByName(
-							motion_force_task_config.task_name);
+						->getMotionForceTaskByName(task_name);
 
-				_controller_inputs.at(
-					controller_name)[motion_force_task_config.task_name] =
+				_controller_inputs.at(controller_name)[task_name] =
 					MotionForceTaskInput();
+
+				// _task_loggers.at(controller_name)[task_name] =
+				task_loggers[task_name] = std::make_unique<Sai2Common::Logger>(
+					_config.logger_config.folder_name + '/' + controller_name +
+						'/' + task_name,
+					_config.logger_config.add_timestamp_to_filename);
+				auto task_logger = task_loggers.at(task_name).get();
+				task_logger->addToLog(_is_active_controller.at(controller_name),
+									  "is_active");
 
 				const string key_prefix =
 					"sai2::interfaces::controller::" + _config.robot_name +
-					"::" + controller_name +
-					"::" + motion_force_task_config.task_name + "::";
+					"::" + controller_name + "::" + task_name + "::";
 
 				// dynamic decoupling
+				task_logger->addToLog(
+					motion_force_task_config.use_dynamic_decoupling,
+					"use_dynamic_decoupling");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "use_dynamic_decoupling",
 					motion_force_task_config.use_dynamic_decoupling,
@@ -384,6 +466,20 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.moment_space_param_config =
 						moment_space_param_config;
 				}
+				task_logger->addToLog(
+					motion_force_task_config.force_space_param_config
+						->force_space_dimension,
+					"force_space_dimension");
+				task_logger->addToLog(
+					motion_force_task_config.force_space_param_config->axis,
+					"force_or_motion_axis");
+				task_logger->addToLog(
+					motion_force_task_config.moment_space_param_config
+						->force_space_dimension,
+					"moment_space_dimension");
+				task_logger->addToLog(
+					motion_force_task_config.moment_space_param_config->axis,
+					"moment_or_rotmotion_axis");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "closed_loop_force_control",
 					motion_force_task_config.closed_loop_force_control,
@@ -421,6 +517,17 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.velocity_saturation_config =
 						velocity_saturation_config;
 				}
+				task_logger->addToLog(motion_force_task_config
+										  .velocity_saturation_config->enabled,
+									  "velocity_saturation_enabled");
+				task_logger->addToLog(
+					motion_force_task_config.velocity_saturation_config
+						->linear_velocity_limits,
+					"linear_velocity_saturation_limits");
+				task_logger->addToLog(
+					motion_force_task_config.velocity_saturation_config
+						->angular_velocity_limits,
+					"angular_velocity_saturation_limits");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
 					motion_force_task_config.velocity_saturation_config
@@ -465,6 +572,30 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 							0);
 					motion_force_task_config.otg_config = otg_config;
 				}
+				task_logger->addToLog(
+					motion_force_task_config.otg_config->enabled,
+					"otg_enabled");
+				task_logger->addToLog(
+					motion_force_task_config.otg_config->jerk_limited,
+					"otg_jerk_limited");
+				task_logger->addToLog(
+					motion_force_task_config.otg_config->linear_velocity_limit,
+					"otg_linear_velocity_limit");
+				task_logger->addToLog(
+					motion_force_task_config.otg_config->angular_velocity_limit,
+					"otg_angular_velocity_limit");
+				task_logger->addToLog(motion_force_task_config.otg_config
+										  ->linear_acceleration_limit,
+									  "otg_linear_acceleration_limit");
+				task_logger->addToLog(motion_force_task_config.otg_config
+										  ->angular_acceleration_limit,
+									  "otg_angular_acceleration_limit");
+				task_logger->addToLog(
+					motion_force_task_config.otg_config->linear_jerk_limit,
+					"otg_linear_jerk_limit");
+				task_logger->addToLog(
+					motion_force_task_config.otg_config->angular_jerk_limit,
+					"otg_angular_jerk_limit");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_enabled",
 					motion_force_task_config.otg_config->enabled,
@@ -559,6 +690,42 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.moment_gains_config =
 						moment_gains_config;
 				}
+				task_logger->addToLog(
+					motion_force_task_config.position_gains_config->kp,
+					"position_kp");
+				task_logger->addToLog(
+					motion_force_task_config.position_gains_config->kv,
+					"position_kv");
+				task_logger->addToLog(
+					motion_force_task_config.position_gains_config->ki,
+					"position_ki");
+				task_logger->addToLog(
+					motion_force_task_config.orientation_gains_config->kp,
+					"orientation_kp");
+				task_logger->addToLog(
+					motion_force_task_config.orientation_gains_config->kv,
+					"orientation_kv");
+				task_logger->addToLog(
+					motion_force_task_config.orientation_gains_config->ki,
+					"orientation_ki");
+				task_logger->addToLog(
+					motion_force_task_config.force_gains_config->kp,
+					"force_kp");
+				task_logger->addToLog(
+					motion_force_task_config.force_gains_config->kv,
+					"force_kv");
+				task_logger->addToLog(
+					motion_force_task_config.force_gains_config->ki,
+					"force_ki");
+				task_logger->addToLog(
+					motion_force_task_config.moment_gains_config->kp,
+					"moment_kp");
+				task_logger->addToLog(
+					motion_force_task_config.moment_gains_config->kv,
+					"moment_kv");
+				task_logger->addToLog(
+					motion_force_task_config.moment_gains_config->ki,
+					"moment_ki");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "position_kp",
 					motion_force_task_config.position_gains_config->kp,
@@ -611,9 +778,32 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				// input
 				MotionForceTaskInput& motion_force_task_input =
 					std::get<MotionForceTaskInput>(
-						_controller_inputs.at(controller_name)
-							.at(motion_force_task_config.task_name));
+						_controller_inputs.at(controller_name).at(task_name));
 				motion_force_task_input.setFromTask(motion_force_task);
+				task_logger->addToLog(motion_force_task_input.goal_position,
+									  "goal_position");
+				task_logger->addToLog(
+					motion_force_task_input.goal_linear_velocity,
+					"goal_linear_velocity");
+				task_logger->addToLog(
+					motion_force_task_input.goal_linear_acceleration,
+					"goal_linear_acceleration");
+				task_logger->addToLog(motion_force_task_input.goal_orientation,
+									  "goal_orientation");
+				task_logger->addToLog(
+					motion_force_task_input.goal_angular_velocity,
+					"goal_angular_velocity");
+				task_logger->addToLog(
+					motion_force_task_input.goal_angular_acceleration,
+					"goal_angular_acceleration");
+				task_logger->addToLog(motion_force_task_input.desired_force,
+									  "desired_force");
+				task_logger->addToLog(motion_force_task_input.desired_moment,
+									  "desired_moment");
+				task_logger->addToLog(motion_force_task_input.sensed_force,
+									  "sensed_force");
+				task_logger->addToLog(motion_force_task_input.sensed_moment,
+									  "sensed_moment");
 				_redis_client.addToSendGroup(
 					key_prefix + "goal_position",
 					motion_force_task_input.goal_position,
@@ -694,6 +884,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_input.sensed_moment, controller_name);
 			}
 		}
+		_task_loggers[controller_name] = std::move(task_loggers);
 	}
 }
 
@@ -1034,6 +1225,43 @@ void RobotControllerRedisInterface::processInputs() {
 				motion_force_task_input.sensed_force,
 				motion_force_task_input.sensed_moment);
 		}
+	}
+
+	// logging
+	switch (_logging_state) {
+		case LoggingState::OFF:
+			if (_logging_on) {
+				_logging_state = LoggingState::START;
+			}
+			break;
+		case LoggingState::START:
+			_robot_logger->start(_config.logger_config.frequency);
+			for (auto& task_loggers : _task_loggers) {
+				for (auto& pair : task_loggers.second) {
+					pair.second->start(_config.logger_config.frequency);
+				}
+			}
+			_logging_state = LoggingState::ON;
+			break;
+
+		case LoggingState::ON:
+			if (!_logging_on) {
+				_logging_state = LoggingState::STOP;
+			}
+			break;
+
+		case LoggingState::STOP:
+			_robot_logger->stop();
+			for (auto& task_loggers : _task_loggers) {
+				for (auto& pair : task_loggers.second) {
+					pair.second->stop();
+				}
+			}
+			_logging_state = LoggingState::OFF;
+			break;
+
+		default:
+			break;
 	}
 }
 

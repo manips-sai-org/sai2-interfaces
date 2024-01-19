@@ -9,7 +9,7 @@
 	</simParameters>
 
 	<logger>
-		<logFolderName>logs</logFolderName>
+		<logFolderName>simviz_log_files</logFolderName>
 		<logFrequency>100</logFrequency>
 		<startWithSimulation>false</startWithSimulation>
 		<timestampInFilename>true</timestampInFilename>

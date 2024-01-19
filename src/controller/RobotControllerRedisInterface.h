@@ -6,6 +6,7 @@
 #include "RobotControllerConfigParser.h"
 #include "Sai2Model.h"
 #include "Sai2Primitives.h"
+#include "logger/Logger.h"
 #include "redis/RedisClient.h"
 
 namespace Sai2Interfaces {
@@ -18,16 +19,21 @@ public:
 	void run();
 
 private:
+	enum LoggingState {
+		OFF,
+		START,
+		ON,
+		STOP,
+	};
 	struct JointTaskInput {
 		Eigen::VectorXd goal_position;
 		Eigen::VectorXd goal_velocity;
 		Eigen::VectorXd goal_acceleration;
 
-		JointTaskInput(){
+		JointTaskInput() {
 			goal_position.setZero(1);
 			goal_velocity.setZero(1);
 			goal_acceleration.setZero(1);
-		
 		};
 		JointTaskInput(const int& dofs) {
 			goal_position.setZero(dofs);
@@ -35,7 +41,8 @@ private:
 			goal_acceleration.setZero(dofs);
 		}
 
-		void setFromTask(const std::shared_ptr<Sai2Primitives::JointTask>& task) {
+		void setFromTask(
+			const std::shared_ptr<Sai2Primitives::JointTask>& task) {
 			goal_position = task->getDesiredPosition();
 			goal_velocity = task->getDesiredVelocity();
 			goal_acceleration = task->getDesiredAcceleration();
@@ -67,7 +74,8 @@ private:
 			sensed_moment.setZero();
 		}
 
-		void setFromTask(const std::shared_ptr<Sai2Primitives::MotionForceTask>& task) {
+		void setFromTask(
+			const std::shared_ptr<Sai2Primitives::MotionForceTask>& task) {
 			goal_position = task->getDesiredPosition();
 			goal_linear_velocity = task->getDesiredVelocity();
 			goal_linear_acceleration = task->getDesiredAcceleration();
@@ -84,12 +92,9 @@ private:
 	typedef std::variant<JointTaskInput, MotionForceTaskInput> TaskInputVariant;
 
 	void initialize();
-
-	void completeConfigFromTaskDefaultValues();
 	void initializeRedisTasksIO();
 
 	void switchController(const std::string& controller_name);
-
 	void processInputs();
 
 	std::string _config_file;
@@ -106,9 +111,18 @@ private:
 	Eigen::VectorXd _robot_q;
 	Eigen::VectorXd _robot_dq;
 	Eigen::VectorXd _robot_command_torques;
+	Eigen::MatrixXd _robot_M;
 
 	std::map<std::string, std::map<std::string, TaskInputVariant>>
 		_controller_inputs;
+
+	std::map<std::string,
+			 std::map<std::string, std::unique_ptr<Sai2Common::Logger>>>
+		_task_loggers;
+	std::unique_ptr<Sai2Common::Logger> _robot_logger;
+	std::map<std::string, bool> _is_active_controller;
+	bool _logging_on;
+	LoggingState _logging_state;
 };
 
 }  // namespace Sai2Interfaces

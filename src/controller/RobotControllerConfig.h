@@ -19,6 +19,13 @@ struct GainsConfig {
 	}
 };
 
+struct ControllerLoggerConfig {
+	std::string folder_name = "logs_control";
+	double frequency = 100.0;
+	bool start_with_logger_on = false;
+	bool add_timestamp_to_filename = true;
+};
+
 struct JointTaskConfig {
 	struct JointVelSatConfig {
 		bool enabled = false;
@@ -105,6 +112,8 @@ struct RobotControllerConfig {
 	Eigen::Affine3d robot_base_in_world = Eigen::Affine3d::Identity();
 	Eigen::Vector3d world_gravity = Eigen::Vector3d(0, 0, -9.81);
 	double timestep = 0.001;
+
+	ControllerLoggerConfig logger_config;
 
 	std::string initial_active_controller_name = "";
 

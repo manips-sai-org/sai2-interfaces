@@ -15,7 +15,7 @@ struct SimForceSensorConfig
 };
 
 struct SimLoggerConfig {
-	std::string folder_name = "log_files";
+	std::string folder_name = "logs_simviz";
 	double frequency = 100.0;
 	bool start_with_logger_on = false;
 	bool add_timestamp_to_filename = true;

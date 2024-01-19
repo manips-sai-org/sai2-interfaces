@@ -246,6 +246,30 @@ RobotControllerConfig RobotControllerConfigParser::parseConfig(
 		config.timestep = timestep->DoubleText();
 	}
 
+	// extract logger config
+	tinyxml2::XMLElement* logger = root->FirstChildElement("logger");
+	if (logger) {
+		if (logger->FirstChildElement("logFolderName")) {
+			config.logger_config.folder_name =
+				logger->FirstChildElement("logFolderName")->GetText();
+		}
+
+		if (logger->FirstChildElement("logFrequency")) {
+			config.logger_config.frequency =
+				logger->FirstChildElement("logFrequency")->DoubleText();
+		}
+
+		if (logger->FirstChildElement("startWithController")) {
+			config.logger_config.start_with_logger_on =
+				logger->FirstChildElement("startWithController")->BoolText();
+		}
+
+		if (logger->FirstChildElement("timestampInFilename")) {
+			config.logger_config.add_timestamp_to_filename =
+				logger->FirstChildElement("timestampInFilename")->BoolText();
+		}
+	}
+
 	// parse all controller configs
 	for (tinyxml2::XMLElement* controller =
 			 root->FirstChildElement("controller");
