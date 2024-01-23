@@ -243,7 +243,6 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 		_controller_inputs[controller_name] = {};
 		_redis_client.createNewReceiveGroup(controller_name);
 
-		std::map<std::string, std::unique_ptr<Sai2Common::Logger>> task_loggers;
 		if (!std::filesystem::exists(_config.logger_config.folder_name + '/' +
 									 controller_name)) {
 			std::filesystem::create_directory(
@@ -261,12 +260,13 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				_controller_inputs.at(controller_name)[task_name] =
 					JointTaskInput(joint_task->getTaskDof());
 
-				// _task_loggers.at(controller_name)[task_name] =
-				task_loggers[task_name] = std::make_unique<Sai2Common::Logger>(
-					_config.logger_config.folder_name + '/' + controller_name +
-						'/' + task_name,
-					_config.logger_config.add_timestamp_to_filename);
-				auto task_logger = task_loggers.at(task_name).get();
+				_task_loggers[controller_name][task_name] =
+					std::make_unique<Sai2Common::Logger>(
+						_config.logger_config.folder_name + '/' +
+							controller_name + '/' + task_name,
+						_config.logger_config.add_timestamp_to_filename);
+				auto task_logger =
+					_task_loggers.at(controller_name).at(task_name).get();
 				task_logger->addToLog(_is_active_controller.at(controller_name),
 									  "is_active");
 
@@ -421,12 +421,13 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				_controller_inputs.at(controller_name)[task_name] =
 					MotionForceTaskInput();
 
-				// _task_loggers.at(controller_name)[task_name] =
-				task_loggers[task_name] = std::make_unique<Sai2Common::Logger>(
-					_config.logger_config.folder_name + '/' + controller_name +
-						'/' + task_name,
-					_config.logger_config.add_timestamp_to_filename);
-				auto task_logger = task_loggers.at(task_name).get();
+				_task_loggers[controller_name][task_name] =
+					std::make_unique<Sai2Common::Logger>(
+						_config.logger_config.folder_name + '/' +
+							controller_name + '/' + task_name,
+						_config.logger_config.add_timestamp_to_filename);
+				auto task_logger =
+					_task_loggers.at(controller_name).at(task_name).get();
 				task_logger->addToLog(_is_active_controller.at(controller_name),
 									  "is_active");
 
@@ -884,7 +885,6 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_input.sensed_moment, controller_name);
 			}
 		}
-		_task_loggers[controller_name] = std::move(task_loggers);
 	}
 }
 
