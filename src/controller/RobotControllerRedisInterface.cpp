@@ -19,7 +19,7 @@ const std::string reset_inputs_redis_group = "reset_input_group";
 const std::string LOGGING_ON_KEY = "sai2::interfaces::controller::logging_on";
 
 const std::string ACTIVE_CONTROLLER_KEY =
-	"sai2::interfaces::active_controller_name";
+	"sai2::interfaces::controller::active_controller_name";
 
 const std::string ROBOT_COMMAND_TORQUES_PREFIX =
 	"sai2::interfaces::robot_command_torques::";
@@ -801,10 +801,18 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 									  "desired_force");
 				task_logger->addToLog(motion_force_task_input.desired_moment,
 									  "desired_moment");
-				task_logger->addToLog(motion_force_task_input.sensed_force,
-									  "sensed_force");
-				task_logger->addToLog(motion_force_task_input.sensed_moment,
-									  "sensed_moment");
+				task_logger->addToLog(
+					motion_force_task_input.sensed_force_sensor_frame,
+					"sensed_force_sensor_frame");
+				task_logger->addToLog(
+					motion_force_task_input.sensed_moment_sensor_frame,
+					"sensed_moment_sensor_frame");
+				task_logger->addToLog(
+					motion_force_task_input.sensed_force_world_frame,
+					"sensed_force_world_frame");
+				task_logger->addToLog(
+					motion_force_task_input.sensed_moment_world_frame,
+					"sensed_moment_world_frame");
 				_redis_client.addToSendGroup(
 					key_prefix + "goal_position",
 					motion_force_task_input.goal_position,
@@ -840,13 +848,19 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				_redis_client.addToSendGroup(
 					FORCE_SENSOR_PREFIX + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::force",
-					motion_force_task_input.sensed_force,
+					motion_force_task_input.sensed_force_sensor_frame,
 					reset_inputs_redis_group);
 				_redis_client.addToSendGroup(
 					FORCE_SENSOR_PREFIX + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::moment",
-					motion_force_task_input.sensed_moment,
+					motion_force_task_input.sensed_moment_sensor_frame,
 					reset_inputs_redis_group);
+				_redis_client.addToSendGroup(
+					key_prefix + "sensed_force",
+					motion_force_task_input.sensed_force_world_frame);
+				_redis_client.addToSendGroup(
+					key_prefix + "sensed_moment",
+					motion_force_task_input.sensed_moment_world_frame);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "goal_position",
 					motion_force_task_input.goal_position, controller_name);
@@ -878,11 +892,13 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				_redis_client.addToReceiveGroup(
 					FORCE_SENSOR_PREFIX + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::force",
-					motion_force_task_input.sensed_force, controller_name);
+					motion_force_task_input.sensed_force_sensor_frame,
+					controller_name);
 				_redis_client.addToReceiveGroup(
 					FORCE_SENSOR_PREFIX + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::moment",
-					motion_force_task_input.sensed_moment, controller_name);
+					motion_force_task_input.sensed_moment_sensor_frame,
+					controller_name);
 			}
 		}
 	}
@@ -923,12 +939,10 @@ void RobotControllerRedisInterface::processInputs() {
 			} else {
 				const auto& velocity_saturation_config =
 					joint_task_config.velocity_saturation_config.value();
-				if (velocity_saturation_config.enabled &&
-					!joint_task->getVelocitySaturationEnabled()) {
+				if (velocity_saturation_config.enabled) {
 					joint_task->enableVelocitySaturation(
 						velocity_saturation_config.velocity_limits);
-				} else if (!velocity_saturation_config.enabled &&
-						   joint_task->getVelocitySaturationEnabled()) {
+				} else {
 					joint_task->disableVelocitySaturation();
 				}
 			}
@@ -994,7 +1008,6 @@ void RobotControllerRedisInterface::processInputs() {
 			joint_task->setDesiredVelocity(joint_task_input.goal_velocity);
 			joint_task->setDesiredAcceleration(
 				joint_task_input.goal_acceleration);
-
 		} else if (holds_alternative<MotionForceTaskConfig>(task_config)) {
 			auto& motion_force_task_config =
 				get<MotionForceTaskConfig>(task_config);
@@ -1072,7 +1085,11 @@ void RobotControllerRedisInterface::processInputs() {
 				const auto& velocity_saturation_config =
 					motion_force_task_config.velocity_saturation_config.value();
 				if (velocity_saturation_config.enabled &&
-					!motion_force_task->getVelocitySaturationEnabled()) {
+					(!motion_force_task->getVelocitySaturationEnabled() ||
+					 velocity_saturation_config.linear_velocity_limits !=
+						 motion_force_task->getLinearSaturationVelocity() ||
+					 velocity_saturation_config.angular_velocity_limits !=
+						 motion_force_task->getAngularSaturationVelocity())) {
 					motion_force_task->enableVelocitySaturation(
 						velocity_saturation_config.linear_velocity_limits,
 						velocity_saturation_config.angular_velocity_limits);
@@ -1222,8 +1239,12 @@ void RobotControllerRedisInterface::processInputs() {
 			motion_force_task->setDesiredMoment(
 				motion_force_task_input.desired_moment);
 			motion_force_task->updateSensedForceAndMoment(
-				motion_force_task_input.sensed_force,
-				motion_force_task_input.sensed_moment);
+				motion_force_task_input.sensed_force_sensor_frame,
+				motion_force_task_input.sensed_moment_sensor_frame);
+			motion_force_task_input.sensed_force_world_frame =
+				motion_force_task->getSensedForce();
+			motion_force_task_input.sensed_moment_world_frame =
+				motion_force_task->getSensedMoment();
 		}
 	}
 

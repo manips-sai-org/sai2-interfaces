@@ -58,8 +58,10 @@ private:
 		Eigen::Vector3d goal_angular_acceleration;
 		Eigen::Vector3d desired_force;
 		Eigen::Vector3d desired_moment;
-		Eigen::Vector3d sensed_force;
-		Eigen::Vector3d sensed_moment;
+		Eigen::Vector3d sensed_force_sensor_frame;
+		Eigen::Vector3d sensed_moment_sensor_frame;
+		Eigen::Vector3d sensed_force_world_frame;
+		Eigen::Vector3d sensed_moment_world_frame;
 
 		MotionForceTaskInput() {
 			goal_position.setZero();
@@ -70,8 +72,10 @@ private:
 			goal_angular_acceleration.setZero();
 			desired_force.setZero();
 			desired_moment.setZero();
-			sensed_force.setZero();
-			sensed_moment.setZero();
+			sensed_force_sensor_frame.setZero();
+			sensed_moment_sensor_frame.setZero();
+			sensed_force_world_frame.setZero();
+			sensed_moment_world_frame.setZero();
 		}
 
 		void setFromTask(
@@ -84,8 +88,8 @@ private:
 			goal_angular_acceleration = task->getDesiredAngularAcceleration();
 			desired_force = task->getDesiredForce();
 			desired_moment = task->getDesiredMoment();
-			sensed_force = task->getSensedForce();
-			sensed_moment = task->getSensedMoment();
+			sensed_force_world_frame = task->getSensedForce();
+			sensed_moment_world_frame = task->getSensedMoment();
 		}
 	};
 

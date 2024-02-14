@@ -109,10 +109,13 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
           } else if (this.rows > 1 && this.cols > 1) {
             // matrix
             tbl_cell_text = document.createTextNode(value[i][j].toFixed(this.decimalPlaces) + '');
+          } else if (this.display_row_vector) {
+            // row vector 
+            tbl_cell_text = document.createTextNode(value[j].toFixed(this.decimalPlaces) + '');
           } else {
-            // vector 
+			// col vector
             tbl_cell_text = document.createTextNode(value[i].toFixed(this.decimalPlaces) + '');
-          }
+		  }
 
           tbl_cell.appendChild(tbl_cell_text);
           tbl_row.appendChild(tbl_cell);
@@ -132,9 +135,20 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
     this.decimalPlaces = this.getAttribute('decimalPlaces') || 3;
     this.display_text = this.getAttribute('display') || this.key;
     this.display_row_vector = this.hasAttribute('displayAsRowVector');
+	this.labelPosition = this.getAttribute('labelPosition') || 'left';
 
     this.label = this.template_node.querySelector('label');
     this.table = this.template_node.querySelector('table');
+
+    // Position the label and table based on labelPosition attribute
+    if (this.labelPosition === 'top') {
+		this.container = this.template_node.querySelector('.sai2-interface-display-top');
+		this.container.style.flexDirection = 'column';
+		this.label.style.textAlign = 'center';
+		this.label.style.marginBottom = '15px';
+	} else {
+		this.label.style.marginRight = '5px';
+	  }
 
     this.label.innerHTML = this.display_text;
     this.update_value();

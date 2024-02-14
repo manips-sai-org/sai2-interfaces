@@ -486,14 +486,15 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	}
 
 	// force space param
-	tinyxml2::XMLElement* force_motion_space =
+	tinyxml2::XMLElement* force_space_param =
 		xml->FirstChildElement("forceSpaceParametrization");
-	if (force_motion_space) {
+	if (force_space_param) {
 		MotionForceTaskConfig::ForceMotionSpaceParamConfig
 			force_motion_space_config;
 		force_motion_space_config.force_space_dimension =
-			force_motion_space->IntAttribute("forceSpaceDimension");
-		force_motion_space_config.axis = parseVector3dLocal(force_motion_space);
+			force_space_param->IntAttribute("forceSpaceDimension");
+		force_motion_space_config.axis = parseVector3dLocal(
+			force_space_param->FirstChildElement("direction"));
 		config.force_space_param_config = force_motion_space_config;
 	}
 
@@ -505,7 +506,8 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 			moment_space_param_config;
 		moment_space_param_config.force_space_dimension =
 			moment_space_param->IntAttribute("momentSpaceDimension");
-		moment_space_param_config.axis = parseVector3dLocal(moment_space_param);
+		moment_space_param_config.axis = parseVector3dLocal(
+			moment_space_param->FirstChildElement("direction"));
 		config.moment_space_param_config = moment_space_param_config;
 	}
 

@@ -160,7 +160,7 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
     };
 
     this.reset_button = document.createElement('button');
-    this.reset_button.innerHTML = 'Reset Orientation Offset';
+    this.reset_button.innerHTML = 'Center Sliders';
     this.reset_button.onclick = () => {
       // set slider to zero
       this.slider.refresh(); 
@@ -176,8 +176,9 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 
     this.display = document.createElement('sai2-interfaces-display');
     this.display.setAttribute('key', this.key);
-    this.display.setAttribute('display', 'Rotation Matrix');
+    this.display.setAttribute('display', 'Matrix Form');
     this.display.setAttribute('decimalPlaces', 3);
+    this.display.setAttribute('labelPosition', 'top');
     this.display.setAttribute('refreshRate', this.refreshRate);
 
     right_div.append(this.display);

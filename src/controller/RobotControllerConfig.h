@@ -29,20 +29,14 @@ struct ControllerLoggerConfig {
 struct JointTaskConfig {
 	struct JointVelSatConfig {
 		bool enabled = false;
-		Eigen::VectorXd velocity_limits;
+		Eigen::VectorXd velocity_limits = Eigen::VectorXd::Zero(1);
 	};
 
 	struct JointOTGConfig {
 		struct JointOTGLimit {
-			Eigen::VectorXd velocity_limit;
-			Eigen::VectorXd acceleration_limit;
-			Eigen::VectorXd jerk_limit;
-
-			JointOTGLimit() {
-				velocity_limit.setZero(1);
-				acceleration_limit.setZero(1);
-				jerk_limit.setZero(1);
-			}
+			Eigen::VectorXd velocity_limit = Eigen::VectorXd::Zero(1);
+			Eigen::VectorXd acceleration_limit = Eigen::VectorXd::Zero(1);
+			Eigen::VectorXd jerk_limit = Eigen::VectorXd::Zero(1);
 		};
 
 		bool enabled = false;
@@ -62,13 +56,13 @@ struct JointTaskConfig {
 struct MotionForceTaskConfig {
 	struct ForceMotionSpaceParamConfig {
 		int force_space_dimension = 0;
-		Eigen::Vector3d axis;
+		Eigen::Vector3d axis = Eigen::Vector3d::UnitZ();
 	};
 
 	struct VelSatConfig {
 		bool enabled = false;
-		double linear_velocity_limits;
-		double angular_velocity_limits;
+		double linear_velocity_limits = 0.0;
+		double angular_velocity_limits = 0.0;
 	};
 
 	struct OTGConfig {
