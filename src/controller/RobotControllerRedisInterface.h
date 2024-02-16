@@ -43,9 +43,9 @@ private:
 
 		void setFromTask(
 			const std::shared_ptr<Sai2Primitives::JointTask>& task) {
-			goal_position = task->getDesiredPosition();
-			goal_velocity = task->getDesiredVelocity();
-			goal_acceleration = task->getDesiredAcceleration();
+			goal_position = task->getGoalPosition();
+			goal_velocity = task->getGoalVelocity();
+			goal_acceleration = task->getGoalAcceleration();
 		}
 	};
 
@@ -56,6 +56,10 @@ private:
 		Eigen::Matrix3d goal_orientation;
 		Eigen::Vector3d goal_angular_velocity;
 		Eigen::Vector3d goal_angular_acceleration;
+		Eigen::Vector3d current_position;
+		Eigen::Vector3d current_linear_velocity;
+		Eigen::Matrix3d current_orientation;
+		Eigen::Vector3d current_angular_velocity;
 		Eigen::Vector3d desired_force;
 		Eigen::Vector3d desired_moment;
 		Eigen::Vector3d sensed_force_sensor_frame;
@@ -70,6 +74,10 @@ private:
 			goal_orientation.setIdentity();
 			goal_angular_velocity.setZero();
 			goal_angular_acceleration.setZero();
+			current_position.setZero();
+			current_linear_velocity.setZero();
+			current_orientation.setIdentity();
+			current_angular_velocity.setZero();
 			desired_force.setZero();
 			desired_moment.setZero();
 			sensed_force_sensor_frame.setZero();
@@ -80,12 +88,16 @@ private:
 
 		void setFromTask(
 			const std::shared_ptr<Sai2Primitives::MotionForceTask>& task) {
-			goal_position = task->getDesiredPosition();
-			goal_linear_velocity = task->getDesiredVelocity();
-			goal_linear_acceleration = task->getDesiredAcceleration();
-			goal_orientation = task->getDesiredOrientation();
-			goal_angular_velocity = task->getDesiredAngularVelocity();
+			goal_position = task->getGoalPosition();
+			goal_linear_velocity = task->getGoalLinearVelocity();
+			goal_linear_acceleration = task->getGoalLinearAcceleration();
+			goal_orientation = task->getGoalOrientation();
+			goal_angular_velocity = task->getGoalAngularVelocity();
 			goal_angular_acceleration = task->getDesiredAngularAcceleration();
+			current_position = task->getCurrentPosition();
+			current_linear_velocity = task->getCurrentLinearVelocity();
+			current_orientation = task->getCurrentOrientation();
+			current_angular_velocity = task->getCurrentAngularVelocity();
 			desired_force = task->getDesiredForce();
 			desired_moment = task->getDesiredMoment();
 			sensed_force_world_frame = task->getSensedForce();
