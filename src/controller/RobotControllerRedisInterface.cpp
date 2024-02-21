@@ -242,6 +242,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 		const string& controller_name = pair.first;
 
 		_controller_inputs[controller_name] = {};
+		_controller_task_monitoring_data[controller_name] = {};
 		_redis_client.createNewReceiveGroup(controller_name);
 
 		if (!std::filesystem::exists(_config.logger_config.folder_name + '/' +
@@ -260,6 +261,9 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 									  ->getJointTaskByName(task_name);
 				_controller_inputs.at(controller_name)[task_name] =
 					JointTaskInput(joint_task->getTaskDof());
+				_controller_task_monitoring_data.at(
+					controller_name)[task_name] =
+					JointTaskMonitoringData(joint_task->getTaskDof());
 
 				_task_loggers[controller_name][task_name] =
 					std::make_unique<Sai2Common::Logger>(
@@ -410,6 +414,28 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				_redis_client.addToReceiveGroup(
 					key_prefix + "goal_acceleration",
 					joint_task_input.goal_acceleration, controller_name);
+
+				// monitoring data
+				JointTaskMonitoringData& joint_task_monitoring_data =
+					std::get<JointTaskMonitoringData>(
+						_controller_task_monitoring_data.at(controller_name)
+							.at(task_name));
+				task_logger->addToLog(
+					joint_task_monitoring_data.current_position,
+					"current_position");
+				task_logger->addToLog(
+					joint_task_monitoring_data.current_velocity,
+					"current_velocity");
+				task_logger->addToLog(
+					joint_task_monitoring_data.desired_position,
+					"desired_position");
+				task_logger->addToLog(
+					joint_task_monitoring_data.desired_velocity,
+					"desired_velocity");
+				task_logger->addToLog(
+					joint_task_monitoring_data.desired_acceleration,
+					"desired_acceleration");
+
 			} else if (holds_alternative<MotionForceTaskConfig>(task_config)) {
 				auto& motion_force_task_config =
 					get<MotionForceTaskConfig>(task_config);
@@ -421,6 +447,9 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 				_controller_inputs.at(controller_name)[task_name] =
 					MotionForceTaskInput();
+				_controller_task_monitoring_data.at(
+					controller_name)[task_name] =
+					MotionForceTaskMonitoringData();
 
 				_task_loggers[controller_name][task_name] =
 					std::make_unique<Sai2Common::Logger>(
@@ -798,17 +827,6 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					motion_force_task_input.goal_angular_acceleration,
 					"goal_angular_acceleration");
-				task_logger->addToLog(motion_force_task_input.current_position,
-									  "current_position");
-				task_logger->addToLog(
-					motion_force_task_input.current_linear_velocity,
-					"current_linear_velocity");
-				task_logger->addToLog(
-					motion_force_task_input.current_orientation,
-					"current_orientation");
-				task_logger->addToLog(
-					motion_force_task_input.current_angular_velocity,
-					"current_angular_velocity");
 				task_logger->addToLog(motion_force_task_input.desired_force,
 									  "desired_force");
 				task_logger->addToLog(motion_force_task_input.desired_moment,
@@ -819,12 +837,6 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					motion_force_task_input.sensed_moment_sensor_frame,
 					"sensed_moment_sensor_frame");
-				task_logger->addToLog(
-					motion_force_task_input.sensed_force_world_frame,
-					"sensed_force_world_frame");
-				task_logger->addToLog(
-					motion_force_task_input.sensed_moment_world_frame,
-					"sensed_moment_world_frame");
 				_redis_client.addToSendGroup(
 					key_prefix + "goal_position",
 					motion_force_task_input.goal_position,
@@ -867,12 +879,6 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 						"::" + motion_force_task_config.link_name + "::moment",
 					motion_force_task_input.sensed_moment_sensor_frame,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
-					key_prefix + "sensed_force",
-					motion_force_task_input.sensed_force_world_frame);
-				_redis_client.addToSendGroup(
-					key_prefix + "sensed_moment",
-					motion_force_task_input.sensed_moment_world_frame);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "goal_position",
 					motion_force_task_input.goal_position, controller_name);
@@ -911,6 +917,55 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 						"::" + motion_force_task_config.link_name + "::moment",
 					motion_force_task_input.sensed_moment_sensor_frame,
 					controller_name);
+
+				// monitoring data
+				MotionForceTaskMonitoringData&
+					motion_force_task_monitoring_data =
+						std::get<MotionForceTaskMonitoringData>(
+							_controller_task_monitoring_data.at(controller_name)
+								.at(task_name));
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.current_position,
+					"current_position");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.current_orientation,
+					"current_orientation");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.current_linear_velocity,
+					"current_linear_velocity");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.current_angular_velocity,
+					"current_angular_velocity");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.desired_position,
+					"desired_position");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.desired_orientation,
+					"desired_orientation");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.desired_linear_velocity,
+					"desired_linear_velocity");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.desired_angular_velocity,
+					"desired_angular_velocity");
+				task_logger->addToLog(motion_force_task_monitoring_data
+										  .desired_linear_acceleration,
+									  "desired_linear_acceleration");
+				task_logger->addToLog(motion_force_task_monitoring_data
+										  .desired_angular_acceleration,
+									  "desired_angular_acceleration");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.sensed_force_world_frame,
+					"sensed_force_world_frame");
+				task_logger->addToLog(
+					motion_force_task_monitoring_data.sensed_moment_world_frame,
+					"sensed_moment_world_frame");
+				_redis_client.addToSendGroup(
+					key_prefix + "sensed_force",
+					motion_force_task_monitoring_data.sensed_force_world_frame);
+				_redis_client.addToSendGroup(key_prefix + "sensed_moment",
+											 motion_force_task_monitoring_data
+												 .sensed_moment_world_frame);
 			}
 		}
 	}
@@ -1013,8 +1068,15 @@ void RobotControllerRedisInterface::processInputs() {
 					.at(joint_task_config.task_name));
 			joint_task->setGoalPosition(joint_task_input.goal_position);
 			joint_task->setGoalVelocity(joint_task_input.goal_velocity);
-			joint_task->setGoalAcceleration(
-				joint_task_input.goal_acceleration);
+			joint_task->setGoalAcceleration(joint_task_input.goal_acceleration);
+
+			// monitoring data
+			auto& joint_task_monitoring_data =
+				std::get<JointTaskMonitoringData>(
+					_controller_task_monitoring_data.at(_active_controller_name)
+						.at(joint_task_config.task_name));
+			joint_task_monitoring_data.setFromTask(joint_task);
+
 		} else if (holds_alternative<MotionForceTaskConfig>(task_config)) {
 			auto& motion_force_task_config =
 				get<MotionForceTaskConfig>(task_config);
@@ -1228,14 +1290,6 @@ void RobotControllerRedisInterface::processInputs() {
 			}
 
 			// inputs
-			motion_force_task_input.current_position =
-				motion_force_task->getCurrentPosition();
-			motion_force_task_input.current_linear_velocity = 
-				motion_force_task->getCurrentLinearVelocity();
-			motion_force_task_input.current_orientation =
-				motion_force_task->getCurrentOrientation();
-			motion_force_task_input.current_angular_velocity =
-				motion_force_task->getCurrentAngularVelocity();
 			motion_force_task->setGoalPosition(
 				motion_force_task_input.goal_position);
 			motion_force_task->setGoalLinearVelocity(
@@ -1248,20 +1302,23 @@ void RobotControllerRedisInterface::processInputs() {
 				motion_force_task_input.goal_angular_velocity);
 			motion_force_task->setGoalAngularAcceleration(
 				motion_force_task_input.goal_angular_acceleration);
-			motion_force_task->setDesiredForce(
+			motion_force_task->setGoalForce(
 				motion_force_task_input.desired_force);
-			motion_force_task->setDesiredMoment(
+			motion_force_task->setGoalMoment(
 				motion_force_task_input.desired_moment);
 			motion_force_task->updateSensedForceAndMoment(
 				motion_force_task_input.sensed_force_sensor_frame,
 				motion_force_task_input.sensed_moment_sensor_frame);
-			motion_force_task_input.sensed_force_world_frame =
-				motion_force_task->getSensedForce();
-			motion_force_task_input.sensed_moment_world_frame =
-				motion_force_task->getSensedMoment();
 			if (reset_inputs) {
 				_redis_client.sendAllFromGroup(reset_inputs_redis_group);
 			}
+
+			// monitoring data
+			auto& motion_force_task_monitoring_data =
+				std::get<MotionForceTaskMonitoringData>(
+					_controller_task_monitoring_data.at(_active_controller_name)
+						.at(motion_force_task_config.task_name));
+			motion_force_task_monitoring_data.setFromTask(motion_force_task);
 		}
 	}
 
