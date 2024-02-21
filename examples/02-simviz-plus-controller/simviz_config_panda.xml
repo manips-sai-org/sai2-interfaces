@@ -11,8 +11,8 @@
 	<logger>
 		<logFolderName>simviz_log_files</logFolderName>
 		<logFrequency>100</logFrequency>
-		<startWithSimulation>false</startWithSimulation>
-		<timestampInFilename>true</timestampInFilename>
+		<startWithSimulation>true</startWithSimulation>
+		<timestampInFilename>false</timestampInFilename>
 	</logger>
 
 	<forceSensor>

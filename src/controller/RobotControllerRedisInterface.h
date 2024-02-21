@@ -156,12 +156,12 @@ private:
 			current_linear_velocity = task->getCurrentLinearVelocity();
 			current_orientation = task->getCurrentOrientation();
 			current_angular_velocity = task->getCurrentAngularVelocity();
-			desired_position = task->getGoalPosition();
-			desired_linear_velocity = task->getGoalLinearVelocity();
-			desired_linear_acceleration = task->getGoalLinearAcceleration();
-			desired_orientation = task->getGoalOrientation();
-			desired_angular_velocity = task->getGoalAngularVelocity();
-			desired_angular_acceleration = task->getGoalAngularAcceleration();
+			desired_position = task->getDesiredPosition();
+			desired_linear_velocity = task->getDesiredLinearVelocity();
+			desired_linear_acceleration = task->getDesiredLinearAcceleration();
+			desired_orientation = task->getDesiredOrientation();
+			desired_angular_velocity = task->getDesiredAngularVelocity();
+			desired_angular_acceleration = task->getDesiredAngularAcceleration();
 			sensed_force_world_frame = task->getSensedForceControlWorldFrame();
 			sensed_moment_world_frame = task->getSensedMomentControlWorldFrame();
 		}

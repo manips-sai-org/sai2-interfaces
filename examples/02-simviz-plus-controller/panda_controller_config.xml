@@ -11,7 +11,7 @@
 		<logFolderName>control_log_files</logFolderName>
 		<logFrequency>100</logFrequency>
 		<startWithController>true</startWithController>
-		<timestampInFilename>true</timestampInFilename>
+		<timestampInFilename>false</timestampInFilename>
 	</logger>
 
 	<controller name="cartesian_controller">
