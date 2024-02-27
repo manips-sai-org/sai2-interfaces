@@ -21,52 +21,51 @@ import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <style>
-    .sai2-interface-logger-top {
-      display: flex;
-      flex-direction: row;
-      align-items: baseline;
-      // justify-content: space-evenly;
-      flex-wrap: wrap;
-    }
+<style>
+	.sai2-interface-logger-top {
+		display: flex;
+		flex-direction: row;
+		align-items: baseline;
+		// justify-content: space-evenly;
+		flex-wrap: wrap;
+	}
 
-    .sai2-interface-logger-top > input {
-      width: 32%;
-    }
+	.sai2-interface-logger-top>input {
+		width: 32%;
+	}
 
-    .sai2-interface-logger-top > div {
-      width: 32%;
-    }
-
-  </style>
-  <div class="sai2-interface-logger-top">
-    <input type=file class="file_selector">
-    <button class="reset_btn">Reset Sim</button>
-  </div>
+	.sai2-interface-logger-top>div {
+		width: 32%;
+	}
+</style>
+<div class="sai2-interface-logger-top">
+	<input type=file class="file_selector">
+	<button class="reset_btn">Reset Sim</button>
+</div>
 `;
 
 class Sai2InterfacesConfigSelector extends Sai2InterfacesComponent {
-  constructor() {
-    super(template);
-    this.config_key = this.getAttribute('config_key') || "sai2::interfaces::simviz::config_file";
-    this.reset_key = this.getAttribute('reset_key') || "sai2::interfaces::simviz::reset";
-    this.path_prefix = this.getAttribute('path_prefix') || 'resources/';
-  }
+	constructor() {
+		super(template);
+		this.config_key = this.getAttribute('config_key') || "sai2::interfaces::simviz::config_file";
+		this.reset_key = this.getAttribute('reset_key') || "sai2::interfaces::simviz::reset";
+		this.path_prefix = this.getAttribute('path_prefix') || 'resources/';
+	}
 
-  onMount() {
-    let config_file_input = this.template_node.querySelector('.file_selector');
-    let reset_button = this.template_node.querySelector('.reset_btn');
+	onMount() {
+		let config_file_input = this.template_node.querySelector('.file_selector');
+		let reset_button = this.template_node.querySelector('.reset_btn');
 
-    // offline plotting initialization
-    reset_button.onclick = () => {
-      let selectedFile = config_file_input.files[0];
-      if (selectedFile) {
-        let fileName = selectedFile.name; // Get the file name
-        post_redis_key_val(this.config_key, this.path_prefix + fileName);
-      }
-      post_redis_key_val(this.reset_key, "1");
-    };
-  }
+		// offline plotting initialization
+		reset_button.onclick = () => {
+			let selectedFile = config_file_input.files[0];
+			if (selectedFile) {
+				let fileName = selectedFile.name; // Get the file name
+				post_redis_key_val(this.config_key, this.path_prefix + fileName);
+			}
+			post_redis_key_val(this.reset_key, "1");
+		};
+	}
 }
 
 customElements.define('sai2-interfaces-config-selector', Sai2InterfacesConfigSelector);

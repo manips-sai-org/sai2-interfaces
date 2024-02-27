@@ -13,43 +13,43 @@ import { get_redis_val, post_redis_key_val } from '../redis.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <label class="display"></label>
-  <button class="button"></button>
+	<label class="display"/>
+	<button class="button"/>
 `;
 
 
 customElements.define('sai2-interfaces-toggle', class extends HTMLElement {
-  constructor() {
-    super();
-    this.template = template;
-    this.current_value = 0;
-  }
+	constructor() {
+		super();
+		this.template = template;
+		this.current_value = 0;
+	}
 
-  connectedCallback() {
-    let template_node = this.template.content.cloneNode(true);
-    let display_label = template_node.querySelector('.display');
-    let button = template_node.querySelector('.button');
+	connectedCallback() {
+		let template_node = this.template.content.cloneNode(true);
+		let display_label = template_node.querySelector('.display');
+		let button = template_node.querySelector('.button');
 
-    this.key = this.getAttribute('key');
-    
-    // set display
-    display_label.innerHTML = this.getAttribute('display') || this.key;
-    get_redis_val(this.key).then(value => {
-      this.current_value = parseInt(value);
-      button.innerHTML = this.current_value ? "ON" : "OFF";
-      button.className = this.current_value ? "button-enable" : "button-disable";
-    });
-    
-    // set up listeners
-    // register listeners for input textbox
-    button.onclick = () => {
-      this.current_value = this.current_value ? 0 : 1;
-      post_redis_key_val(this.key, this.current_value);
-      button.innerHTML = this.current_value ? "ON" : "OFF";
-      button.className = this.current_value ? "button-enable" : "button-disable";
-    };
+		this.key = this.getAttribute('key');
 
-    // append to document
-    this.appendChild(template_node);
-  }
+		// set display
+		display_label.innerHTML = this.getAttribute('display') || this.key;
+		get_redis_val(this.key).then(value => {
+			this.current_value = parseInt(value);
+			button.innerHTML = this.current_value ? "ON" : "OFF";
+			button.className = this.current_value ? "button-enable" : "button-disable";
+		});
+
+		// set up listeners
+		// register listeners for input textbox
+		button.onclick = () => {
+			this.current_value = this.current_value ? 0 : 1;
+			post_redis_key_val(this.key, this.current_value);
+			button.innerHTML = this.current_value ? "ON" : "OFF";
+			button.className = this.current_value ? "button-enable" : "button-disable";
+		};
+
+		// append to document
+		this.appendChild(template_node);
+	}
 });

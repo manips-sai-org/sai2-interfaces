@@ -18,29 +18,29 @@ const template = document.createElement('template');
 template.innerHTML = `<div></div>`;
 
 class Sai2InterfacesSelectOption extends Sai2InterfacesComponent {
-  constructor() {
-    super(template);
-  }
+	constructor() {
+		super(template);
+	}
 
-  onMount() {
-  }
+	onMount() {
+	}
 
-  refresh() {
-    for (let child of this.querySelectorAll(":scope > *")) {
-      if (typeof child.refresh === 'function') {
-        child.refresh();
-      }
-    }
-  }
+	refresh() {
+		for (let child of this.querySelectorAll(":scope > *")) {
+			if (typeof child.refresh === 'function') {
+				child.refresh();
+			}
+		}
+	}
 
-  onUnmount() {
-  }
+	onUnmount() {
+	}
 
-  enableComponent() {
-  }
+	enableComponent() {
+	}
 
-  disableComponent() {
-  }
+	disableComponent() {
+	}
 }
 
 

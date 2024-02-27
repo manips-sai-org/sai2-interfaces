@@ -11,22 +11,22 @@
 import { post_redis_key_val } from '../redis.js';
 
 customElements.define('sai2-interfaces-setkey', class extends HTMLElement {
-  constructor() {
-    super();
-  }
+	constructor() {
+		super();
+	}
 
-  connectedCallback() {
-    const key = this.getAttribute('key');
-    const valueToSet = this.getAttribute('value');
-    const label = this.getAttribute('label') || 'Button';
+	connectedCallback() {
+		const key = this.getAttribute('key');
+		const valueToSet = this.getAttribute('value');
+		const label = this.getAttribute('label') || 'Button';
 
-    const button = document.createElement('button');
-    button.textContent = label;
+		const button = document.createElement('button');
+		button.textContent = label;
 
-    button.addEventListener('click', () => {
-      post_redis_key_val(key, valueToSet);
-    });
+		button.addEventListener('click', () => {
+			post_redis_key_val(key, valueToSet);
+		});
 
-    this.appendChild(button);
-  }
+		this.appendChild(button);
+	}
 });

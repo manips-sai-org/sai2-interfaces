@@ -26,7 +26,7 @@ customElements.define('sai2-interfaces-enum', class extends HTMLElement {
 		this.template = template;
 		this.display = this.getAttribute('display');
 		this.key = this.getAttribute('key');
-        this.values = JSON.parse(this.getAttribute('values') || '[]');
+		this.values = JSON.parse(this.getAttribute('values') || '[]');
 
 		// assumption: values are strings/numbers
 		this.value_map = {};
