@@ -3,28 +3,30 @@
 #include <iostream>
 #include <urdf/urdfdom/urdf_parser/src/pose.cpp>
 
+using namespace std;
+using namespace Eigen;
+
 namespace Sai2Interfaces {
 
 namespace {
 
-Eigen::Affine3d parsePoseLocal(tinyxml2::XMLElement* xml) {
-	Eigen::Affine3d pose = Eigen::Affine3d::Identity();
+Affine3d parsePoseLocal(tinyxml2::XMLElement* xml) {
+	Affine3d pose = Affine3d::Identity();
 
 	Sai2Urdfreader::Pose pose_urdf;
 	Sai2Urdfreader::parsePose(pose_urdf, xml);
 
 	pose.translation() << pose_urdf.position.x, pose_urdf.position.y,
 		pose_urdf.position.z;
-	pose.linear() =
-		Eigen::Quaterniond(pose_urdf.rotation.w, pose_urdf.rotation.x,
-						   pose_urdf.rotation.y, pose_urdf.rotation.z)
-			.toRotationMatrix();
+	pose.linear() = Quaterniond(pose_urdf.rotation.w, pose_urdf.rotation.x,
+								pose_urdf.rotation.y, pose_urdf.rotation.z)
+						.toRotationMatrix();
 
 	return pose;
 }
 
-Eigen::Vector3d parseVector3dLocal(tinyxml2::XMLElement* xml,
-								   std::string attribute_name = "xyz") {
+Vector3d parseVector3dLocal(tinyxml2::XMLElement* xml,
+							string attribute_name = "xyz") {
 	Sai2Urdfreader::Vector3 vec;
 
 	const char* xyz_str = xml->Attribute(attribute_name.c_str());
@@ -32,179 +34,361 @@ Eigen::Vector3d parseVector3dLocal(tinyxml2::XMLElement* xml,
 		try {
 			vec.init(xyz_str);
 		} catch (Sai2Urdfreader::ParseError& e) {
-			std::cout << e.what() << std::endl;
-			throw std::runtime_error("Could not parse vector3d");
+			cout << e.what() << endl;
+			throw runtime_error("Could not parse vector3d");
 		}
 	}
 
-	return Eigen::Vector3d(vec.x, vec.y, vec.z);
+	return Vector3d(vec.x, vec.y, vec.z);
 }
 
-std::vector<std::string> splitString(const std::string& str, char delimiter) {
-	std::vector<std::string> tokens;
-	std::istringstream iss(str);
-	std::string token;
+Vector3d parseVector3dLocal(const char* xyz_str) {
+	Sai2Urdfreader::Vector3 vec;
 
-	while (std::getline(iss, token, delimiter)) {
-		tokens.push_back(token);
+	if (xyz_str != NULL) {
+		try {
+			vec.init(xyz_str);
+		} catch (Sai2Urdfreader::ParseError& e) {
+			cout << e.what() << endl;
+			throw runtime_error("Could not parse vector3d");
+		}
+	}
+
+	return Vector3d(vec.x, vec.y, vec.z);
+}
+
+vector<string> splitString(const string& str) {
+	vector<string> tokens;
+	istringstream iss(str);
+	string token1, token2;
+
+	while (getline(iss, token1, ' ')) {
+		if (!token1.empty()) {
+			istringstream iss2(token1);
+			while (getline(iss2, token2, '\t')) {
+				if (!token2.empty()) {
+					tokens.push_back(token2);
+				}
+			}
+		}
 	}
 
 	return tokens;
 }
 
+enum GainsType {
+	JOINT_GAINS,
+	MOTFORCE_POS,
+	MOTFORCE_ORI,
+	MOTFORCE_FORCE,
+	MOTFORCE_MOMENT
+};
+
 GainsConfig parseGainsConfig(tinyxml2::XMLElement* xml,
-							 const std::string& config_file_name,
-							 const std::string& gains_name,
-							 const bool is_cartesian_gains) {
+							 const string& config_file_name,
+							 const GainsType gains_type) {
+	string gains_name;
+	double default_kp, default_kv, default_ki;
+
+	switch (gains_type) {
+		case JOINT_GAINS:
+			gains_name = "jointGains";
+			default_kp = JointTaskDefaultParams::kp;
+			default_kv = JointTaskDefaultParams::kv;
+			default_ki = JointTaskDefaultParams::ki;
+			break;
+		case MOTFORCE_POS:
+			gains_name = "positionGains";
+			default_kp = MotionForceTaskDefaultParams::kp_pos;
+			default_kv = MotionForceTaskDefaultParams::kv_pos;
+			default_ki = MotionForceTaskDefaultParams::ki_pos;
+			break;
+		case MOTFORCE_ORI:
+			gains_name = "orientationGains";
+			default_kp = MotionForceTaskDefaultParams::kp_ori;
+			default_kv = MotionForceTaskDefaultParams::kv_ori;
+			default_ki = MotionForceTaskDefaultParams::ki_ori;
+			break;
+		case MOTFORCE_FORCE:
+			gains_name = "forceGains";
+			default_kp = MotionForceTaskDefaultParams::kp_force;
+			default_kv = MotionForceTaskDefaultParams::kv_force;
+			default_ki = MotionForceTaskDefaultParams::ki_force;
+			break;
+		case MOTFORCE_MOMENT:
+			gains_name = "momentGains";
+			default_kp = MotionForceTaskDefaultParams::kp_moment;
+			default_kv = MotionForceTaskDefaultParams::kv_moment;
+			default_ki = MotionForceTaskDefaultParams::ki_moment;
+			break;
+	}
+
+	GainsConfig gains_config = GainsConfig(default_kp, default_kv, default_ki);
+
 	const char* kp = xml->Attribute("kp");
 	const char* kv = xml->Attribute("kv");
 	const char* ki = xml->Attribute("ki");
-	if (!kp || !kv || !ki) {
-		throw std::runtime_error(
+
+	vector<string> vectorKp = {};
+	vector<string> vectorKv = {};
+	vector<string> vectorKi = {};
+
+	if (kp) {
+		vectorKp = splitString(kp);
+	}
+	if (kv) {
+		vectorKv = splitString(kv);
+	}
+	if (ki) {
+		vectorKi = splitString(ki);
+	}
+
+	const int size =
+		max(vectorKp.size(), max(vectorKv.size(), vectorKi.size()));
+
+	if (size == 0) {
+		return gains_config;
+	}
+
+	if (size == 1) {
+		if (vectorKp.size() == 1) {
+			gains_config.kp.setConstant(1, stod(vectorKp[0]));
+		}
+		if (vectorKv.size() == 1) {
+			gains_config.kv.setConstant(1, stod(vectorKv[0]));
+		}
+		if (vectorKi.size() == 1) {
+			gains_config.ki.setConstant(1, stod(vectorKi[0]));
+		}
+		return gains_config;
+	}
+
+	if (vectorKp.size() > 1 && vectorKp.size() != size ||
+		vectorKv.size() > 1 && vectorKv.size() != size ||
+		vectorKi.size() > 1 && vectorKi.size() != size) {
+		throw runtime_error(
 			gains_name +
-			" must have a kp, kv and ki in config file: " + config_file_name);
+			" gains must have the same number of kp, kv and ki values for "
+			"those in vector form in config file: " +
+			config_file_name);
 	}
 
-	std::vector<std::string> vectorKp = splitString(kp, ' ');
-	std::vector<std::string> vectorKv = splitString(kv, ' ');
-	std::vector<std::string> vectorKi = splitString(ki, ' ');
-
-	if (vectorKv.size() != vectorKp.size() ||
-		vectorKi.size() != vectorKp.size()) {
-		throw std::runtime_error(gains_name +
-								 " gains must have the same number of kp, kv "
-								 "and ki values in config file: " +
-								 config_file_name);
-	}
-	const int size = vectorKp.size();
-
-	if (size < 1) {
-		throw std::runtime_error(gains_name +
-								 " gains must have at least one kp, kv "
-								 "and ki value in config file: " +
-								 config_file_name);
+	if (gains_type == MOTFORCE_FORCE || gains_type == MOTFORCE_MOMENT) {
+		throw runtime_error(gains_name +
+							" gains must have 1 kp, kv or ki value if present "
+							"in config file: " +
+							config_file_name);
 	}
 
-	if (is_cartesian_gains && size != 1 && size != 3) {
-		throw std::runtime_error(gains_name +
-								 " gains must have 1 or 3 kp, kv "
-								 "and ki values in config file: " +
-								 config_file_name);
+	if ((gains_type == MOTFORCE_POS || gains_type == MOTFORCE_ORI) &&
+		size != 3) {
+		throw runtime_error(gains_name +
+							" gains must have 3 kp, kv or ki values for "
+							"those in vector form in config file: " +
+							config_file_name);
 	}
 
-	GainsConfig gains_config;
-	Eigen::VectorXd kp_vec = Eigen::VectorXd(size);
-	Eigen::VectorXd kv_vec = Eigen::VectorXd(size);
-	Eigen::VectorXd ki_vec = Eigen::VectorXd(size);
-	for (int i = 0; i < size; i++) {
-		kp_vec[i] = std::stod(vectorKp[i]);
-		kv_vec[i] = std::stod(vectorKv[i]);
-		ki_vec[i] = std::stod(vectorKi[i]);
+	if (vectorKp.size() == 0) {
+		gains_config.kp.setConstant(size, default_kp);
+	} else if (vectorKp.size() == 1) {
+		gains_config.kp.setConstant(size, stod(vectorKp[0]));
+	} else {
+		VectorXd kp_vec = VectorXd(size);
+		for (int i = 0; i < size; i++) {
+			kp_vec[i] = stod(vectorKp[i]);
+		}
+		gains_config.kp = kp_vec;
 	}
-	gains_config.kp = kp_vec;
-	gains_config.kv = kv_vec;
-	gains_config.ki = ki_vec;
+
+	if (vectorKv.size() == 0) {
+		gains_config.kv.setConstant(size, default_kv);
+	} else if (vectorKv.size() == 1) {
+		gains_config.kv.setConstant(size, stod(vectorKv[0]));
+	} else {
+		VectorXd kv_vec = VectorXd(size);
+		for (int i = 0; i < size; i++) {
+			kv_vec[i] = stod(vectorKv[i]);
+		}
+		gains_config.kv = kv_vec;
+	}
+
+	if (vectorKi.size() == 0) {
+		gains_config.ki.setConstant(size, default_ki);
+	} else if (vectorKi.size() == 1) {
+		gains_config.ki.setConstant(size, stod(vectorKi[0]));
+	} else {
+		VectorXd ki_vec = VectorXd(size);
+		for (int i = 0; i < size; i++) {
+			ki_vec[i] = stod(vectorKi[i]);
+		}
+		gains_config.ki = ki_vec;
+	}
+
 	return gains_config;
 }
 
 JointTaskConfig::JointOTGConfig parseOTGJointConfig(
-	tinyxml2::XMLElement* otg_xml, const std::string& config_file_name) {
+	tinyxml2::XMLElement* otg_xml, const string& config_file_name) {
 	JointTaskConfig::JointOTGConfig otg_config;
 
 	// type
 	const char* type = otg_xml->Attribute("type");
 	if (!type) {
-		throw std::runtime_error("otg must have a type in config file: " +
-								 config_file_name);
+		throw runtime_error("otg must have a type in config file: " +
+							config_file_name);
 	}
-	if (std::string(type) == "disabled") {
+	if (string(type) == "disabled") {
 		otg_config.enabled = false;
-		return otg_config;
-	} else if (std::string(type) == "acceleration") {
+	} else if (string(type) == "acceleration") {
 		otg_config.enabled = true;
 		otg_config.jerk_limited = false;
-	} else if (std::string(type) == "jerk") {
+	} else if (string(type) == "jerk") {
 		otg_config.enabled = true;
 		otg_config.jerk_limited = true;
 	} else {
-		throw std::runtime_error("Unknown otg type: " + std::string(type));
+		throw runtime_error("Unknown otg type: " + string(type));
 	}
 
-	const char* velocity_limits = otg_xml->Attribute("max_velocity");
+	const char* velocity_limit = otg_xml->Attribute("max_velocity");
 	const char* acceleration_limit = otg_xml->Attribute("max_acceleration");
 	const char* jerk_limit = otg_xml->Attribute("max_jerk");
 
-	if (otg_config.enabled && (!velocity_limits || !acceleration_limit)) {
-		throw std::runtime_error(
-			"otg must have a max_velocity and max_acceleration if not disabled "
-			"in config file: " +
-			config_file_name);
-	}
-	if (otg_config.enabled && otg_config.jerk_limited && !jerk_limit) {
-		throw std::runtime_error(
-			"otg must have a max_jerk if jerk limited in config file: " +
-			config_file_name);
-	}
+	vector<string> vectorVelocityLimit = {};
+	vector<string> vectorAccelerationLimit = {};
+	vector<string> vectorJerkLimit = {};
 
-	std::vector<std::string> vectorVelocityLimits =
-		splitString(velocity_limits, ' ');
-	std::vector<std::string> vectorAccelerationLimit =
-		splitString(acceleration_limit, ' ');
-	std::vector<std::string> vectorJerkLimit = {};
-
-	if (vectorVelocityLimits.size() != vectorAccelerationLimit.size()) {
-		throw std::runtime_error(
-			"otg must have the same number of max_velocity and "
-			"max_acceleration values in config file: " +
-			config_file_name);
+	if (velocity_limit) {
+		vectorVelocityLimit = splitString(velocity_limit);
+	}
+	if (acceleration_limit) {
+		vectorAccelerationLimit = splitString(acceleration_limit);
 	}
 	if (jerk_limit) {
-		vectorJerkLimit = splitString(jerk_limit, ' ');
-		if (vectorVelocityLimits.size() != vectorJerkLimit.size()) {
-			throw std::runtime_error(
-				"otg must have the same number of max_velocity and max_jerk "
-				"values in config file: " +
-				config_file_name);
-		}
+		vectorJerkLimit = splitString(jerk_limit);
 	}
-	const int size = vectorVelocityLimits.size();
 
-	JointTaskConfig::JointOTGConfig::JointOTGLimit limits;
-	Eigen::VectorXd vel_limits_vec = Eigen::VectorXd(size);
-	Eigen::VectorXd acc_limits_vec = Eigen::VectorXd(size);
-	for (int i = 0; i < size; i++) {
-		vel_limits_vec[i] = std::stod(vectorVelocityLimits[i]);
-		acc_limits_vec[i] = std::stod(vectorAccelerationLimit[i]);
+	const int size =
+		max(vectorVelocityLimit.size(),
+			max(vectorAccelerationLimit.size(), vectorJerkLimit.size()));
+
+	if (size == 0) {
+		return otg_config;
 	}
-	limits.velocity_limit = vel_limits_vec;
-	limits.acceleration_limit = acc_limits_vec;
-	if (otg_config.enabled && otg_config.jerk_limited) {
-		Eigen::VectorXd jerk_limits_vec = Eigen::VectorXd(size);
-		for (int i = 0; i < size; i++) {
-			jerk_limits_vec[i] = std::stod(vectorJerkLimit[i]);
+
+	if (size == 1) {
+		if (vectorVelocityLimit.size() == 1) {
+			otg_config.limits.velocity_limit.setConstant(
+				1, stod(vectorVelocityLimit[0]));
 		}
-		limits.jerk_limit = jerk_limits_vec;
+		if (vectorAccelerationLimit.size() == 1) {
+			otg_config.limits.acceleration_limit.setConstant(
+				1, stod(vectorAccelerationLimit[0]));
+		}
+		if (vectorJerkLimit.size() == 1) {
+			otg_config.limits.jerk_limit.setConstant(1,
+													 stod(vectorJerkLimit[0]));
+		}
+		return otg_config;
 	}
-	otg_config.limits = limits;
+
+	if (vectorVelocityLimit.size() > 1 && vectorVelocityLimit.size() != size ||
+		vectorAccelerationLimit.size() > 1 &&
+			vectorAccelerationLimit.size() != size ||
+		vectorJerkLimit.size() > 1 && vectorJerkLimit.size() != size) {
+		throw runtime_error(
+			"otg config limits must have the same number of max_velocity, "
+			"max_acceleration, and max_jerk values for those in vector form in "
+			"config file: " +
+			config_file_name);
+	}
+
+	if (vectorVelocityLimit.size() == 0) {
+		otg_config.limits.velocity_limit.setConstant(
+			size, JointTaskDefaultParams::otg_max_velocity);
+	} else if (vectorVelocityLimit.size() == 1) {
+		otg_config.limits.velocity_limit.setConstant(
+			size, stod(vectorVelocityLimit[0]));
+	} else {
+		VectorXd vel_limits_vec = VectorXd(size);
+		for (int i = 0; i < size; i++) {
+			vel_limits_vec[i] = stod(vectorVelocityLimit[i]);
+		}
+		otg_config.limits.velocity_limit = vel_limits_vec;
+	}
+
+	if (vectorAccelerationLimit.size() == 0) {
+		otg_config.limits.acceleration_limit.setConstant(
+			size, JointTaskDefaultParams::otg_max_acceleration);
+	} else if (vectorAccelerationLimit.size() == 1) {
+		otg_config.limits.acceleration_limit.setConstant(
+			size, stod(vectorAccelerationLimit[0]));
+	} else {
+		VectorXd acc_limits_vec = VectorXd(size);
+		for (int i = 0; i < size; i++) {
+			acc_limits_vec[i] = stod(vectorAccelerationLimit[i]);
+		}
+		otg_config.limits.acceleration_limit = acc_limits_vec;
+	}
+
+	if (vectorJerkLimit.size() == 0) {
+		otg_config.limits.jerk_limit.setConstant(
+			size, JointTaskDefaultParams::otg_max_jerk);
+	} else if (vectorJerkLimit.size() == 1) {
+		otg_config.limits.jerk_limit.setConstant(size,
+												 stod(vectorJerkLimit[0]));
+	} else {
+		VectorXd jerk_limits_vec = VectorXd(size);
+		for (int i = 0; i < size; i++) {
+			jerk_limits_vec[i] = stod(vectorJerkLimit[i]);
+		}
+		otg_config.limits.jerk_limit = jerk_limits_vec;
+	}
+
 	return otg_config;
+}
+
+JointTaskConfig::JointVelSatConfig parseVelSatJointConfig(
+	tinyxml2::XMLElement* vel_sat_xml, const string& config_file_name) {
+	JointTaskConfig::JointVelSatConfig vel_sat_config;
+
+	// enabled
+	if (!vel_sat_xml->Attribute("enabled")) {
+		throw runtime_error(
+			"velocitySaturation must have an enabled attribute if present in "
+			"joint task in config file: " +
+			config_file_name);
+	}
+	vel_sat_config.enabled = vel_sat_xml->BoolAttribute("enabled");
+
+	const char* velocity_limits = vel_sat_xml->Attribute("velocity_limit");
+	if (velocity_limits) {
+		vector<string> vectorVelocityLimits = splitString(velocity_limits);
+		const int size = vectorVelocityLimits.size();
+		VectorXd vel_limits_vec = VectorXd(size);
+		for (int i = 0; i < size; i++) {
+			vel_limits_vec[i] = stod(vectorVelocityLimits[i]);
+		}
+		vel_sat_config.velocity_limits = vel_limits_vec;
+	}
+	return vel_sat_config;
 }
 
 }  // namespace
 
 RobotControllerConfig RobotControllerConfigParser::parseConfig(
-	const std::string& config_file) {
+	const string& config_file) {
 	_config_file_name = config_file;
 	RobotControllerConfig config;
 
 	tinyxml2::XMLDocument doc;
 	if (doc.LoadFile(config_file.c_str()) != tinyxml2::XML_SUCCESS) {
-		throw std::runtime_error("Could not load simviz config file: " +
-								 config_file);
+		throw runtime_error("Could not load simviz config file: " +
+							config_file);
 	}
 
 	tinyxml2::XMLElement* root = doc.FirstChildElement("controlConfiguration");
 	if (!root) {
-		throw std::runtime_error(
+		throw runtime_error(
 			"No 'controlConfiguration' element found in config file: " +
 			config_file);
 	}
@@ -213,7 +397,7 @@ RobotControllerConfig RobotControllerConfigParser::parseConfig(
 	tinyxml2::XMLElement* robotModelFile =
 		root->FirstChildElement("robotModelFile");
 	if (!robotModelFile) {
-		throw std::runtime_error(
+		throw runtime_error(
 			"No 'robotModelFile' element found in config file: " + config_file);
 	}
 	config.robot_model_file = robotModelFile->GetText();
@@ -221,8 +405,8 @@ RobotControllerConfig RobotControllerConfigParser::parseConfig(
 	// robot name
 	tinyxml2::XMLElement* robotName = root->FirstChildElement("robotName");
 	if (!robotName) {
-		throw std::runtime_error(
-			"No 'robotName' element found in config file: " + config_file);
+		throw runtime_error("No 'robotName' element found in config file: " +
+							config_file);
 	}
 	config.robot_name = robotName->GetText();
 
@@ -278,17 +462,17 @@ RobotControllerConfig RobotControllerConfigParser::parseConfig(
 		// get controller name
 		const char* name = controller->Attribute("name");
 		if (!name) {
-			throw std::runtime_error(
+			throw runtime_error(
 				"controllers must have a name in config file: " + config_file);
 		}
-		if (name == std::string("")) {
-			throw std::runtime_error(
+		if (name == string("")) {
+			throw runtime_error(
 				"controllers must have a non-empty name in config file: " +
 				config_file);
 		}
 		if (config.controllers_configs.find(name) !=
 			config.controllers_configs.end()) {
-			throw std::runtime_error(
+			throw runtime_error(
 				"controllers must have a unique name in config file: " +
 				config_file);
 		}
@@ -303,25 +487,25 @@ RobotControllerConfig RobotControllerConfigParser::parseConfig(
 	return config;
 }
 
-std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>
+vector<variant<JointTaskConfig, MotionForceTaskConfig>>
 RobotControllerConfigParser::parseSingleControllerConfig(
 	tinyxml2::XMLElement* xml) {
-	std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>> configs;
+	vector<variant<JointTaskConfig, MotionForceTaskConfig>> configs;
 	// loop over tasks
 	for (tinyxml2::XMLElement* task = xml->FirstChildElement("task"); task;
 		 task = task->NextSiblingElement("task")) {
 		// get task type
 		const char* type = task->Attribute("type");
 		if (!type) {
-			throw std::runtime_error("tasks must have a type in config file: " +
-									 _config_file_name);
+			throw runtime_error("tasks must have a type in config file: " +
+								_config_file_name);
 		}
-		if (std::string(type) == "joint_task") {
+		if (string(type) == "joint_task") {
 			configs.push_back(parseJointTaskConfig(task));
-		} else if (std::string(type) == "motion_force_task") {
+		} else if (string(type) == "motion_force_task") {
 			configs.push_back(parseMotionForceTaskConfig(task));
 		} else {
-			throw std::runtime_error("Unknown task type: " + std::string(type));
+			throw runtime_error("Unknown task type: " + string(type));
 		}
 	}
 	return configs;
@@ -333,8 +517,8 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 	// get name
 	const char* name = xml->Attribute("name");
 	if (!name) {
-		throw std::runtime_error("tasks must have a name in config file: " +
-								 _config_file_name);
+		throw runtime_error("tasks must have a name in config file: " +
+							_config_file_name);
 	}
 	config.task_name = name;
 
@@ -343,7 +527,7 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 		xml->FirstChildElement("controlledJointNames");
 	if (controlled_joints && controlled_joints->GetText()) {
 		config.controlled_joint_names =
-			splitString(controlled_joints->GetText(), ' ');
+			splitString(controlled_joints->GetText());
 	}
 
 	// dynamic decoupling
@@ -357,29 +541,8 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 	tinyxml2::XMLElement* velocity_saturation =
 		xml->FirstChildElement("velocitySaturation");
 	if (velocity_saturation) {
-		JointTaskConfig::JointVelSatConfig vel_sat_config;
-		// enabled
-		vel_sat_config.enabled = velocity_saturation->BoolAttribute("enabled");
-
-		const char* velocity_limits =
-			velocity_saturation->Attribute("velocity_limit");
-		if (velocity_limits) {
-			std::vector<std::string> vectorVelocityLimits =
-				splitString(velocity_limits, ' ');
-			Eigen::VectorXd vel_limits_vec =
-				Eigen::VectorXd(vectorVelocityLimits.size());
-			for (int i = 0; i < vectorVelocityLimits.size(); i++) {
-				vel_limits_vec[i] = std::stod(vectorVelocityLimits[i]);
-			}
-			vel_sat_config.velocity_limits = vel_limits_vec;
-		} else if (vel_sat_config.enabled) {
-			throw std::runtime_error(
-				"velocitySaturation must have a velocity_limit if enabled "
-				"in "
-				"config file: " +
-				_config_file_name);
-		}
-		config.velocity_saturation_config = vel_sat_config;
+		config.velocity_saturation_config =
+			parseVelSatJointConfig(velocity_saturation, _config_file_name);
 	}
 
 	// otg
@@ -391,8 +554,8 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 	// gains
 	tinyxml2::XMLElement* gains = xml->FirstChildElement("gains");
 	if (gains) {
-		config.gains_config = parseGainsConfig(gains, _config_file_name,
-											   "joint task gains", false);
+		config.gains_config =
+			parseGainsConfig(gains, _config_file_name, JOINT_GAINS);
 	}
 
 	return config;
@@ -404,16 +567,16 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	// get name
 	const char* name = xml->Attribute("name");
 	if (!name) {
-		throw std::runtime_error("tasks must have a name in config file: " +
-								 _config_file_name);
+		throw runtime_error("tasks must have a name in config file: " +
+							_config_file_name);
 	}
 	config.task_name = name;
 
 	// link name
 	const char* link_name = xml->FirstChildElement("linkName")->GetText();
 	if (!link_name) {
-		throw std::runtime_error("tasks must have a linkName in config file: " +
-								 _config_file_name);
+		throw runtime_error("tasks must have a linkName in config file: " +
+							_config_file_name);
 	}
 	config.link_name = link_name;
 
@@ -443,7 +606,7 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	tinyxml2::XMLElement* controlled_directions_position =
 		xml->FirstChildElement("controlledDirectionsTranslation");
 	if (controlled_directions_position) {
-		std::vector<Eigen::Vector3d> controlled_directions;
+		vector<Vector3d> controlled_directions;
 		for (tinyxml2::XMLElement* direction =
 				 controlled_directions_position->FirstChildElement("direction");
 			 direction;
@@ -457,7 +620,7 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	tinyxml2::XMLElement* controlled_directions_orientation =
 		xml->FirstChildElement("controlledDirectionsRotation");
 	if (controlled_directions_orientation) {
-		std::vector<Eigen::Vector3d> controlled_directions;
+		vector<Vector3d> controlled_directions;
 		for (tinyxml2::XMLElement* direction =
 				 controlled_directions_orientation->FirstChildElement(
 					 "direction");
@@ -491,10 +654,17 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	if (force_space_param) {
 		MotionForceTaskConfig::ForceMotionSpaceParamConfig
 			force_motion_space_config;
-		force_motion_space_config.force_space_dimension =
-			force_space_param->IntAttribute("forceSpaceDimension");
-		force_motion_space_config.axis = parseVector3dLocal(
-			force_space_param->FirstChildElement("direction"));
+		if (force_space_param->Attribute("dim")) {
+			force_motion_space_config.force_space_dimension =
+				force_space_param->IntAttribute("dim");
+		}
+		if (force_space_param->Attribute("direction")) {
+			force_motion_space_config.axis =
+				parseVector3dLocal(force_space_param->Attribute("direction"));
+			if (force_motion_space_config.axis.norm() > 1e-3) {
+				force_motion_space_config.axis.normalize();
+			}
+		}
 		config.force_space_param_config = force_motion_space_config;
 	}
 
@@ -504,10 +674,17 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	if (moment_space_param) {
 		MotionForceTaskConfig::ForceMotionSpaceParamConfig
 			moment_space_param_config;
-		moment_space_param_config.force_space_dimension =
-			moment_space_param->IntAttribute("momentSpaceDimension");
-		moment_space_param_config.axis = parseVector3dLocal(
-			moment_space_param->FirstChildElement("direction"));
+		if (moment_space_param->Attribute("dim")) {
+			moment_space_param_config.force_space_dimension =
+				moment_space_param->IntAttribute("dim");
+		}
+		if (moment_space_param->Attribute("direction")) {
+			moment_space_param_config.axis =
+				parseVector3dLocal(moment_space_param->Attribute("direction"));
+			if (moment_space_param_config.axis.norm() > 1e-3) {
+				moment_space_param_config.axis.normalize();
+			}
+		}
 		config.moment_space_param_config = moment_space_param_config;
 	}
 
@@ -517,30 +694,27 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	if (velocity_saturation) {
 		MotionForceTaskConfig::VelSatConfig vel_sat_config;
 		// enabled
+		if (!velocity_saturation->Attribute("enabled")) {
+			throw runtime_error(
+				"velocitySaturation must have an enabled attribute if present "
+				"in "
+				"MotionForceTask in config file: " +
+				_config_file_name);
+		}
 		vel_sat_config.enabled = velocity_saturation->BoolAttribute("enabled");
 
 		const char* linear_velocity_limits =
 			velocity_saturation->Attribute("linear_velocity_limit");
 		if (linear_velocity_limits) {
 			vel_sat_config.linear_velocity_limits =
-				std::stod(linear_velocity_limits);
-		} else if (vel_sat_config.enabled) {
-			throw std::runtime_error(
-				"velocitySaturation must have a linear_velocity_limit if "
-				"enabled in config file: " +
-				_config_file_name);
+				stod(linear_velocity_limits);
 		}
 
 		const char* angular_velocity_limits =
 			velocity_saturation->Attribute("angular_velocity_limit");
 		if (angular_velocity_limits) {
 			vel_sat_config.angular_velocity_limits =
-				std::stod(angular_velocity_limits);
-		} else if (vel_sat_config.enabled) {
-			throw std::runtime_error(
-				"velocitySaturation must have a angular_velocity_limit if "
-				"enabled in config file: " +
-				_config_file_name);
+				stod(angular_velocity_limits);
 		}
 		config.velocity_saturation_config = vel_sat_config;
 	}
@@ -552,44 +726,34 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		// type
 		const char* type = otg->Attribute("type");
 		if (!type) {
-			throw std::runtime_error("otg must have a type in config file: " +
-									 _config_file_name);
+			throw runtime_error("otg must have a type in config file: " +
+								_config_file_name);
 		}
-		if (std::string(type) == "disabled") {
+		if (string(type) == "disabled") {
 			otg_config.enabled = false;
-		} else if (std::string(type) == "acceleration") {
+		} else if (string(type) == "acceleration") {
 			otg_config.enabled = true;
 			otg_config.jerk_limited = false;
-		} else if (std::string(type) == "jerk") {
+		} else if (string(type) == "jerk") {
 			otg_config.enabled = true;
 			otg_config.jerk_limited = true;
 		} else {
-			throw std::runtime_error("Unknown otg type: " + std::string(type));
+			throw runtime_error("Unknown otg type: " + string(type) +
+								"in MotionForce task config in config file: " +
+								_config_file_name);
 		}
 
 		// velocity limits
 		const char* linear_velocity_limits =
 			otg->Attribute("max_linear_velocity");
 		if (linear_velocity_limits) {
-			otg_config.linear_velocity_limit =
-				std::stod(linear_velocity_limits);
-		} else if (otg_config.enabled) {
-			throw std::runtime_error(
-				"otg must have a max_linear_velocity if not disabled in config "
-				"file: " +
-				_config_file_name);
+			otg_config.linear_velocity_limit = stod(linear_velocity_limits);
 		}
 
 		const char* angular_velocity_limits =
 			otg->Attribute("max_angular_velocity");
 		if (angular_velocity_limits) {
-			otg_config.angular_velocity_limit =
-				std::stod(angular_velocity_limits);
-		} else if (otg_config.enabled) {
-			throw std::runtime_error(
-				"otg must have a max_angular_velocity if not disabled in "
-				"config file: " +
-				_config_file_name);
+			otg_config.angular_velocity_limit = stod(angular_velocity_limits);
 		}
 
 		// acceleration limit
@@ -597,45 +761,25 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 			otg->Attribute("max_linear_acceleration");
 		if (linear_acceleration_limit) {
 			otg_config.linear_acceleration_limit =
-				std::stod(linear_acceleration_limit);
-		} else if (otg_config.enabled) {
-			throw std::runtime_error(
-				"otg must have a max_linear_acceleration if not disabled in "
-				"config file: " +
-				_config_file_name);
+				stod(linear_acceleration_limit);
 		}
 
 		const char* angular_acceleration_limit =
 			otg->Attribute("max_angular_acceleration");
 		if (angular_acceleration_limit) {
 			otg_config.angular_acceleration_limit =
-				std::stod(angular_acceleration_limit);
-		} else if (otg_config.enabled) {
-			throw std::runtime_error(
-				"otg must have a max_angular_acceleration if not disabled in "
-				"config file: " +
-				_config_file_name);
+				stod(angular_acceleration_limit);
 		}
 
 		// jerk limit
 		const char* linear_jerk_limit = otg->Attribute("max_linear_jerk");
 		if (linear_jerk_limit) {
-			otg_config.linear_jerk_limit = std::stod(linear_jerk_limit);
-		} else if (otg_config.enabled && otg_config.jerk_limited) {
-			throw std::runtime_error(
-				"otg must have a max_linear_jerk if jerk limited in config "
-				"file: " +
-				_config_file_name);
+			otg_config.linear_jerk_limit = stod(linear_jerk_limit);
 		}
 
 		const char* angular_jerk_limit = otg->Attribute("max_angular_jerk");
 		if (angular_jerk_limit) {
-			otg_config.angular_jerk_limit = std::stod(angular_jerk_limit);
-		} else if (otg_config.enabled && otg_config.jerk_limited) {
-			throw std::runtime_error(
-				"otg must have a max_angular_jerk if jerk limited in config "
-				"file: " +
-				_config_file_name);
+			otg_config.angular_jerk_limit = stod(angular_jerk_limit);
 		}
 		config.otg_config = otg_config;
 	}
@@ -644,8 +788,8 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	tinyxml2::XMLElement* position_gains =
 		xml->FirstChildElement("positionGains");
 	if (position_gains) {
-		config.position_gains_config = parseGainsConfig(
-			position_gains, _config_file_name, "positionGains", true);
+		config.position_gains_config =
+			parseGainsConfig(position_gains, _config_file_name, MOTFORCE_POS);
 	}
 
 	// orientation gains
@@ -653,21 +797,21 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		xml->FirstChildElement("orientationGains");
 	if (orientation_gains) {
 		config.orientation_gains_config = parseGainsConfig(
-			orientation_gains, _config_file_name, "orientationGains", true);
+			orientation_gains, _config_file_name, MOTFORCE_ORI);
 	}
 
 	// force gains
 	tinyxml2::XMLElement* force_gains = xml->FirstChildElement("forceGains");
 	if (force_gains) {
-		config.force_gains_config = parseGainsConfig(
-			force_gains, _config_file_name, "forceGains", true);
+		config.force_gains_config =
+			parseGainsConfig(force_gains, _config_file_name, MOTFORCE_FORCE);
 	}
 
 	// moment gains
 	tinyxml2::XMLElement* moment_gains = xml->FirstChildElement("momentGains");
 	if (moment_gains) {
-		config.moment_gains_config = parseGainsConfig(
-			moment_gains, _config_file_name, "momentGains", true);
+		config.moment_gains_config =
+			parseGainsConfig(moment_gains, _config_file_name, MOTFORCE_MOMENT);
 	}
 
 	return config;

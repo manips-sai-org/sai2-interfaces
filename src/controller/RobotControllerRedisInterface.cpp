@@ -288,14 +288,9 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 				// gains
 				if (!joint_task_config.gains_config.has_value()) {
-					auto gains_config = GainsConfig();
-					gains_config.kp = Sai2Primitives::extractKpFromGainVector(
-						joint_task->getGains());
-					gains_config.kv = Sai2Primitives::extractKvFromGainVector(
-						joint_task->getGains());
-					gains_config.ki = Sai2Primitives::extractKiFromGainVector(
-						joint_task->getGains());
-					joint_task_config.gains_config = gains_config;
+					joint_task_config.gains_config = GainsConfig(
+						JointTaskDefaultParams::kp, JointTaskDefaultParams::kv,
+						JointTaskDefaultParams::ki);
 				}
 				task_logger->addToLog(joint_task_config.gains_config->kp, "kp");
 				task_logger->addToLog(joint_task_config.gains_config->kv, "kv");
@@ -312,14 +307,8 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 				// velocity saturation
 				if (!joint_task_config.velocity_saturation_config.has_value()) {
-					auto velocity_saturation_config =
-						JointTaskConfig::JointVelSatConfig();
-					velocity_saturation_config.enabled =
-						joint_task->getVelocitySaturationEnabled();
-					velocity_saturation_config.velocity_limits =
-						joint_task->getVelocitySaturationMaxVelocity();
 					joint_task_config.velocity_saturation_config =
-						velocity_saturation_config;
+						JointTaskConfig::JointVelSatConfig();
 				}
 				task_logger->addToLog(
 					joint_task_config.velocity_saturation_config->enabled,
@@ -340,17 +329,8 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 				// otg
 				if (!joint_task_config.otg_config.has_value()) {
-					auto otg_config = JointTaskConfig::JointOTGConfig();
-					otg_config.enabled = joint_task->getInternalOtgEnabled();
-					otg_config.jerk_limited =
-						joint_task->getInternalOtg().getJerkLimitEnabled();
-					otg_config.limits.velocity_limit =
-						joint_task->getInternalOtg().getMaxVelocity();
-					otg_config.limits.acceleration_limit =
-						joint_task->getInternalOtg().getMaxAcceleration();
-					otg_config.limits.jerk_limit =
-						joint_task->getInternalOtg().getMaxJerk();
-					joint_task_config.otg_config = otg_config;
+					joint_task_config.otg_config =
+						JointTaskConfig::JointOTGConfig();
 				}
 				task_logger->addToLog(joint_task_config.otg_config->enabled,
 									  "otg_enabled");
@@ -477,25 +457,13 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				// force control parametrization
 				if (!motion_force_task_config.force_space_param_config
 						 .has_value()) {
-					auto force_space_param_config =
-						MotionForceTaskConfig::ForceMotionSpaceParamConfig();
-					force_space_param_config.force_space_dimension =
-						motion_force_task->getForceSpaceDimension();
-					force_space_param_config.axis =
-						motion_force_task->getForceMotionSingleAxis();
 					motion_force_task_config.force_space_param_config =
-						force_space_param_config;
+						MotionForceTaskConfig::ForceMotionSpaceParamConfig();
 				}
 				if (!motion_force_task_config.moment_space_param_config
 						 .has_value()) {
-					auto moment_space_param_config =
-						MotionForceTaskConfig::ForceMotionSpaceParamConfig();
-					moment_space_param_config.force_space_dimension =
-						motion_force_task->getMomentSpaceDimension();
-					moment_space_param_config.axis =
-						motion_force_task->getMomentRotMotionSingleAxis();
 					motion_force_task_config.moment_space_param_config =
-						moment_space_param_config;
+						MotionForceTaskConfig::ForceMotionSpaceParamConfig();
 				}
 				task_logger->addToLog(
 					motion_force_task_config.force_space_param_config
@@ -537,16 +505,8 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				// velocity saturation
 				if (!motion_force_task_config.velocity_saturation_config
 						 .has_value()) {
-					auto velocity_saturation_config =
-						MotionForceTaskConfig::VelSatConfig();
-					velocity_saturation_config.enabled =
-						motion_force_task->getVelocitySaturationEnabled();
-					velocity_saturation_config.linear_velocity_limits =
-						motion_force_task->getLinearSaturationVelocity();
-					velocity_saturation_config.angular_velocity_limits =
-						motion_force_task->getAngularSaturationVelocity();
 					motion_force_task_config.velocity_saturation_config =
-						velocity_saturation_config;
+						MotionForceTaskConfig::VelSatConfig();
 				}
 				task_logger->addToLog(motion_force_task_config
 										  .velocity_saturation_config->enabled,
@@ -577,31 +537,8 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 				// otg
 				if (!motion_force_task_config.otg_config.has_value()) {
-					auto otg_config = MotionForceTaskConfig::OTGConfig();
-					otg_config.enabled =
-						motion_force_task->getInternalOtgEnabled();
-					otg_config.jerk_limited =
-						motion_force_task->getInternalOtg()
-							.getJerkLimitEnabled();
-					otg_config.linear_velocity_limit =
-						motion_force_task->getInternalOtg()
-							.getMaxLinearVelocity()(0);
-					otg_config.angular_velocity_limit =
-						motion_force_task->getInternalOtg()
-							.getMaxAngularVelocity()(0);
-					otg_config.linear_acceleration_limit =
-						motion_force_task->getInternalOtg()
-							.getMaxLinearAcceleration()(0);
-					otg_config.angular_acceleration_limit =
-						motion_force_task->getInternalOtg()
-							.getMaxAngularAcceleration()(0);
-					otg_config.linear_jerk_limit =
-						motion_force_task->getInternalOtg().getMaxLinearJerk()(
-							0);
-					otg_config.angular_jerk_limit =
-						motion_force_task->getInternalOtg().getMaxAngularJerk()(
-							0);
-					motion_force_task_config.otg_config = otg_config;
+					motion_force_task_config.otg_config =
+						MotionForceTaskConfig::OTGConfig();
 				}
 				task_logger->addToLog(
 					motion_force_task_config.otg_config->enabled,
@@ -665,61 +602,29 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				// gains
 				if (!motion_force_task_config.position_gains_config
 						 .has_value()) {
-					auto position_gains_config = GainsConfig();
-					position_gains_config.kp =
-						Sai2Primitives::extractKpFromGainVector(
-							motion_force_task->getPosControlGains());
-					position_gains_config.kv =
-						Sai2Primitives::extractKvFromGainVector(
-							motion_force_task->getPosControlGains());
-					position_gains_config.ki =
-						Sai2Primitives::extractKiFromGainVector(
-							motion_force_task->getPosControlGains());
 					motion_force_task_config.position_gains_config =
-						position_gains_config;
+						GainsConfig(MotionForceTaskDefaultParams::kp_pos,
+									MotionForceTaskDefaultParams::kv_pos,
+									MotionForceTaskDefaultParams::ki_pos);
 				}
 				if (!motion_force_task_config.orientation_gains_config
 						 .has_value()) {
-					auto orientation_gains_config = GainsConfig();
-					orientation_gains_config.kp =
-						Sai2Primitives::extractKpFromGainVector(
-							motion_force_task->getOriControlGains());
-					orientation_gains_config.kv =
-						Sai2Primitives::extractKvFromGainVector(
-							motion_force_task->getOriControlGains());
-					orientation_gains_config.ki =
-						Sai2Primitives::extractKiFromGainVector(
-							motion_force_task->getOriControlGains());
 					motion_force_task_config.orientation_gains_config =
-						orientation_gains_config;
+						GainsConfig(MotionForceTaskDefaultParams::kp_ori,
+									MotionForceTaskDefaultParams::kv_ori,
+									MotionForceTaskDefaultParams::ki_ori);
 				}
 				if (!motion_force_task_config.force_gains_config.has_value()) {
-					auto force_gains_config = GainsConfig();
-					force_gains_config.kp =
-						Sai2Primitives::extractKpFromGainVector(
-							motion_force_task->getForceControlGains());
-					force_gains_config.kv =
-						Sai2Primitives::extractKvFromGainVector(
-							motion_force_task->getForceControlGains());
-					force_gains_config.ki =
-						Sai2Primitives::extractKiFromGainVector(
-							motion_force_task->getForceControlGains());
 					motion_force_task_config.force_gains_config =
-						force_gains_config;
+						GainsConfig(MotionForceTaskDefaultParams::kp_force,
+									MotionForceTaskDefaultParams::kv_force,
+									MotionForceTaskDefaultParams::ki_force);
 				}
 				if (!motion_force_task_config.moment_gains_config.has_value()) {
-					auto moment_gains_config = GainsConfig();
-					moment_gains_config.kp =
-						Sai2Primitives::extractKpFromGainVector(
-							motion_force_task->getMomentControlGains());
-					moment_gains_config.kv =
-						Sai2Primitives::extractKvFromGainVector(
-							motion_force_task->getMomentControlGains());
-					moment_gains_config.ki =
-						Sai2Primitives::extractKiFromGainVector(
-							motion_force_task->getMomentControlGains());
 					motion_force_task_config.moment_gains_config =
-						moment_gains_config;
+						GainsConfig(MotionForceTaskDefaultParams::kp_moment,
+									MotionForceTaskDefaultParams::kv_moment,
+									MotionForceTaskDefaultParams::ki_moment);
 				}
 				task_logger->addToLog(
 					motion_force_task_config.position_gains_config->kp,

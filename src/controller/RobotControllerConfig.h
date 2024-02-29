@@ -5,6 +5,12 @@
 #include <map>
 #include <string>
 
+#include "Sai2Primitives.h"
+
+using JointTaskDefaultParams = Sai2Primitives::JointTask::DefaultParameters;
+using MotionForceTaskDefaultParams =
+	Sai2Primitives::MotionForceTask::DefaultParameters;
+
 namespace Sai2Interfaces {
 
 struct GainsConfig {
@@ -17,6 +23,12 @@ struct GainsConfig {
 		kv.setZero(1);
 		ki.setZero(1);
 	}
+
+	GainsConfig(const double kp, const double kv, const double ki) {
+		this->kp = Eigen::VectorXd::Constant(1, kp);
+		this->kv = Eigen::VectorXd::Constant(1, kv);
+		this->ki = Eigen::VectorXd::Constant(1, ki);
+	}
 };
 
 struct ControllerLoggerConfig {
@@ -28,25 +40,35 @@ struct ControllerLoggerConfig {
 
 struct JointTaskConfig {
 	struct JointVelSatConfig {
-		bool enabled = false;
-		Eigen::VectorXd velocity_limits = Eigen::VectorXd::Zero(1);
+		bool enabled = JointTaskDefaultParams::use_velocity_saturation;
+		Eigen::VectorXd velocity_limits =
+			JointTaskDefaultParams::saturation_velocity *
+			Eigen::VectorXd::Ones(1);
 	};
 
 	struct JointOTGConfig {
 		struct JointOTGLimit {
-			Eigen::VectorXd velocity_limit = Eigen::VectorXd::Zero(1);
-			Eigen::VectorXd acceleration_limit = Eigen::VectorXd::Zero(1);
-			Eigen::VectorXd jerk_limit = Eigen::VectorXd::Zero(1);
+			Eigen::VectorXd velocity_limit =
+				JointTaskDefaultParams::otg_max_velocity *
+				Eigen::VectorXd::Ones(1);
+			Eigen::VectorXd acceleration_limit =
+				JointTaskDefaultParams::otg_max_acceleration *
+				Eigen::VectorXd::Ones(1);
+			Eigen::VectorXd jerk_limit =
+				JointTaskDefaultParams::otg_max_jerk *
+				Eigen::VectorXd::Ones(1);
 		};
 
-		bool enabled = false;
-		bool jerk_limited = false;
+		bool enabled = JointTaskDefaultParams::use_internal_otg;
+		bool jerk_limited = JointTaskDefaultParams::internal_otg_jerk_limited;
 		JointOTGLimit limits;
 	};
 
 	std::string task_name = "";
 	std::vector<std::string> controlled_joint_names = {};
-	bool use_dynamic_decoupling = true;
+	bool use_dynamic_decoupling =
+		JointTaskDefaultParams::dynamic_decoupling_type !=
+		Sai2Primitives::JointTask::DynamicDecouplingType::IMPEDANCE;
 
 	std::optional<JointVelSatConfig> velocity_saturation_config = {};
 	std::optional<JointOTGConfig> otg_config = {};
@@ -55,32 +77,44 @@ struct JointTaskConfig {
 
 struct MotionForceTaskConfig {
 	struct ForceMotionSpaceParamConfig {
-		int force_space_dimension = 0;
+		int force_space_dimension =
+			MotionForceTaskDefaultParams::force_space_dimension;
 		Eigen::Vector3d axis = Eigen::Vector3d::UnitZ();
 	};
 
 	struct VelSatConfig {
-		bool enabled = false;
-		double linear_velocity_limits = 0.0;
-		double angular_velocity_limits = 0.0;
+		bool enabled = MotionForceTaskDefaultParams::use_velocity_saturation;
+		double linear_velocity_limits =
+			MotionForceTaskDefaultParams::linear_saturation_velocity;
+		double angular_velocity_limits =
+			MotionForceTaskDefaultParams::angular_saturation_velocity;
 	};
 
 	struct OTGConfig {
-		bool enabled = false;
-		bool jerk_limited = false;
-		double linear_velocity_limit;
-		double angular_velocity_limit;
-		double linear_acceleration_limit;
-		double angular_acceleration_limit;
-		double linear_jerk_limit;
-		double angular_jerk_limit;
+		bool enabled = MotionForceTaskDefaultParams::use_internal_otg;
+		bool jerk_limited =
+			MotionForceTaskDefaultParams::internal_otg_jerk_limited;
+		double linear_velocity_limit =
+			MotionForceTaskDefaultParams::otg_max_linear_velocity;
+		double angular_velocity_limit =
+			MotionForceTaskDefaultParams::otg_max_angular_velocity;
+		double linear_acceleration_limit =
+			MotionForceTaskDefaultParams::otg_max_linear_acceleration;
+		double angular_acceleration_limit =
+			MotionForceTaskDefaultParams::otg_max_angular_acceleration;
+		double linear_jerk_limit =
+			MotionForceTaskDefaultParams::otg_max_linear_jerk;
+		double angular_jerk_limit =
+			MotionForceTaskDefaultParams::otg_max_angular_jerk;
 	};
 
 	std::string task_name = "";
 	std::string link_name = "";
 	Eigen::Affine3d compliant_frame = Eigen::Affine3d::Identity();
 	bool is_parametrization_in_compliant_frame = false;
-	bool use_dynamic_decoupling = true;
+	bool use_dynamic_decoupling =
+		MotionForceTaskDefaultParams::dynamic_decoupling_type !=
+		Sai2Primitives::MotionForceTask::DynamicDecouplingType::IMPEDANCE;
 
 	std::optional<std::vector<Eigen::Vector3d>> controlled_directions_position =
 		{};
