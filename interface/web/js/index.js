@@ -24,6 +24,7 @@ import './components/sai2-interfaces-orientation.js';
 import './components/sai2-interfaces-axis-setter.js';
 import './components/groups/sai2-interfaces-motion-control.js';
 import './components/groups/sai2-interfaces-force-control.js';
+import './components/groups/sai2-interfaces-joint-control.js';
 
 var socket = io();
 socket.on('connect', () => {
