@@ -28,6 +28,7 @@ template.innerHTML = `
 	}
 
 	.sai2-interfaces-orientation-right {
+		margin: 0.5em;
 		flex: 1;
 	}
 </style>

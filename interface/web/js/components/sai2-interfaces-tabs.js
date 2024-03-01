@@ -1,29 +1,41 @@
+import { EVENT_RESET_DISPLAYS } from '../config.js';
+
 class Sai2InterfacesTabs extends HTMLElement {
 	constructor() {
 		super();
+		Sai2InterfacesTabs.counter = (Sai2InterfacesTabs.counter || 0) + 1;
+		const name = this.getAttribute('name').replace(/\s+/g, '_');
+		this.uniqueId = name + Sai2InterfacesTabs.counter;
 	}
 
 	connectedCallback() {
-		const name = this.getAttribute('name').replace(/\s+/g, '_');
 		const tabsContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-CONTENT');
 		const position = this.getAttribute('tabsPosition') || 'top';
 		const color = this.getAttribute('color') || 'rgb(0, 110, 255)';
 
+		// Retrieve the active tab name from sessionStorage
+		let activeTabName = sessionStorage.getItem(`${this.uniqueId}_activeTabName`);
+		if (!activeTabName) {
+			// Set the first tab as active if no active tab is stored
+			const tabName = tabsContent[0].getAttribute('name').replace(/\s+/g, '_');
+			activeTabName = this.uniqueId + "_" + tabName + "-tab";
+		}
+
 		// Create the tabs HTML
 		const tabsHTML = Array.from(tabsContent).map((tabContent, index) => {
 			const tabNameDisplay = tabContent.getAttribute('name');
-			const tabName = tabNameDisplay.replace(/\s+/g, '_');
-			const isActive = index === 0 ? 'active' : '';
+			const tabName = this.uniqueId + "_" + tabNameDisplay.replace(/\s+/g, '_') + "-tab";
+			const isActive = tabName === activeTabName ? 'active' : '';
 			return `<li class="nav-item">
-                        <a class="nav-link ${isActive}" id="${name}_${tabName}-tab" data-bs-toggle="tab" href="#${name}_${tabName}" role="tab" aria-controls="${name}_${tabName}" aria-selected="${isActive === 'active'}">${tabNameDisplay}</a>
+                        <a class="nav-link ${isActive}" id="${tabName}" data-bs-toggle="tab" href="#${tabName}-content" role="tab" aria-controls="${tabName}-content" aria-selected="${isActive === 'active'}">${tabNameDisplay}</a>
                     </li>`;
 		}).join('');
 
 		// Create the tab contents HTML
 		const tabContentsHTML = Array.from(tabsContent).map((tabContent, index) => {
-			const tabName = tabContent.getAttribute('name').replace(/\s+/g, '_');
-			const isActive = index === 0 ? 'show active' : '';
-			return `<div class="tab-pane fade ${isActive}" id="${name}_${tabName}" role="tabpanel" aria-labelledby="${name}_${tabName}-tab">
+			const tabName = this.uniqueId + "_" + tabContent.getAttribute('name').replace(/\s+/g, '_') + "-tab";
+			const isActive = tabName === activeTabName ? 'show active' : '';
+			return `<div class="tab-pane fade ${isActive}" id="${tabName}-content" role="tabpanel" aria-labelledby="${tabName}">
                         ${tabContent.innerHTML}
                     </div>`;
 		}).join('');
@@ -35,30 +47,48 @@ class Sai2InterfacesTabs extends HTMLElement {
 		this.innerHTML = `
 
 		<style>
-		.${name} .nav-link.active {
-			background-color: ${color};
-			color: rgb(240, 240, 240);
-		}
+			.${this.uniqueId} .nav-link.active {
+				background-color: ${color};
+				color: rgb(240, 240, 240);
+			}
 
-		.${name} .nav-link {
-			background-color: rgb(240, 240, 240);
-			color: ${color};
-		}
-	</style>
+			.${this.uniqueId} .nav-link {
+				background-color: rgb(240, 240, 240);
+				color: ${color};
+			}
+		</style>
 
 		<div class="row">
-                <div class="${tabsClass}">
-                    <ul class="nav ${navType} ${name}" id="${name}" role="tablist">
-                        ${tabsHTML}
-                    </ul>
-                </div>
-                <div class="${contentClass}">
-                    <div class="tab-content" id="${name}_content">
-                        ${tabContentsHTML}
-                    </div>
-                </div>
-            </div>
+			<div class="${tabsClass}">
+				<ul class="nav ${navType} ${this.uniqueId}" id="${this.uniqueId}" role="tablist">
+					${tabsHTML}
+				</ul>
+			</div>
+			<div class="${contentClass}">
+				<div class="tab-content" id="${this.uniqueId}-content">
+					${tabContentsHTML}
+				</div>
+			</div>
+		</div>
         `;
+
+		// Add event listener to tabs for refreshing the page on tab switch 
+		// and remembering which one is active
+		this.querySelectorAll('.nav-link').forEach((tabLink) => {
+			tabLink.addEventListener('show.bs.tab', () => {
+				if (tabLink.getAttribute('id').startsWith(this.uniqueId)) {
+					console.log('Tab clicked!', this.uniqueId, tabLink.getAttribute('id'));
+					sessionStorage.setItem(`${this.uniqueId}_activeTabName`, tabLink.getAttribute('id'));
+
+					const resetDisplaysEvent = new CustomEvent(EVENT_RESET_DISPLAYS, {
+						bubbles: true,
+						detail: { message: 'Reset the displays' }
+					});
+					document.dispatchEvent(resetDisplaysEvent);
+				}
+			});
+		});
+
 	}
 }
 

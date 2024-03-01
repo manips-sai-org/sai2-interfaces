@@ -17,6 +17,7 @@
  * @module ./module/sai2-interface-slider
  */
 
+import { EVENT_RESET_DISPLAYS } from '../config.js';
 import { get_redis_val, post_redis_key_val } from '../redis.js';
 import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
@@ -57,6 +58,11 @@ template.innerHTML = `
 class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 	constructor() {
 		super(template);
+
+		document.addEventListener(EVENT_RESET_DISPLAYS, (event) => {
+			console.log('Reset sliders event caught!', event.detail.message);
+			this.refresh();
+		});
 	}
 
 	parseSliderAttribute(attr) {
