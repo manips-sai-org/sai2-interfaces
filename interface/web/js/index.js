@@ -14,6 +14,7 @@ import './components/sai2-interfaces-setkey.js';
 import './components/sai2-interfaces-config-selector.js';
 import './components/sai2-interfaces-toggle.js';
 import './components/sai2-interfaces-plot.js';
+import './components/sai2-interfaces-plot-button.js';
 import './components/sai2-interfaces-enum.js';
 import './components/sai2-interfaces-tabs.js';
 import './components/sai2-interfaces-display.js';

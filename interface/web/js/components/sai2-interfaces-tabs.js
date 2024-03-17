@@ -1,4 +1,5 @@
 import { EVENT_RESET_DISPLAYS } from '../config.js';
+import { post_redis_key_val } from '../redis.js';
 
 class Sai2InterfacesTabs extends HTMLElement {
 	constructor() {
@@ -12,6 +13,7 @@ class Sai2InterfacesTabs extends HTMLElement {
 		const tabsContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-CONTENT');
 		const position = this.getAttribute('tabsPosition') || 'top';
 		const color = this.getAttribute('color') || 'rgb(0, 110, 255)';
+		const key = this.getAttribute('key');
 
 		// Retrieve the active tab name from sessionStorage
 		let activeTabName = sessionStorage.getItem(`${this.uniqueId}_activeTabName`);
@@ -26,8 +28,16 @@ class Sai2InterfacesTabs extends HTMLElement {
 			const tabNameDisplay = tabContent.getAttribute('name');
 			const tabName = this.uniqueId + "_" + tabNameDisplay.replace(/\s+/g, '_') + "-tab";
 			const isActive = tabName === activeTabName ? 'active' : '';
+			const value = tabContent.getAttribute('value');
 			return `<li class="nav-item">
-                        <a class="nav-link ${isActive}" id="${tabName}" data-bs-toggle="tab" href="#${tabName}-content" role="tab" aria-controls="${tabName}-content" aria-selected="${isActive === 'active'}">${tabNameDisplay}</a>
+                        <a class="nav-link ${isActive}" 
+						id="${tabName}" data-bs-toggle="tab" 
+						href="#${tabName}-content" role="tab" 
+						aria-controls="${tabName}-content" 
+						aria-selected="${isActive === 'active'}" 
+						data-value="${value}">
+							${tabNameDisplay}
+						</a>
                     </li>`;
 		}).join('');
 
@@ -35,7 +45,9 @@ class Sai2InterfacesTabs extends HTMLElement {
 		const tabContentsHTML = Array.from(tabsContent).map((tabContent, index) => {
 			const tabName = this.uniqueId + "_" + tabContent.getAttribute('name').replace(/\s+/g, '_') + "-tab";
 			const isActive = tabName === activeTabName ? 'show active' : '';
-			return `<div class="tab-pane fade ${isActive}" id="${tabName}-content" role="tabpanel" aria-labelledby="${tabName}">
+			return `<div class="tab-pane fade ${isActive}" 
+					id="${tabName}-content" role="tabpanel" 
+					aria-labelledby="${tabName}">
                         ${tabContent.innerHTML}
                     </div>`;
 		}).join('');
@@ -44,6 +56,10 @@ class Sai2InterfacesTabs extends HTMLElement {
 		const navType = position === 'left' ? 'nav-pills flex-column' : 'nav-tabs flex-row';
 		const tabsClass = position === 'left' ? 'col-md-2' : 'row';
 		const contentClass = position === 'left' ? 'col-md-10' : 'row';
+
+		const borderClass = position === 'left' ? 'border-right' : 'border-bottom';
+		const paddingClass = position === 'left' ? 'padding-right' : 'padding-top';
+
 		this.innerHTML = `
 
 		<style>
@@ -55,6 +71,11 @@ class Sai2InterfacesTabs extends HTMLElement {
 			.${this.uniqueId} .nav-link {
 				background-color: rgb(240, 240, 240);
 				color: ${color};
+			}
+
+			.${this.uniqueId} {
+				${borderClass}: 2px solid ${color};
+				${paddingClass}: 10px;
 			}
 		</style>
 
@@ -85,6 +106,14 @@ class Sai2InterfacesTabs extends HTMLElement {
 						detail: { message: 'Reset the displays' }
 					});
 					document.dispatchEvent(resetDisplaysEvent);
+
+					if (key) {
+						const value = tabLink.getAttribute('data-value');
+						if (value && value !== 'null') {
+							post_redis_key_val(key, value);
+						}
+					}
+
 				}
 			});
 		});

@@ -1,9 +1,9 @@
 from flask import Flask, jsonify, request, Response, send_file, send_from_directory
-from flask_socketio import SocketIO, send, emit
+from flask_socketio import SocketIO
 from redis_cache import RedisCache
 from redis_logger import RedisLogger, display_log_file
 from trajectory_runner import TrajectoryRunner
-from plot import PlotManager
+from online_plot import OnlinePlotManager
 from werkzeug.utils import secure_filename
 import json 
 import click
@@ -12,7 +12,7 @@ import catmullrom
 import numpy as np
 import os 
 import sys
-import time
+import subprocess
 
 # determine full, absolute path to web/
 static_folder_path = os.path.join(os.path.dirname(os.path.realpath(sys.argv[0])), 'web')
@@ -120,9 +120,9 @@ def handle_logger_start():
     Frontend documentation:
     POST to /logger/start with JSON object
     {
-       'filename': <filename>,
-       'logger_period': <frequency in seconds>,
-       'keys': ['key1', 'key2', ...]
+		'filename': <filename>,
+		'logger_period': <frequency in seconds>,
+		'keys': ['key1', 'key2', ...]
     }
 
     Returns 200 OK if successful start, 400 otherwise
@@ -162,6 +162,12 @@ def handle_logger_offline_plot():
     display_log_file(local_path)
     return Response(status=200)
 
+@app.route('/plot/offline', methods=['POST'])
+def trigger_open_csv_plotter():
+    csv_plotter_path = static_folder_path + '/../csv_plotter.py'
+    subprocess.Popen(['python', csv_plotter_path])
+    return Response(status=200)
+    
 @app.route('/plot/start', methods=['POST'])
 def handle_plot_start():
     data = request.get_json()
@@ -323,7 +329,7 @@ def server(http_port, redis_host, redis_port, redis_db, cache_refresh_rate, exam
     redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db, decode_responses=True)
     redis_cache = RedisCache(redis_client, refresh_rate=cache_refresh_rate)
     redis_logger = RedisLogger(redis_client)
-    plot_manager = PlotManager(redis_cache)
+    plot_manager = OnlinePlotManager(redis_cache)
 
     redis_cache.start()
     socketio.run(app, port=http_port, debug=True)

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>Sai2 Interfaces Controller Example</title>
+
+	<!-- Global and utility stylesheets -->
+	<link rel="stylesheet" href="./css/picnic.min.css" type="text/css">
+	<link rel="stylesheet" href="./css/range_input.css" type="text/css">
+	<link rel="stylesheet" href="./css/global_styles.css" type="text/css">
+	<link rel="stylesheet" href="./css/chosen.min.css" type="text/css">
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css">
+
+
+	<!-- External library includes -->
+	<script src="./js/library/jquery-3.3.1.min.js" type="text/javascript"></script>
+	<script src="./js/library/chosen.jquery.min.js" type="text/javascript"></script>
+	<script src="./js/library/plotly.min.js" type="text/javascript"></script>
+	<script src="./js/library/echarts.min.js" type="text/javascript"></script>
+	<script src="./js/library/socket.io.js" type="text/javascript"></script>
+	<script src="./bootstrap/js/bootstrap.bundle.min.js"></script>
+
+	<!-- global execution scripts -->
+	<script type="module" src="./js/index.js"></script>
+</head>
+
+<body>
+
+	<div class="container mt-5">
+		<div class="row mt-3 mb-3 justify-content-end">
+			<div class="col-6">
+			</div>
+			<div class="col-6">
+				<sai2-interfaces-plot-button />
+			</div>
+		</div>
+
+		<div class="row m-3">
+
+			<sai2-interfaces-tabs tabsPosition="left" color="#cc7a00" name="controller selection"
+				key="sai2::interfaces::controller::active_controller_name">
+
+				<sai2-interfaces-tab-content name="Cartesian" value="cartesian_controller">
+
+					<sai2-interfaces-tabs color="#730099" name="Cartesian Controller">
+
+						<sai2-interfaces-tab-content name="Motion Force Task">
+							<sai2-interfaces-tabs name="motion_force_task">
+								<sai2-interfaces-tab-content name="Motion control">
+									<div class="container">
+										<sai2-interfaces-motion-control robotName="Panda"
+											controllerName="cartesian_controller" taskName="cartesian_task" />
+									</div>
+								</sai2-interfaces-tab-content>
+								<sai2-interfaces-tab-content name="Force control">
+									<div class="container">
+										<sai2-interfaces-force-control robotName="Panda"
+											controllerName="cartesian_controller" taskName="cartesian_task" />
+									</div>
+								</sai2-interfaces-tab-content>
+							</sai2-interfaces-tabs>
+						</sai2-interfaces-tab-content>
+						<sai2-interfaces-tab-content name="Nullspace Joint Task">
+							<sai2-interfaces-joint-control robotName="Panda" controllerName="cartesian_controller"
+								taskName="joint_task" />
+						</sai2-interfaces-tab-content>
+					</sai2-interfaces-tabs>
+				</sai2-interfaces-tab-content>
+
+
+				<sai2-interfaces-tab-content name="Joint" value="joint_controller">
+					<sai2-interfaces-joint-control robotName="Panda" controllerName="joint_controller"
+						taskName="joint_task" />
+				</sai2-interfaces-tab-content>
+
+
+				<sai2-interfaces-tab-content name="Floating" value="floating_controller">
+					<sai2-interfaces-joint-control robotName="Panda" controllerName="floating_controller"
+						taskName="joint_task_zero_gains" />
+				</sai2-interfaces-tab-content>
+
+
+			</sai2-interfaces-tabs>
+
+
+		</div>
+	</div>
+</body>
+
+</html>

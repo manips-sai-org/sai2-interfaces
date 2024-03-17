@@ -31,10 +31,14 @@ template.innerHTML = `
 </style>
 <div class="sai2-interface-plot-top">
 	<div class="metadata">
-		<select class="x_key chosen_select" data-placeholder="Select x key..."></select>
+		<select class="x_key chosen_select" data-placeholder="Select x key..." disabled>
+			<option value="Time" selected>Time</option>
+		</select>
 		<select class="y_key chosen_select" multiple data-placeholder="Select y key..."></select>
-		<h3>Rate:&nbsp;</h3>
+		<h3>Rate (sec):&nbsp;</h3>
 		<input class="query_rate" type="number" step="0.1">
+		<h3>Window Size (sec):&nbsp;</h3>
+		<input class="window_size" type="number" step="1.0">
 		<button class="plot_button"></button>
 		<label class="error-label" style="color:red;"><label>
 	</div>
@@ -129,6 +133,13 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
 					}
 				}
 
+				let latest_time = this.data[this.x_key][this.data[this.x_key].length - 1];
+				let initial_time = 0;
+				if(this.window_size > 0) {
+					initial_time = Math.max(latest_time-this.window_size, 0);
+				}
+				this.layout.xaxis = { title: 'Time', range: [initial_time, latest_time] };
+
 				this.layout.datarevision++;
 				Plotly.react(this.plot, this.series, this.layout, this.config);
 			});
@@ -143,6 +154,10 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
 		let xkey_select = template_node.querySelector('.x_key');
 		let ykey_select = template_node.querySelector('.y_key');
 		let query_rate_input = template_node.querySelector('.query_rate');
+		query_rate_input.value = 0.1;
+		let window_size_input = template_node.querySelector('.window_size');
+		window_size_input.value = 30;
+		this.window_size = 30.0;
 		let plot_button = template_node.querySelector('.plot_button');
 		let error_label = template_node.querySelector('.error-label');
 		this.plot = template_node.querySelector('.plot-div');
@@ -207,6 +222,12 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
 				if (isNaN(query_rate) || query_rate < 0) {
 					query_rate = 0.1;
 					query_rate_input.value = 0.1;
+				}
+
+				this.window_size = parseFloat(window_size_input.value);
+				if (isNaN(this.window_size) || this.window_size < 0) {
+					this.window_size = 30.0;
+					window_size_input.value = 30.0;
 				}
 
 				plot_button.innerHTML = 'Stop';
