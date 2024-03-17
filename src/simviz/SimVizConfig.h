@@ -6,6 +6,13 @@
 
 namespace Sai2Interfaces {
 
+enum SimVizMode
+{
+	SIMVIZ = 0,
+	SIM_ONLY = 1,
+	VIZ_ONLY = 2
+};
+
 struct SimForceSensorConfig
 {
     std::string robot_name = "";
@@ -28,6 +35,8 @@ struct SimVizConfig
     double friction_coefficient = 0.0;
     double collision_restitution = 0.0;
     double timestep = 0.001;
+
+	SimVizMode mode = SimVizMode::SIMVIZ;
 
     std::vector<SimForceSensorConfig> force_sensors = {};
 

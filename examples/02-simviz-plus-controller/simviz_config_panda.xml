@@ -1,6 +1,8 @@
 <simvizConfiguration>
 	<worldFilePath>resources/urdf/world_files/world_panda.urdf</worldFilePath>
 
+	<mode>simviz</mode>
+
 	<simParameters>
 		<timestep>0.001</timestep>
 		<enableJointLimits>true</enableJointLimits>

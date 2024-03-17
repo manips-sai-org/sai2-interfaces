@@ -52,6 +52,23 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	}
 	config.world_file = worldFilePath->GetText();
 
+	// Extract the simviz mode
+	tinyxml2::XMLElement* mode = root->FirstChildElement("mode");
+	if (mode) {
+		std::string mode_str = mode->GetText();
+		if (mode_str == "simviz") {
+			config.mode = SimVizMode::SIMVIZ;
+		} else if (mode_str == "simOnly") {
+			config.mode = SimVizMode::SIM_ONLY;
+		} else if (mode_str == "vizOnly") {
+			config.mode = SimVizMode::VIZ_ONLY;
+		} else {
+			throw std::runtime_error(
+				"Invalid simviz mode: " + mode_str + " in config file: " +
+				config_file + ". Valid modes are: simviz, simOnly, vizOnly");
+		}
+	}
+
 	// Extract simParameters
 	tinyxml2::XMLElement* simParams = root->FirstChildElement("simParameters");
 	if (simParams) {

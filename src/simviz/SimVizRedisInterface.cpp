@@ -190,9 +190,16 @@ void SimVizRedisInterface::initializeRedisDatabase() {
 }
 
 void SimVizRedisInterface::run() {
-	std::thread sim_thread(&SimVizRedisInterface::simLoopRun, this);
-	vizLoopRun();
-	sim_thread.join();
+	std::thread sim_thread;
+	if (_config.mode != SimVizMode::VIZ_ONLY) {
+		sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this);
+	}
+	if (_config.mode != SimVizMode::SIM_ONLY) {
+		vizLoopRun();
+	}
+	if (_config.mode != SimVizMode::VIZ_ONLY) {
+		sim_thread.join();
+	}
 }
 
 void SimVizRedisInterface::vizLoopRun() {
