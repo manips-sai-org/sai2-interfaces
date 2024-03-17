@@ -415,6 +415,12 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					joint_task_monitoring_data.desired_acceleration,
 					"desired_acceleration");
+				_redis_client.addToSendGroup(
+					key_prefix + "current_position",
+					joint_task_monitoring_data.current_position);
+				_redis_client.addToSendGroup(
+					key_prefix + "current_velocity",
+					joint_task_monitoring_data.current_velocity);
 
 			} else if (holds_alternative<MotionForceTaskConfig>(task_config)) {
 				auto& motion_force_task_config =
@@ -871,6 +877,18 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				_redis_client.addToSendGroup(key_prefix + "sensed_moment",
 											 motion_force_task_monitoring_data
 												 .sensed_moment_world_frame);
+				_redis_client.addToSendGroup(
+					key_prefix + "current_position",
+					motion_force_task_monitoring_data.current_position);
+				_redis_client.addToSendGroup(
+					key_prefix + "current_orientation",
+					motion_force_task_monitoring_data.current_orientation);
+				_redis_client.addToSendGroup(
+					key_prefix + "current_linear_velocity",
+					motion_force_task_monitoring_data.current_linear_velocity);
+				_redis_client.addToSendGroup(
+					key_prefix + "current_angular_velocity",
+					motion_force_task_monitoring_data.current_angular_velocity);
 			}
 		}
 	}
