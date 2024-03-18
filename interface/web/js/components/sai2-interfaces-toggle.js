@@ -13,8 +13,8 @@ import { get_redis_val, post_redis_key_val } from '../redis.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
-	<label class="display"/>
-	<button class="button"/>
+	<label class="display"></label>
+	<button class="button"></button>
 `;
 
 

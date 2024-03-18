@@ -7,7 +7,7 @@ class Sai2InterfacesJointControl extends HTMLElement {
 		this.redisPrefix = "sai2::interfaces::controller::" + this.robotName + "::" + this.controllerName + "::" + this.taskName;
 
 		// Fetch the HTML template
-		fetch('component_groups_templates/sai2-interfaces-joint-control.html')
+		fetch('html/component_groups_templates/sai2-interfaces-joint-control.html')
 			.then(response => response.text())
 			.then(template => {
 				const replacedHTML = template.replaceAll('{{_prefix_}}', this.redisPrefix);

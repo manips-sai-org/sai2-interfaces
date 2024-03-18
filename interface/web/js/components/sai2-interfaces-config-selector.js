@@ -21,26 +21,13 @@ import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
-<style>
-	.sai2-interface-logger-top {
-		display: flex;
-		flex-direction: row;
-		align-items: baseline;
-		// justify-content: space-evenly;
-		flex-wrap: wrap;
-	}
-
-	.sai2-interface-logger-top>input {
-		width: 32%;
-	}
-
-	.sai2-interface-logger-top>div {
-		width: 32%;
-	}
-</style>
-<div class="sai2-interface-logger-top">
-	<input type=file class="file_selector">
-	<button class="reset_btn">Reset Sim</button>
+<div class="row">
+	<div class="col-10">
+		<input type=file class="file_selector" placeholder="Select a config file"/>
+	</div>
+	<div class="col-2">
+		<button class="btn btn-warning">Send Config</button>
+	</div>
 </div>
 `;
 
@@ -54,7 +41,7 @@ class Sai2InterfacesConfigSelector extends Sai2InterfacesComponent {
 
 	onMount() {
 		let config_file_input = this.template_node.querySelector('.file_selector');
-		let reset_button = this.template_node.querySelector('.reset_btn');
+		let reset_button = this.template_node.querySelector('.btn');
 
 		// offline plotting initialization
 		reset_button.onclick = () => {

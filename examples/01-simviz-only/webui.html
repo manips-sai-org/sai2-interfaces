@@ -1,88 +1,49 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Simviz UI Interface</title>
 
-    <!-- Global and utility stylesheets -->
-    <link rel="stylesheet" href="./css/picnic.min.css" type="text/css">
-    <link rel="stylesheet" href="./css/range_input.css" type="text/css">
-    <link rel="stylesheet" href="./css/global_styles.css" type="text/css">
-    <link rel="stylesheet" href="./css/chosen.min.css" type="text/css">
+<head>
+	<meta charset="UTF-8">
+	<title>Simviz UI Interface</title>
 
-    <!-- External library includes -->
-    <script src="./js/library/jquery-3.3.1.min.js" type="text/javascript"></script>
-    <script src="./js/library/chosen.jquery.min.js" type="text/javascript"></script>
-    <script src="./js/library/plotly.min.js" type="text/javascript"></script>
-    <script src="./js/library/socket.io.js" type="text/javascript"></script>
+	<!-- Global and utility stylesheets -->
+	<link rel="stylesheet" href="./css/picnic.min.css" type="text/css">
+	<link rel="stylesheet" href="./css/range_input.css" type="text/css">
+	<link rel="stylesheet" href="./css/global_styles.css" type="text/css">
+	<link rel="stylesheet" href="./css/chosen.min.css" type="text/css">
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css">
 
-    <!-- global execution scripts -->
-    <script type="module" src="./js/index.js"></script>
+	<!-- External library includes -->
+	<script src="./js/library/jquery-3.3.1.min.js" type="text/javascript"></script>
+	<script src="./js/library/chosen.jquery.min.js" type="text/javascript"></script>
+	<script src="./js/library/plotly.min.js" type="text/javascript"></script>
+	<script src="./js/library/socket.io.js" type="text/javascript"></script>
+	<script src="./bootstrap/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Example CSS goes here -->
-    <!-- <style>
-      .title {
-        text-align: center;
-      }
+	<!-- global execution scripts -->
+	<script type="module" src="./js/index.js"></script>
 
-      h2 {
-        text-align: center;
-      }
+</head>
 
-      .container {
-        display: grid;
-        justify-content: center;
-        grid-template-columns: 0.75fr;
-        grid-template-rows: 80vh auto;
-        grid-gap: 10px;
-      }
+<body>
+	<div class="title">
+		<h1>UI interface for SimViz</h1>
+	</div>
+	<div class="container">
+		<!-- <div>
+			<sai2-interfaces-setkey key="sai2::interfaces::simviz::reset" value="1" label="Reset Sim" />
+		</div> -->
+		<div>
+			<sai2-interfaces-toggle key="sai2::interfaces::simviz::pause" display="Pause Simulation" />
+		</div>
+		<div>
+			<sai2-interfaces-toggle key="sai2::interfaces::simviz::gravity_comp_enabled"
+				display="Gravity compensation" />
+		</div>
+		<div>
+			<sai2-interfaces-config-selector key="sai2::interfaces::simviz::config_file" />
+		</div>
+	</div>
 
-      .container-item {
-        border-style: solid;
-        border-radius: 1em;
-        display: flex;
-        flex-direction: column;
-      }
+</body>
 
-      .container-item-content {
-        flex: 1;
-      }
-    </style> -->
-
-  </head>
-  <body>
-    <div class="title">
-      <h1>UI interface for SimViz</h1>
-    </div>
-    <div class="container">
-      <!-- <div>
-        <sai2-interfaces-setkey key="sai2::interfaces::simviz::reset" value="1" label="Reset Sim" />
-      </div> -->
-      <div>
-        <sai2-interfaces-toggle key="sai2::interfaces::simviz::pause" display="Pause Simulation" />
-    
-      </div>
-      <div>
-        <sai2-interfaces-toggle key="sai2::interfaces::simviz::gravity_comp_enabled" display="Gravity compensation" />
-    
-      </div>
-      <div>
-        <sai2-interfaces-config-selector key="sai2::interfaces::simviz::config_file"/>
-    
-      </div>
-
-    </div>
-
-    <!-- <div class="container">
-      <div class="container-item">
-        <h2>Plot</h2>
-        <sai2-interfaces-plot class="container-item-content">
-        </sai2-interfaces-plot>
-      </div>
-      <div class="container-item">
-        <h2>Logger</h2>
-        <sai2-interfaces-logger class="container-item-content"></sai2-interfaces-logger>
-      </div>
-    </div> -->
-  </body>
 </html>
