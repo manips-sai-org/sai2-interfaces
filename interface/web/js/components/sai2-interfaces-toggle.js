@@ -13,8 +13,14 @@ import { get_redis_val, post_redis_key_val } from '../redis.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
-	<label class="display"></label>
-	<button class="button"></button>
+<div class="row">
+	<div class="col-auto" >
+		<label class="display"></label>
+	</div>
+	<div class="col-auto">
+		<button class="button"></button>
+	</div>
+</div>
 `;
 
 
@@ -50,6 +56,6 @@ customElements.define('sai2-interfaces-toggle', class extends HTMLElement {
 		};
 
 		// append to document
-		this.appendChild(template_node);
+		this.replaceWith(template_node);
 	}
 });

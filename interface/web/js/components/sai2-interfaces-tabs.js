@@ -5,12 +5,13 @@ class Sai2InterfacesTabs extends HTMLElement {
 	constructor() {
 		super();
 		Sai2InterfacesTabs.counter = (Sai2InterfacesTabs.counter || 0) + 1;
-		const name = this.getAttribute('name').replace(/\s+/g, '_');
-		this.uniqueId = name + Sai2InterfacesTabs.counter;
 	}
 
 	connectedCallback() {
+		const name = this.getAttribute('name').replace(/\s+/g, '_');
+		this.uniqueId = name + Sai2InterfacesTabs.counter;
 		const tabsContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-CONTENT');
+		const otherContent = Array.from(this.children).filter(child => child.tagName != 'SAI2-INTERFACES-TAB-CONTENT');
 		const position = this.getAttribute('tabsPosition') || 'top';
 		const color = this.getAttribute('color') || 'rgb(0, 110, 255)';
 		const key = this.getAttribute('key');
@@ -61,7 +62,6 @@ class Sai2InterfacesTabs extends HTMLElement {
 		const paddingClass = position === 'left' ? 'padding-right' : 'padding-top';
 
 		this.innerHTML = `
-
 		<style>
 			.${this.uniqueId} .nav-link.active {
 				background-color: ${color};
@@ -92,6 +92,14 @@ class Sai2InterfacesTabs extends HTMLElement {
 			</div>
 		</div>
         `;
+
+		// Add the other content to the tabs div
+		let row = this.querySelector('.row');
+		let tabsDiv = row.querySelector(`.${tabsClass}`);
+		let ulDiv = tabsDiv.querySelector('ul');
+		otherContent.forEach((content) => {
+			ulDiv.appendChild(content);
+		});
 
 		// Add event listener to tabs for refreshing the page on tab switch 
 		// and remembering which one is active

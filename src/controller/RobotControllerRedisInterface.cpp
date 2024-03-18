@@ -16,10 +16,14 @@ void stop(int i) { should_stop = true; }
 
 const std::string reset_inputs_redis_group = "reset_input_group";
 
-const std::string LOGGING_ON_KEY = "sai2::interfaces::controller::logging_on";
+std::string getActiveControllerKey(const std::string& robot_name) {
+	return "sai2::interfaces::controller::" + robot_name +
+		   "::active_controller_name";
+}
 
-const std::string ACTIVE_CONTROLLER_KEY =
-	"sai2::interfaces::controller::active_controller_name";
+std::string getLoggingOnKey(const std::string& robot_name) {
+	return "sai2::interfaces::controller::" + robot_name + "::logging_on";
+}
 
 const std::string ROBOT_COMMAND_TORQUES_PREFIX =
 	"sai2::interfaces::robot_command_torques::";
@@ -54,7 +58,8 @@ void RobotControllerRedisInterface::run() {
 		timer.waitForNextLoop();
 
 		// switch controller if needed
-		switchController(_redis_client.get(ACTIVE_CONTROLLER_KEY));
+		switchController(
+			_redis_client.get(getActiveControllerKey(_config.robot_name)));
 
 		// read from redis
 		_redis_client.receiveAllFromGroup();
@@ -102,7 +107,8 @@ void RobotControllerRedisInterface::initialize() {
 									_robot_q);
 	_redis_client.addToReceiveGroup(ROBOT_DQ_PREFIX + _config.robot_name,
 									_robot_dq);
-	_redis_client.addToReceiveGroup(LOGGING_ON_KEY, _logging_on);
+	_redis_client.addToReceiveGroup(getLoggingOnKey(_config.robot_name),
+									_logging_on);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	_redis_client.receiveAllFromGroup();
@@ -195,7 +201,8 @@ void RobotControllerRedisInterface::initialize() {
 	initializeRedisTasksIO();
 
 	switchController(_config.initial_active_controller_name);
-	_redis_client.set(ACTIVE_CONTROLLER_KEY, _active_controller_name);
+	_redis_client.set(getActiveControllerKey(_config.robot_name),
+					  _active_controller_name);
 }
 
 void RobotControllerRedisInterface::switchController(
@@ -222,13 +229,14 @@ void RobotControllerRedisInterface::switchController(
 
 	// reset inputs for new active controller
 	for (auto& task_input : _controller_inputs.at(_active_controller_name)) {
-		if(holds_alternative<JointTaskInput>(task_input.second)) {
+		if (holds_alternative<JointTaskInput>(task_input.second)) {
 			auto& joint_task_input = get<JointTaskInput>(task_input.second);
 			joint_task_input.setFromTask(
 				_robot_controllers.at(_active_controller_name)
 					->getJointTaskByName(task_input.first));
-		} else if(holds_alternative<MotionForceTaskInput>(task_input.second)) {
-			auto& motion_force_task_input = get<MotionForceTaskInput>(task_input.second);
+		} else if (holds_alternative<MotionForceTaskInput>(task_input.second)) {
+			auto& motion_force_task_input =
+				get<MotionForceTaskInput>(task_input.second);
 			motion_force_task_input.setFromTask(
 				_robot_controllers.at(_active_controller_name)
 					->getMotionForceTaskByName(task_input.first));

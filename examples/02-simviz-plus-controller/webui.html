@@ -27,65 +27,21 @@
 <body>
 
 	<div class="container mt-5">
-		<div class="row mt-3 mb-3 justify-content-end">
+		<div class="row mb-3 justify-content-center">
 			<div class="col-6">
 				<sai2-interfaces-config-selector reset_key="sai2::interfaces::simviz::reset" />
 			</div>
-			<div class="col-6">
+			<div class="col-auto">
 				<sai2-interfaces-plot-button />
 			</div>
 		</div>
 
-		<div class="row m-3">
-
-			<sai2-interfaces-tabs tabsPosition="left" color="#cc7a00" name="controller selection"
-				key="sai2::interfaces::controller::active_controller_name">
-
-				<sai2-interfaces-tab-content name="Cartesian" value="cartesian_controller">
-
-					<sai2-interfaces-tabs color="#730099" name="Cartesian Controller">
-
-						<sai2-interfaces-tab-content name="Motion Force Task">
-							<sai2-interfaces-tabs name="motion_force_task">
-								<sai2-interfaces-tab-content name="Motion control">
-									<div class="container">
-										<sai2-interfaces-motion-control robotName="Panda"
-											controllerName="cartesian_controller" taskName="cartesian_task" />
-									</div>
-								</sai2-interfaces-tab-content>
-								<sai2-interfaces-tab-content name="Force control">
-									<div class="container">
-										<sai2-interfaces-force-control robotName="Panda"
-											controllerName="cartesian_controller" taskName="cartesian_task" />
-									</div>
-								</sai2-interfaces-tab-content>
-							</sai2-interfaces-tabs>
-						</sai2-interfaces-tab-content>
-						<sai2-interfaces-tab-content name="Nullspace Joint Task">
-							<sai2-interfaces-joint-control robotName="Panda" controllerName="cartesian_controller"
-								taskName="joint_task" />
-						</sai2-interfaces-tab-content>
-					</sai2-interfaces-tabs>
-				</sai2-interfaces-tab-content>
-
-
-				<sai2-interfaces-tab-content name="Joint" value="joint_controller">
-					<sai2-interfaces-joint-control robotName="Panda" controllerName="joint_controller"
-						taskName="joint_task" />
-				</sai2-interfaces-tab-content>
-
-
-				<sai2-interfaces-tab-content name="Floating" value="floating_controller">
-					<sai2-interfaces-joint-control robotName="Panda" controllerName="floating_controller"
-						taskName="joint_task_zero_gains" />
-				</sai2-interfaces-tab-content>
-
-
-			</sai2-interfaces-tabs>
-
-
+		<div class="row mt-5">
+			<sai2-interfaces-robot-controller robotName='Panda'
+				controllerNames='["cartesian_controller", "joint_controller", "floating_controller"]'
+				controllerTaskNames='[["cartesian_task", "joint_task"], ["joint_task"], ["joint_task_zero_gains"]]'
+				controllerTaskTypes='[["motion_force_task", "joint_task"], ["joint_task"], ["joint_task"]]' />
 		</div>
-	</div>
 </body>
 
 </html>
