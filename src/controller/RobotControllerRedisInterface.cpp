@@ -219,6 +219,21 @@ void RobotControllerRedisInterface::switchController(
 	_robot_model->setDq(_robot_dq);
 	_robot_model->updateModel();
 	_robot_controllers.at(_active_controller_name)->reinitializeTasks();
+
+	// reset inputs for new active controller
+	for (auto& task_input : _controller_inputs.at(_active_controller_name)) {
+		if(holds_alternative<JointTaskInput>(task_input.second)) {
+			auto& joint_task_input = get<JointTaskInput>(task_input.second);
+			joint_task_input.setFromTask(
+				_robot_controllers.at(_active_controller_name)
+					->getJointTaskByName(task_input.first));
+		} else if(holds_alternative<MotionForceTaskInput>(task_input.second)) {
+			auto& motion_force_task_input = get<MotionForceTaskInput>(task_input.second);
+			motion_force_task_input.setFromTask(
+				_robot_controllers.at(_active_controller_name)
+					->getMotionForceTaskByName(task_input.first));
+		}
+	}
 	_redis_client.sendAllFromGroup(reset_inputs_redis_group);
 }
 

@@ -59,8 +59,9 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 	constructor() {
 		super(template);
 
-		document.addEventListener(EVENT_RESET_DISPLAYS, (event) => {
+		document.addEventListener(EVENT_RESET_DISPLAYS, async (event) => {
 			console.log('Reset sliders event caught!', event.detail.message);
+			await new Promise(r => setTimeout(r, 100));
 			this.refresh();
 		});
 	}
