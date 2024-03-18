@@ -2,7 +2,7 @@ const template = document.createElement('template');
 template.innerHTML = `
 <div class="btn-group" role="group">
 	<button type="button" class="btn btn-info">New online plot tab</button>
-	<button type="button" class="btn btn-warning">Open offline CSV plotter</button>
+	<button type="button" class="btn btn-success">Open offline CSV plotter</button>
 </div>
 `;
 
@@ -17,7 +17,7 @@ class Sai2InterfacesPlotButton extends HTMLElement {
 
 		// Add event listeners
 		template_node.querySelector('.btn-info').addEventListener('click', this.newOnlinePlotTab);
-		template_node.querySelector('.btn-warning').addEventListener('click', this.openOfflineCSVPlotter);
+		template_node.querySelector('.btn-success').addEventListener('click', this.openOfflineCSVPlotter);
 
 		// append to document
 		this.appendChild(template_node);

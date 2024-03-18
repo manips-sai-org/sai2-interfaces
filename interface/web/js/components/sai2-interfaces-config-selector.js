@@ -22,10 +22,10 @@ import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 const template = document.createElement('template');
 template.innerHTML = `
 <div class="row">
-	<div class="col-10">
+	<div class="col-9">
 		<input type=file class="file_selector" placeholder="Select a config file"/>
 	</div>
-	<div class="col-2">
+	<div class="col-3">
 		<button class="btn btn-warning">Send Config</button>
 	</div>
 </div>
