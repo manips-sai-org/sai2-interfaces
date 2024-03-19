@@ -38,7 +38,7 @@
 			<momentSpaceParametrization dim="0" direction="1 0 0"/>
 
 			<velocitySaturation enabled="false" linear_velocity_limit="0.35" angular_velocity_limit="0.78" />
-			<otg type="jerk" 
+			<otg type="disabled" 
 				max_linear_velocity="0.35" 
 				max_linear_acceleration="1.5" 
 				max_linear_jerk="5.0" 
@@ -61,7 +61,7 @@
 		<task name="joint_task" type="joint_task">
 			<controlledJointNames></controlledJointNames>
 			<useDynamicDecoupling>true</useDynamicDecoupling>
-			<otg type="acceleration"/>
+			<otg type="disabled"/>
 		</task>
 	</controller>
 

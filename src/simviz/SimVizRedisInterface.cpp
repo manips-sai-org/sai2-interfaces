@@ -8,8 +8,8 @@
 namespace Sai2Interfaces {
 
 namespace {
-bool should_stop = false;
-void stop(int i) { should_stop = true; }
+bool external_stop_signal = false;
+void stop(int i) { external_stop_signal = true; }
 
 const std::string sim_param_group_name = "simviz_redis_sim_param_group_name";
 
@@ -21,7 +21,6 @@ const std::string SIM_PAUSE_KEY = "sai2::interfaces::simviz::pause";
 const std::string SIM_RESET_KEY = "sai2::interfaces::simviz::reset";
 const std::string GRAV_COMP_ENABLED_KEY =
 	"sai2::interfaces::simviz::gravity_comp_enabled";
-const std::string CONFIG_FILE_KEY = "sai2::interfaces::simviz::config_file";
 
 const std::string ROBOT_COMMAND_TORQUES_PREFIX =
 	"sai2::interfaces::robot_command_torques::";
@@ -33,14 +32,15 @@ const std::string OBJECT_VELOCITY_PREFIX =
 const std::string FORCE_SENSOR_PREFIX = "sai2::interfaces::force_sensor::";
 }  // namespace
 
-SimVizRedisInterface::SimVizRedisInterface(const std::string& config_file)
-	: _config_file(config_file),
+SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config)
+	: _config(config),
+	  _new_config(config),
 	  _pause(false),
 	  _reset(false),
+	  _reset_config(false),
 	  _enable_grav_comp(true),
 	  _logging_on(false),
 	  _logging_state(LoggingState::OFF) {
-	_config = _config_parser.parseConfig(_config_file);
 	_graphics = std::make_unique<Sai2Graphics::Sai2Graphics>(
 		_config.world_file, "sai2 world", false);
 	_simulation = std::make_unique<Sai2Simulation::Sai2Simulation>(
@@ -50,14 +50,22 @@ SimVizRedisInterface::SimVizRedisInterface(const std::string& config_file)
 	_redis_client.createNewSendGroup(group_name);
 	_redis_client.createNewReceiveGroup(group_name);
 	initializeRedisDatabase();
-	reset();
+	resetInternal();
 
 	signal(SIGABRT, &stop);
 	signal(SIGTERM, &stop);
 	signal(SIGINT, &stop);
 }
 
-void SimVizRedisInterface::reset() {
+void SimVizRedisInterface::setNewConfig(const SimVizConfig& config) {
+	if (config == _new_config) {
+		return;
+	}
+	_new_config = config;
+	_reset_config = true;
+}
+
+void SimVizRedisInterface::resetInternal() {
 	_simulation->setTimestep(_config.timestep);
 	_simulation->setCollisionRestitution(_config.collision_restitution);
 	_simulation->setCoeffFrictionStatic(_config.friction_coefficient);
@@ -185,27 +193,25 @@ void SimVizRedisInterface::initializeRedisDatabase() {
 									sim_param_group_name);
 	_redis_client.addToReceiveGroup(LOGGING_ON_KEY, _logging_on,
 									sim_param_group_name);
-	_redis_client.addToReceiveGroup(CONFIG_FILE_KEY, _config_file,
-									sim_param_group_name);
 }
 
-void SimVizRedisInterface::run() {
+void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
 	std::thread sim_thread;
 	if (_config.mode != SimVizMode::VIZ_ONLY) {
-		sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this);
+		sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this, std::ref(user_stop_signal));
 	}
 	if (_config.mode != SimVizMode::SIM_ONLY) {
-		vizLoopRun();
+		vizLoopRun(user_stop_signal);
 	}
 	if (_config.mode != SimVizMode::VIZ_ONLY) {
 		sim_thread.join();
 	}
 }
 
-void SimVizRedisInterface::vizLoopRun() {
+void SimVizRedisInterface::vizLoopRun(const std::atomic<bool>& user_stop_signal) {
 	Sai2Common::LoopTimer timer(30.0);
 
-	while (!should_stop && _graphics->isWindowOpen()) {
+	while (!user_stop_signal && !external_stop_signal && _graphics->isWindowOpen()) {
 		this_thread::sleep_for(chrono::microseconds(50));
 		timer.waitForNextLoop();
 
@@ -234,19 +240,20 @@ void SimVizRedisInterface::vizLoopRun() {
 				_graphics->getUITorques(object_name);
 		}
 	}
-	should_stop = true;
+	external_stop_signal = true;
 }
 
-void SimVizRedisInterface::simLoopRun() {
+void SimVizRedisInterface::simLoopRun(const std::atomic<bool>& user_stop_signal) {
 	Sai2Common::LoopTimer timer(1.0 / _simulation->timestep());
 
-	while (!should_stop) {
+	while (!user_stop_signal && !external_stop_signal) {
 		_redis_client.receiveAllFromGroup(sim_param_group_name);
+		processSimParametrization();
+
 		if (_reset) {
 			timer.resetLoopFrequency(1.0 / _simulation->timestep());
 			timer.reinitializeTimer();
 		}
-		processSimParametrization();
 
 		_reset = false;
 		_redis_client.setInt(SIM_RESET_KEY, _reset);
@@ -297,12 +304,13 @@ void SimVizRedisInterface::simLoopRun() {
 }
 
 void SimVizRedisInterface::processSimParametrization() {
-	if (_reset) {
+	if (_reset || _reset_config) {
 		std::lock_guard<mutex> lock(_mutex_parametrization);
-		_config = _config_parser.parseConfig(_config_file);
+		_config = _new_config;
+		_reset_config = false;
 		_simulation->resetWorld(_config.world_file);
 		_graphics->resetWorld(_config.world_file);
-		reset();
+		resetInternal();
 	}
 
 	if (_enable_grav_comp != _simulation->isGravityCompensationEnabled()) {

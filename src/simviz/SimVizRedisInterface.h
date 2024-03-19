@@ -9,7 +9,7 @@
 
 #include "Sai2Graphics.h"
 #include "Sai2Simulation.h"
-#include "SimVizConfigParser.h"
+#include "SimVizConfig.h"
 #include "logger/Logger.h"
 #include "redis/RedisClient.h"
 #include "timer/LoopTimer.h"
@@ -18,10 +18,11 @@ namespace Sai2Interfaces {
 
 class SimVizRedisInterface {
 public:
-	SimVizRedisInterface(const std::string& config_file);
+	SimVizRedisInterface(const SimVizConfig& config);
 	~SimVizRedisInterface() = default;
 
-	void run();
+	void setNewConfig(const SimVizConfig& config);
+	void run(const std::atomic<bool>& user_stop_signal = false);
 
 private:
 	enum LoggingState {
@@ -31,17 +32,15 @@ private:
 		STOP,
 	};
 
-	void reset();
+	void resetInternal();
 	void initializeRedisDatabase();
 
-	void vizLoopRun();
-	void simLoopRun();
+	void vizLoopRun(const std::atomic<bool>& user_stop_signal);
+	void simLoopRun(const std::atomic<bool>& user_stop_signal);
 	void processSimParametrization();
 
-	std::string _config_file;
-
-	SimVizConfigParser _config_parser;
 	SimVizConfig _config;
+	SimVizConfig _new_config;
 
 	Sai2Common::RedisClient _redis_client;
 
@@ -68,6 +67,7 @@ private:
 	bool _logging_on;
 	bool _pause;
 	bool _reset;
+	bool _reset_config;
 	bool _enable_grav_comp;
 };
 
