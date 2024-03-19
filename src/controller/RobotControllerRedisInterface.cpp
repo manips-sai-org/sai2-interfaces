@@ -11,8 +11,8 @@ namespace Sai2Interfaces {
 
 namespace {
 
-bool should_stop = false;
-void stop(int i) { should_stop = true; }
+bool external_stop_signal = false;
+void stop(int i) { external_stop_signal = true; }
 
 const std::string reset_inputs_redis_group = "reset_input_group";
 
@@ -33,10 +33,8 @@ const std::string FORCE_SENSOR_PREFIX = "sai2::interfaces::force_sensor::";
 }  // namespace
 
 RobotControllerRedisInterface::RobotControllerRedisInterface(
-	const string& config_file) {
-	_config_file = config_file;
-	_config_parser = RobotControllerConfigParser();
-	_config = _config_parser.parseConfig(_config_file);
+	const RobotControllerConfig& config) {
+	_config = config;
 
 	_logging_on = _config.logger_config.start_with_logger_on;
 	_logging_state = _logging_on ? LoggingState::START : LoggingState::OFF;
@@ -50,11 +48,13 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 	signal(SIGINT, &stop);
 }
 
-void RobotControllerRedisInterface::run() {
+void RobotControllerRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
 	// create timer
 	Sai2Common::LoopTimer timer(1.0 / _config.timestep);
+	timer.setTimerName("RobotControllerRedisInterface Timer for robot: " +
+					   _config.robot_name);
 
-	while (!should_stop) {
+	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
 
 		// switch controller if needed
@@ -83,6 +83,7 @@ void RobotControllerRedisInterface::run() {
 		// write to redis
 		_redis_client.sendAllFromGroup();
 	}
+	timer.stop();
 
 	_redis_client.setEigen(ROBOT_COMMAND_TORQUES_PREFIX + _config.robot_name,
 						   Eigen::VectorXd::Zero(_robot_model->dof()));

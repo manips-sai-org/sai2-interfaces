@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "RobotControllerConfigParser.h"
+#include "RobotControllerConfig.h"
 #include "Sai2Model.h"
 #include "Sai2Primitives.h"
 #include "logger/Logger.h"
@@ -13,10 +13,10 @@ namespace Sai2Interfaces {
 
 class RobotControllerRedisInterface {
 public:
-	RobotControllerRedisInterface(const std::string& config_file);
+	RobotControllerRedisInterface(const RobotControllerConfig& config);
 	~RobotControllerRedisInterface() = default;
 
-	void run();
+	void run(const std::atomic<bool>& user_stop_signal = false);
 
 private:
 	enum LoggingState {
@@ -177,8 +177,6 @@ private:
 	void switchController(const std::string& controller_name);
 	void processInputs();
 
-	std::string _config_file;
-	RobotControllerConfigParser _config_parser;
 	RobotControllerConfig _config;
 
 	std::shared_ptr<Sai2Model::Sai2Model> _robot_model;

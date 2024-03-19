@@ -245,6 +245,7 @@ void SimVizRedisInterface::vizLoopRun(const std::atomic<bool>& user_stop_signal)
 
 void SimVizRedisInterface::simLoopRun(const std::atomic<bool>& user_stop_signal) {
 	Sai2Common::LoopTimer timer(1.0 / _simulation->timestep());
+	timer.setTimerName("Simviz Redis Interfae Loop Timer");
 
 	while (!user_stop_signal && !external_stop_signal) {
 		_redis_client.receiveAllFromGroup(sim_param_group_name);
@@ -299,7 +300,6 @@ void SimVizRedisInterface::simLoopRun(const std::atomic<bool>& user_stop_signal)
 		}
 	}
 	timer.stop();
-	cout << "\nSimulation loop timer stats:\n";
 	timer.printInfoPostRun();
 }
 
