@@ -32,7 +32,8 @@ const std::string OBJECT_VELOCITY_PREFIX =
 const std::string FORCE_SENSOR_PREFIX = "sai2::interfaces::force_sensor::";
 }  // namespace
 
-SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config)
+SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
+										   const bool setup_signal_handler)
 	: _config(config),
 	  _new_config(config),
 	  _pause(false),
@@ -40,6 +41,7 @@ SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config)
 	  _reset_config(false),
 	  _enable_grav_comp(true),
 	  _logging_on(false),
+	  _reset_complete(false),
 	  _logging_state(LoggingState::OFF) {
 	_graphics = std::make_unique<Sai2Graphics::Sai2Graphics>(
 		_config.world_file, "sai2 world", false);
@@ -52,15 +54,15 @@ SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config)
 	initializeRedisDatabase();
 	resetInternal();
 
-	signal(SIGABRT, &stop);
-	signal(SIGTERM, &stop);
-	signal(SIGINT, &stop);
+	if (setup_signal_handler) {
+		signal(SIGABRT, &stop);
+		signal(SIGTERM, &stop);
+		signal(SIGINT, &stop);
+	}
 }
 
-void SimVizRedisInterface::setNewConfig(const SimVizConfig& config) {
-	if (config == _new_config) {
-		return;
-	}
+void SimVizRedisInterface::reset(const SimVizConfig& config) {
+	_reset_complete = false;
 	_new_config = config;
 	_reset_config = true;
 }
@@ -181,6 +183,8 @@ void SimVizRedisInterface::resetInternal() {
 			->addToLog(force_sensor_data.moment_local_frame,
 					   force_sensor_data.link_name + "_sensed_moment");
 	}
+
+	_reset_complete = true;
 }
 
 void SimVizRedisInterface::initializeRedisDatabase() {
@@ -198,7 +202,8 @@ void SimVizRedisInterface::initializeRedisDatabase() {
 void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
 	std::thread sim_thread;
 	if (_config.mode != SimVizMode::VIZ_ONLY) {
-		sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this, std::ref(user_stop_signal));
+		sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this,
+								 std::ref(user_stop_signal));
 	}
 	if (_config.mode != SimVizMode::SIM_ONLY) {
 		vizLoopRun(user_stop_signal);
@@ -208,10 +213,12 @@ void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
 	}
 }
 
-void SimVizRedisInterface::vizLoopRun(const std::atomic<bool>& user_stop_signal) {
+void SimVizRedisInterface::vizLoopRun(
+	const std::atomic<bool>& user_stop_signal) {
 	Sai2Common::LoopTimer timer(30.0);
 
-	while (!user_stop_signal && !external_stop_signal && _graphics->isWindowOpen()) {
+	while (!user_stop_signal && !external_stop_signal &&
+		   _graphics->isWindowOpen()) {
 		this_thread::sleep_for(chrono::microseconds(50));
 		timer.waitForNextLoop();
 
@@ -243,7 +250,8 @@ void SimVizRedisInterface::vizLoopRun(const std::atomic<bool>& user_stop_signal)
 	external_stop_signal = true;
 }
 
-void SimVizRedisInterface::simLoopRun(const std::atomic<bool>& user_stop_signal) {
+void SimVizRedisInterface::simLoopRun(
+	const std::atomic<bool>& user_stop_signal) {
 	Sai2Common::LoopTimer timer(1.0 / _simulation->timestep());
 	timer.setTimerName("Simviz Redis Interfae Loop Timer");
 
@@ -300,6 +308,11 @@ void SimVizRedisInterface::simLoopRun(const std::atomic<bool>& user_stop_signal)
 		}
 	}
 	timer.stop();
+
+	for (auto& logger : _loggers) {
+		logger.second->stop();
+	}
+
 	timer.printInfoPostRun();
 }
 

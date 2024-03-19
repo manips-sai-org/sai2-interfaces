@@ -1,4 +1,4 @@
-<robotControlConfiguration robotName="Panda">
+<controlConfiguration>
 
 	<robotModelFile>resources/urdf/robot_models/panda/panda_arm_sphere.urdf</robotModelFile>
 	<baseFrame xyz="0 0 0" rpy="0 0 0" />
@@ -72,4 +72,4 @@
 		</task>
 	</controller>
 
-</robotControlConfiguration>
+</controlConfiguration>

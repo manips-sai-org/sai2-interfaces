@@ -13,7 +13,8 @@ namespace Sai2Interfaces {
 
 class RobotControllerRedisInterface {
 public:
-	RobotControllerRedisInterface(const RobotControllerConfig& config);
+	RobotControllerRedisInterface(const RobotControllerConfig& config,
+								  const bool setup_signal_handler = true);
 	~RobotControllerRedisInterface() = default;
 
 	void run(const std::atomic<bool>& user_stop_signal = false);
@@ -161,9 +162,11 @@ private:
 			desired_linear_acceleration = task->getDesiredLinearAcceleration();
 			desired_orientation = task->getDesiredOrientation();
 			desired_angular_velocity = task->getDesiredAngularVelocity();
-			desired_angular_acceleration = task->getDesiredAngularAcceleration();
+			desired_angular_acceleration =
+				task->getDesiredAngularAcceleration();
 			sensed_force_world_frame = task->getSensedForceControlWorldFrame();
-			sensed_moment_world_frame = task->getSensedMomentControlWorldFrame();
+			sensed_moment_world_frame =
+				task->getSensedMomentControlWorldFrame();
 		}
 	};
 

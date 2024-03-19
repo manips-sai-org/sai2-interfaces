@@ -1,7 +1,8 @@
 #include "RobotControllerConfigParser.h"
 
+#include <urdf/urdfdom_headers/urdf_model/include/urdf_model/pose.h>
+
 #include <iostream>
-#include <urdf/urdfdom/urdf_parser/src/pose.cpp>
 
 using namespace std;
 using namespace Eigen;
@@ -10,11 +11,37 @@ namespace Sai2Interfaces {
 
 namespace {
 
+bool parsePose(Sai2Urdfreader::Pose& pose, tinyxml2::XMLElement* xml) {
+	pose.clear();
+	if (xml) {
+		const char* xyz_str = xml->Attribute("xyz");
+		if (xyz_str != NULL) {
+			try {
+				pose.position.init(xyz_str);
+			} catch (std::exception e) {
+				std::cout << e.what() << std::endl;
+				return false;
+			}
+		}
+
+		const char* rpy_str = xml->Attribute("rpy");
+		if (rpy_str != NULL) {
+			try {
+				pose.rotation.init(rpy_str);
+			} catch (std::exception e) {
+				std::cout << e.what() << std::endl;
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 Affine3d parsePoseLocal(tinyxml2::XMLElement* xml) {
 	Affine3d pose = Affine3d::Identity();
 
 	Sai2Urdfreader::Pose pose_urdf;
-	Sai2Urdfreader::parsePose(pose_urdf, xml);
+	parsePose(pose_urdf, xml);
 
 	pose.translation() << pose_urdf.position.x, pose_urdf.position.y,
 		pose_urdf.position.z;
@@ -375,63 +402,107 @@ JointTaskConfig::JointVelSatConfig parseVelSatJointConfig(
 
 }  // namespace
 
-RobotControllerConfig RobotControllerConfigParser::parseConfig(
-	const string& config_file) {
+std::vector<RobotControllerConfig> RobotControllerConfigParser::parseConfig(
+	const std::string& config_file) {
 	_config_file_name = config_file;
-	RobotControllerConfig config;
+	std::vector<RobotControllerConfig> configs;
 
 	tinyxml2::XMLDocument doc;
 	if (doc.LoadFile(config_file.c_str()) != tinyxml2::XML_SUCCESS) {
-		throw runtime_error("Could not load simviz config file: " +
+		throw runtime_error("Could not load controller config file: " +
 							config_file);
 	}
 
-	tinyxml2::XMLElement* root = doc.FirstChildElement("controlConfiguration");
-	if (!root) {
+	if (doc.FirstChildElement("robotControlConfiguration") == nullptr) {
 		throw runtime_error(
-			"No 'controlConfiguration' element found in config file: " +
+			"No 'robotControlConfiguration' element found in config file: " +
 			config_file);
 	}
 
+	// loop over the robotControlConfiguration elements
+	for (tinyxml2::XMLElement* robotControlConfiguration =
+			 doc.FirstChildElement("robotControlConfiguration");
+		 robotControlConfiguration;
+		 robotControlConfiguration =
+			 robotControlConfiguration->NextSiblingElement(
+				 "robotControlConfiguration")) {
+		// get the robot name
+		if (!robotControlConfiguration->Attribute("robotName")) {
+			throw runtime_error(
+				"Some of the robotControlConfiguration are missing a "
+				"'robotName' attribute field in config file: " +
+				config_file);
+		}
+		const std::string robot_name =
+			robotControlConfiguration->Attribute("robotName");
+
+		if (robotControlConfiguration->Attribute("file")) {
+			const std::string internal_controller_config_file =
+				robotControlConfiguration->Attribute("file");
+			tinyxml2::XMLDocument doc_internal;
+			if (doc_internal.LoadFile(
+					internal_controller_config_file.c_str()) !=
+				tinyxml2::XML_SUCCESS) {
+				throw runtime_error("Could not load controller config file: " +
+									internal_controller_config_file);
+			}
+			if (doc_internal.FirstChildElement("controlConfiguration") ==
+				nullptr) {
+				throw runtime_error(
+					"no 'controlConfiguration' element found in config "
+					"file " +
+					internal_controller_config_file);
+			}
+			configs.push_back(parseControllersConfig(
+				doc_internal.FirstChildElement("controlConfiguration")));
+		} else {
+			configs.push_back(
+				parseControllersConfig(robotControlConfiguration));
+		}
+		configs.back().robot_name = robot_name;
+	}
+
+	return configs;
+}
+
+RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
+	tinyxml2::XMLElement* controlConfiguration) {
+	RobotControllerConfig config;
+
 	// Extract the robotModelFile
 	tinyxml2::XMLElement* robotModelFile =
-		root->FirstChildElement("robotModelFile");
+		controlConfiguration->FirstChildElement("robotModelFile");
 	if (!robotModelFile) {
 		throw runtime_error(
-			"No 'robotModelFile' element found in config file: " + config_file);
+			"No 'robotModelFile' element found in config file: " +
+			_config_file_name);
 	}
 	config.robot_model_file = robotModelFile->GetText();
 
-	// robot name
-	tinyxml2::XMLElement* robotName = root->FirstChildElement("robotName");
-	if (!robotName) {
-		throw runtime_error("No 'robotName' element found in config file: " +
-							config_file);
-	}
-	config.robot_name = robotName->GetText();
-
 	// robot base in world
 	tinyxml2::XMLElement* robotBaseInWorld =
-		root->FirstChildElement("robotBaseInWorld");
+		controlConfiguration->FirstChildElement("robotBaseInWorld");
 	if (robotBaseInWorld) {
 		config.robot_base_in_world = parsePoseLocal(robotBaseInWorld);
 	}
 
 	// world gravity
 	tinyxml2::XMLElement* worldGravity =
-		root->FirstChildElement("worldGravity");
+		controlConfiguration->FirstChildElement("worldGravity");
 	if (worldGravity) {
 		config.world_gravity = parseVector3dLocal(worldGravity);
 	}
 
 	// timestep
-	tinyxml2::XMLElement* timestep = root->FirstChildElement("timestep");
+	tinyxml2::XMLElement* timestep =
+		controlConfiguration->FirstChildElement("timestep");
 	if (timestep) {
 		config.timestep = timestep->DoubleText();
 	}
 
 	// extract logger config
-	tinyxml2::XMLElement* logger = root->FirstChildElement("logger");
+	tinyxml2::XMLElement* logger =
+		controlConfiguration->FirstChildElement("logger");
 	if (logger) {
 		if (logger->FirstChildElement("logFolderName")) {
 			config.logger_config.folder_name =
@@ -456,25 +527,26 @@ RobotControllerConfig RobotControllerConfigParser::parseConfig(
 
 	// parse all controller configs
 	for (tinyxml2::XMLElement* controller =
-			 root->FirstChildElement("controller");
+			 controlConfiguration->FirstChildElement("controller");
 		 controller;
 		 controller = controller->NextSiblingElement("controller")) {
 		// get controller name
 		const char* name = controller->Attribute("name");
 		if (!name) {
 			throw runtime_error(
-				"controllers must have a name in config file: " + config_file);
+				"controllers must have a name in config file: " +
+				_config_file_name);
 		}
 		if (name == string("")) {
 			throw runtime_error(
 				"controllers must have a non-empty name in config file: " +
-				config_file);
+				_config_file_name);
 		}
 		if (config.controllers_configs.find(name) !=
 			config.controllers_configs.end()) {
 			throw runtime_error(
 				"controllers must have a unique name in config file: " +
-				config_file);
+				_config_file_name);
 		}
 
 		config.controllers_configs[name] =

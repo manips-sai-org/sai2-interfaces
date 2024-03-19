@@ -33,7 +33,7 @@ const std::string FORCE_SENSOR_PREFIX = "sai2::interfaces::force_sensor::";
 }  // namespace
 
 RobotControllerRedisInterface::RobotControllerRedisInterface(
-	const RobotControllerConfig& config) {
+	const RobotControllerConfig& config, const bool setup_signal_handler) {
 	_config = config;
 
 	_logging_on = _config.logger_config.start_with_logger_on;
@@ -43,12 +43,15 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 
 	initialize();
 
-	signal(SIGABRT, &stop);
-	signal(SIGTERM, &stop);
-	signal(SIGINT, &stop);
+	if (setup_signal_handler) {
+		signal(SIGABRT, &stop);
+		signal(SIGTERM, &stop);
+		signal(SIGINT, &stop);
+	}
 }
 
-void RobotControllerRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
+void RobotControllerRedisInterface::run(
+	const std::atomic<bool>& user_stop_signal) {
 	// create timer
 	Sai2Common::LoopTimer timer(1.0 / _config.timestep);
 	timer.setTimerName("RobotControllerRedisInterface Timer for robot: " +
@@ -84,6 +87,14 @@ void RobotControllerRedisInterface::run(const std::atomic<bool>& user_stop_signa
 		_redis_client.sendAllFromGroup();
 	}
 	timer.stop();
+
+	// stop logging
+	_robot_logger->stop();
+	for (auto& task_loggers : _task_loggers) {
+		for (auto& pair : task_loggers.second) {
+			pair.second->stop();
+		}
+	}
 
 	_redis_client.setEigen(ROBOT_COMMAND_TORQUES_PREFIX + _config.robot_name,
 						   Eigen::VectorXd::Zero(_robot_model->dof()));

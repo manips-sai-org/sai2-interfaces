@@ -1,17 +1,43 @@
 #include "SimVizConfigParser.h"
 
 #include <tinyxml2.h>
+#include <urdf/urdfdom_headers/urdf_model/include/urdf_model/pose.h>
 
 #include <iostream>
-#include <urdf/urdfdom/urdf_parser/src/pose.cpp>
 
 namespace {
+
+bool parsePose(Sai2Urdfreader::Pose& pose, tinyxml2::XMLElement* xml) {
+	pose.clear();
+	if (xml) {
+		const char* xyz_str = xml->Attribute("xyz");
+		if (xyz_str != NULL) {
+			try {
+				pose.position.init(xyz_str);
+			} catch (std::exception e) {
+				std::cout << e.what() << std::endl;
+				return false;
+			}
+		}
+
+		const char* rpy_str = xml->Attribute("rpy");
+		if (rpy_str != NULL) {
+			try {
+				pose.rotation.init(rpy_str);
+			} catch (std::exception e) {
+				std::cout << e.what() << std::endl;
+				return false;
+			}
+		}
+	}
+	return true;
+}
 
 Eigen::Affine3d parsePoseLocal(tinyxml2::XMLElement* xml) {
 	Eigen::Affine3d pose = Eigen::Affine3d::Identity();
 
 	Sai2Urdfreader::Pose pose_urdf;
-	Sai2Urdfreader::parsePose(pose_urdf, xml);
+	parsePose(pose_urdf, xml);
 
 	pose.translation() << pose_urdf.position.x, pose_urdf.position.y,
 		pose_urdf.position.z;
@@ -36,16 +62,25 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 								 config_file);
 	}
 
-	tinyxml2::XMLElement* root = doc.FirstChildElement("simvizConfiguration");
-	if (!root) {
+	tinyxml2::XMLElement* simviz_config_xml =
+		doc.FirstChildElement("simvizConfiguration");
+	if (!simviz_config_xml) {
 		throw std::runtime_error(
 			"No 'simvizConfiguration' element found in config file: " +
 			config_file);
 	}
 
+	// read the config from the referenced file if it exists
+	tinyxml2::XMLElement* simviz_config_xml_2;
+	if (simviz_config_xml->Attribute("file")) {
+		const std::string internal_config_file =
+			simviz_config_xml->Attribute("file");
+		return parseConfig(internal_config_file);
+	}
+
 	// Extract the worldFilePath
 	tinyxml2::XMLElement* worldFilePath =
-		root->FirstChildElement("worldFilePath");
+		simviz_config_xml->FirstChildElement("worldFilePath");
 	if (!worldFilePath) {
 		throw std::runtime_error(
 			"No 'worldFilePath' element found in config file: " + config_file);
@@ -53,7 +88,7 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	config.world_file = worldFilePath->GetText();
 
 	// Extract the simviz mode
-	tinyxml2::XMLElement* mode = root->FirstChildElement("mode");
+	tinyxml2::XMLElement* mode = simviz_config_xml->FirstChildElement("mode");
 	if (mode) {
 		std::string mode_str = mode->GetText();
 		if (mode_str == "simviz") {
@@ -70,7 +105,8 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	}
 
 	// Extract simParameters
-	tinyxml2::XMLElement* simParams = root->FirstChildElement("simParameters");
+	tinyxml2::XMLElement* simParams =
+		simviz_config_xml->FirstChildElement("simParameters");
 	if (simParams) {
 		if (simParams->FirstChildElement("timestep")) {
 			config.timestep =
@@ -96,7 +132,7 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 
 	// Extract forceSensor elements
 	for (tinyxml2::XMLElement* forceSensor =
-			 root->FirstChildElement("forceSensor");
+			 simviz_config_xml->FirstChildElement("forceSensor");
 		 forceSensor;
 		 forceSensor = forceSensor->NextSiblingElement("forceSensor")) {
 		SimForceSensorConfig force_sensor_config;
@@ -125,7 +161,8 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	}
 
 	// extract logger config
-	tinyxml2::XMLElement* logger = root->FirstChildElement("logger");
+	tinyxml2::XMLElement* logger =
+		simviz_config_xml->FirstChildElement("logger");
 	if (logger) {
 		if (logger->FirstChildElement("logFolderName")) {
 			config.logger_config.folder_name =

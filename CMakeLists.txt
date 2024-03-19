@@ -56,6 +56,7 @@ SET(SAI2_INTERFACES_SOURCE
   ${PROJECT_SOURCE_DIR}/src/simviz/SimVizConfigParser.cpp
   ${PROJECT_SOURCE_DIR}/src/controller/RobotControllerRedisInterface.cpp
   ${PROJECT_SOURCE_DIR}/src/controller/RobotControllerConfigParser.cpp
+  ${PROJECT_SOURCE_DIR}/src/MainRedisInterface.cpp
 )
 
 SET(SAI2-INTERFACES_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/src)

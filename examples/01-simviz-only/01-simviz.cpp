@@ -11,13 +11,28 @@ void auxThreadRun(std::atomic<bool>& stop_simviz,
 				  Sai2Interfaces::SimVizRedisInterface& simviz) {
 	Sai2Interfaces::SimVizConfigParser parser;
 
-	std::this_thread::sleep_for(std::chrono::seconds(10));
-	simviz.setNewConfig(parser.parseConfig(config_file_2));
+	for (int i = 0; i < 100; ++i) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		if (stop_simviz) {
+			return;
+		}
+	}
+	simviz.reset(parser.parseConfig(config_file_2));
 
-	std::this_thread::sleep_for(std::chrono::seconds(10));
-	simviz.setNewConfig(parser.parseConfig(config_file_3));
+	for (int i = 0; i < 100; ++i) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		if (stop_simviz) {
+			return;
+		}
+	}
+	simviz.reset(parser.parseConfig(config_file_3));
 
-	std::this_thread::sleep_for(std::chrono::seconds(10));
+	for (int i = 0; i < 100; ++i) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		if (stop_simviz) {
+			return;
+		}
+	}
 	stop_simviz = true;
 }
 
@@ -31,6 +46,7 @@ int main(int argc, char** argv) {
 						   std::ref(simviz));
 
 	simviz.run(stop_simviz);
+	stop_simviz = true;
 
 	aux_thread.join();
 

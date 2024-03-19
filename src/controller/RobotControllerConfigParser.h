@@ -12,9 +12,10 @@ public:
 	RobotControllerConfigParser() = default;
 	~RobotControllerConfigParser() = default;
 
-	RobotControllerConfig parseConfig(const std::string& config_file);
+	std::vector<RobotControllerConfig> parseConfig(const std::string& config_file);
 
 private:
+	RobotControllerConfig parseControllersConfig(tinyxml2::XMLElement* controlConfiguration);
 	std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>
 	parseSingleControllerConfig(tinyxml2::XMLElement* xml);
 

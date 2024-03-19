@@ -18,11 +18,13 @@ namespace Sai2Interfaces {
 
 class SimVizRedisInterface {
 public:
-	SimVizRedisInterface(const SimVizConfig& config);
+	SimVizRedisInterface(const SimVizConfig& config, const bool setup_signal_handler = true);
 	~SimVizRedisInterface() = default;
 
-	void setNewConfig(const SimVizConfig& config);
+	void reset(const SimVizConfig& config);
 	void run(const std::atomic<bool>& user_stop_signal = false);
+
+	bool isResetComplete() const { return _reset_complete; }
 
 private:
 	enum LoggingState {
@@ -69,6 +71,8 @@ private:
 	bool _reset;
 	bool _reset_config;
 	bool _enable_grav_comp;
+
+	bool _reset_complete;
 };
 
 }  // namespace Sai2Interfaces
