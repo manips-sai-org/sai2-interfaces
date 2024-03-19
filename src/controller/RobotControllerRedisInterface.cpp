@@ -327,6 +327,10 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				_redis_client.addToReceiveGroup(
 					key_prefix + "ki", joint_task_config.gains_config->ki,
 					controller_name);
+				_redis_client.addToReceiveGroup(
+					key_prefix + "gains_safety_checks_enabled",
+					joint_task_config.gains_config->safety_checks_enabled,
+					controller_name);
 
 				// velocity saturation
 				if (!joint_task_config.velocity_saturation_config.has_value()) {
@@ -704,6 +708,11 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.position_gains_config->ki,
 					controller_name);
 				_redis_client.addToReceiveGroup(
+					key_prefix + "position_gains_safety_checks_enabled",
+					motion_force_task_config.position_gains_config
+						->safety_checks_enabled,
+					controller_name);
+				_redis_client.addToReceiveGroup(
 					key_prefix + "orientation_kp",
 					motion_force_task_config.orientation_gains_config->kp,
 					controller_name);
@@ -714,6 +723,11 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				_redis_client.addToReceiveGroup(
 					key_prefix + "orientation_ki",
 					motion_force_task_config.orientation_gains_config->ki,
+					controller_name);
+				_redis_client.addToReceiveGroup(
+					key_prefix + "orientation_gains_safety_checks_enabled",
+					motion_force_task_config.orientation_gains_config
+						->safety_checks_enabled,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "force_kp",
@@ -1004,8 +1018,13 @@ void RobotControllerRedisInterface::processInputs() {
 			} else {
 				const auto& gains_config =
 					joint_task_config.gains_config.value();
-				joint_task->setGains(gains_config.kp, gains_config.kv,
-									 gains_config.ki);
+				if (gains_config.safety_checks_enabled) {
+					joint_task->setGains(gains_config.kp, gains_config.kv,
+										 gains_config.ki);
+				} else {
+					joint_task->setGainsUnsafe(gains_config.kp, gains_config.kv,
+											   gains_config.ki);
+				}
 			}
 
 			// inputs
@@ -1181,8 +1200,13 @@ void RobotControllerRedisInterface::processInputs() {
 			} else {
 				const auto& gains_config =
 					motion_force_task_config.position_gains_config.value();
-				motion_force_task->setPosControlGains(
-					gains_config.kp, gains_config.kv, gains_config.ki);
+				if (gains_config.safety_checks_enabled) {
+					motion_force_task->setPosControlGains(
+						gains_config.kp, gains_config.kv, gains_config.ki);
+				} else {
+					motion_force_task->setPosControlGainsUnsafe(
+						gains_config.kp, gains_config.kv, gains_config.ki);
+				}
 			}
 
 			if (!motion_force_task_config.orientation_gains_config
@@ -1199,8 +1223,13 @@ void RobotControllerRedisInterface::processInputs() {
 			} else {
 				const auto& gains_config =
 					motion_force_task_config.orientation_gains_config.value();
-				motion_force_task->setOriControlGains(
-					gains_config.kp, gains_config.kv, gains_config.ki);
+				if (gains_config.safety_checks_enabled) {
+					motion_force_task->setOriControlGains(
+						gains_config.kp, gains_config.kv, gains_config.ki);
+				} else {
+					motion_force_task->setOriControlGainsUnsafe(
+						gains_config.kp, gains_config.kv, gains_config.ki);
+				}
 			}
 
 			if (!motion_force_task_config.force_gains_config.has_value()) {

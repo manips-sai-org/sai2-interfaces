@@ -14,6 +14,7 @@ using MotionForceTaskDefaultParams =
 namespace Sai2Interfaces {
 
 struct GainsConfig {
+	bool safety_checks_enabled = true;
 	Eigen::VectorXd kp;
 	Eigen::VectorXd kv;
 	Eigen::VectorXd ki;

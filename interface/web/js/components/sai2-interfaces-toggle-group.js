@@ -23,7 +23,6 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 	constructor() {
 		super();
 		this.template = template;
-		this.enabled = false;
 	}
 
 	connectedCallback() {
@@ -31,6 +30,7 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 
 		this.key = this.getAttribute("key");
 		this.display = this.getAttribute("name");
+		this.enabled = this.getAttribute("enabled") === "true";
 
 		this.container = template_node.querySelector(".sai2-interfaces-toggle-group-container");
 		this.checkbox = template_node.querySelector("input");
@@ -71,6 +71,7 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 		disabled_group = $(disabled_group);
 
 		if (this.enabled) {
+			disabled_group.hide();
 			enabled_group.each(function () {
 				for (let child of this.children) {
 					if (typeof child.refresh == 'function') {
@@ -79,10 +80,8 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 				}
 			});
 			enabled_group.show();
-			disabled_group.hide();
 		} else {
 			enabled_group.hide();
-			disabled_group.show();
 			disabled_group.each(function () {
 				for (let child of this.children) {
 					if (typeof child.refresh == 'function') {
@@ -90,6 +89,7 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 					}
 				}
 			});
+			disabled_group.show();
 		}
 	}
 

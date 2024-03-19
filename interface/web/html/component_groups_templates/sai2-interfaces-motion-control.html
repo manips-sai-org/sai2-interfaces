@@ -31,13 +31,14 @@
 	<div class="col-md-4">
 		<div class="section p-3 mt-2 mb-2 border border-primary rounded">
 			<h3>Position Kv</h3>
-			<sai2-interfaces-toggle-group name="Use Unsafe Gains">
+			<sai2-interfaces-toggle-group name="Use Safe Gains" enabled="true"
+				key="{{_prefix_}}::position_gains_safety_checks_enabled">
 				<sai2-interfaces-toggle-group-enabled>
-					<sai2-interfaces-slider key="{{_prefix_}}::position_kv" display="(unsafe) " min="-20" max="60"
-						step="0.01" />
+					<sai2-interfaces-slider key="{{_prefix_}}::position_kv" display=" " min="0" max="60" step="0.01" />
 				</sai2-interfaces-toggle-group-enabled>
 				<sai2-interfaces-toggle-group-disabled>
-					<sai2-interfaces-slider key="{{_prefix_}}::position_kv" display=" " min="0" max="60" step="0.01" />
+					<sai2-interfaces-slider key="{{_prefix_}}::position_kv" display="(unsafe) " min="-20" max="60"
+						step="0.01" />
 				</sai2-interfaces-toggle-group-disabled>
 			</sai2-interfaces-toggle-group>
 		</div>
@@ -64,13 +65,14 @@
 	<div class="col-md-4">
 		<div class="section p-3 mt-2 mb-2 border border-primary rounded">
 			<h3>Orientation Kv</h3>
-			<sai2-interfaces-toggle-group name="Use Unsafe Gains">
+			<sai2-interfaces-toggle-group name="Use Safe Gains" enabled="true"
+				key="{{_prefix_}}::orientation_gains_safety_checks_enabled">
 				<sai2-interfaces-toggle-group-enabled>
-					<sai2-interfaces-slider key="{{_prefix_}}::orientation_kv" display="(unsafe) " min="-20" max="60"
+					<sai2-interfaces-slider key="{{_prefix_}}::orientation_kv" display=" " min="0" max="60"
 						step="0.01" />
 				</sai2-interfaces-toggle-group-enabled>
 				<sai2-interfaces-toggle-group-disabled>
-					<sai2-interfaces-slider key="{{_prefix_}}::orientation_kv" display=" " min="0" max="60"
+					<sai2-interfaces-slider key="{{_prefix_}}::orientation_kv" display="(unsafe) " min="-20" max="60"
 						step="0.01" />
 				</sai2-interfaces-toggle-group-disabled>
 			</sai2-interfaces-toggle-group>
