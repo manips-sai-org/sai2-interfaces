@@ -25,22 +25,16 @@
 </head>
 
 <body>
-
-		<div class="row my-3 justify-content-center">
-			<div class="col-6">
-				<sai2-interfaces-config-selector reset_key="sai2::interfaces::simviz::reset" />
-			</div>
-			<div class="col-auto">
-				<sai2-interfaces-plot-button />
-			</div>
+	<div class="row my-3 justify-content-center">
+		<div class="col-6">
+			<sai2-interfaces-config-selector config_key="sai2::interfaces::main_interface::config_file_name"
+				reset_key="sai2::interfaces::main_interface::reset" />
 		</div>
-
-		<div class="row mx-3">
-			<sai2-interfaces-robot-controller robotName='Panda'
-				controllerNames='["cartesian_controller", "joint_controller", "floating_controller"]'
-				controllerTaskNames='[["cartesian_task", "joint_task"], ["joint_task"], ["joint_task_zero_gains"]]'
-				controllerTaskTypes='[["motion_force_task", "joint_task"], ["joint_task"], ["joint_task"]]' />
+		<div class="col-auto">
+			<sai2-interfaces-plot-button />
 		</div>
+	</div>
+
 </body>
 
 </html>

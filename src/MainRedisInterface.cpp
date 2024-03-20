@@ -87,7 +87,123 @@ bool MainRedisInterface::parseConfig(const std::string& config_file_name) {
 	return true;
 }
 
-void MainRedisInterface::generateUiFile() {}
+std::vector<std::string> generateControllerNamesAndTasksForUI(
+	const RobotControllerConfig& config) {
+	std::string controller_names = "[";
+	std::string controller_tasks_names = "[";
+	std::string controller_tasks_types = "[";
+
+	for (const auto& pair : config.controllers_configs) {
+		controller_names += "\"" + pair.first + "\"";
+		controller_tasks_names += "[";
+		controller_tasks_types += "[";
+		for (int i = 0; i < pair.second.size(); i++) {
+			const auto& task = pair.second.at(i);
+			if (std::holds_alternative<JointTaskConfig>(task)) {
+				controller_tasks_types += "\"joint_task\"";
+				controller_tasks_names +=
+					"\"" + get<JointTaskConfig>(task).task_name + "\"";
+			} else if (std::holds_alternative<MotionForceTaskConfig>(task)) {
+				controller_tasks_types += "\"motion_force_task\"";
+				controller_tasks_names +=
+					"\"" + get<MotionForceTaskConfig>(task).task_name + "\"";
+			} else {
+				std::cerr
+					<< "Error: Unknown task type in generating ui html.\n";
+			}
+			if (i != pair.second.size() - 1) {
+				controller_tasks_names += ", ";
+				controller_tasks_types += ", ";
+			}
+		}
+		controller_tasks_names += "]";
+		controller_tasks_types += "]";
+		if (pair.first != config.controllers_configs.rbegin()->first) {
+			controller_names += ", ";
+			controller_tasks_names += ", ";
+			controller_tasks_types += ", ";
+		}
+	}
+	controller_names += "]";
+	controller_tasks_names += "]";
+	controller_tasks_types += "]";
+	return std::vector<std::string>{controller_names, controller_tasks_names,
+									controller_tasks_types};
+}
+
+void MainRedisInterface::generateUiFile() {
+	std::ifstream templateHtml(_config_folder_path + "/webui_template.html");
+	if (!templateHtml) {
+		std::cerr << "Error: Unable to open template HTML file.\n";
+		return;
+	}
+
+	// Read the content of the original HTML file
+	std::string htmlContent((std::istreambuf_iterator<char>(templateHtml)),
+							(std::istreambuf_iterator<char>()));
+
+	// Close the original file
+	templateHtml.close();
+
+	std::string additionalContent;
+	if (_controllers_configs.size() == 1) {
+		std::vector<std::string> controller_names_and_tasks =
+			generateControllerNamesAndTasksForUI(_controllers_configs[0]);
+		additionalContent =
+			"<div class='row mx-3'>\n<sai2-interfaces-robot-controller "
+			"robotName='" +
+			_controllers_configs[0].robot_name + "'\ncontrollerNames='" +
+			controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
+			controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
+			controller_names_and_tasks[2] + "' />\n</div>\n";
+	} else {
+		additionalContent += "<div class='row mx-3'>\n";
+		additionalContent +=
+			"<sai2-interfaces-tabs name='Robot_names' color='#b30000'>\n";
+
+		for (const auto& config : _controllers_configs) {
+			additionalContent += "<sai2-interfaces-tab-content name='" +
+								 config.robot_name + "'>\n";
+
+			std::vector<std::string> controller_names_and_tasks =
+				generateControllerNamesAndTasksForUI(config);
+			additionalContent +=
+				"<div class='row my-3'>\n<sai2-interfaces-robot-controller "
+				"robotName='" +
+				config.robot_name + "'\ncontrollerNames='" +
+				controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
+				controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
+				controller_names_and_tasks[2] + "' />\n</div>\n";
+
+			additionalContent += "</sai2-interfaces-tab-content>\n";
+		}
+
+		additionalContent += "</sai2-interfaces-tabs>\n";
+		additionalContent += "</div>\n";
+	}
+
+	// Add content before the </body> tag
+	size_t bodyPosition = htmlContent.find("</body>");
+	if (bodyPosition != std::string::npos) {
+		htmlContent.insert(bodyPosition, additionalContent);
+	} else {
+		std::cerr << "Error: </body> tag not found in template HTML file.\n";
+		return;
+	}
+
+	// Write the modified content to a new file
+	std::ofstream modifiedFile(_config_folder_path + "/webui.html");
+	if (!modifiedFile) {
+		std::cerr << "Error: Unable to create modified HTML file.\n";
+	}
+
+	modifiedFile << htmlContent;
+
+	// Close the modified file
+	modifiedFile.close();
+
+	std::cout << "Webui HTML file has been created successfully.\n";
+}
 
 void MainRedisInterface::runInterfaceLoop() {
 	Sai2Common::RedisClient redis_client;
@@ -103,8 +219,8 @@ void MainRedisInterface::runInterfaceLoop() {
 		if (_config_file_name != new_config_file_name ||
 			redis_client.getBool(RESET_KEY)) {
 			bool succes = parseConfig(new_config_file_name);
+			generateUiFile();
 			if (succes) {
-				generateUiFile();
 				reset();
 			}
 			redis_client.setBool(RESET_KEY, false);

@@ -43,7 +43,7 @@ class CsvPlotter:
 
         # Frame for selected listbox and search
         self.selected_frame = tk.Frame(self.y_frame)
-        self.selected_frame.pack(side="left", fill="both", expand=True)
+        self.selected_frame.pack(side="left", fill="both", expand=True, padx=5)
 
         # Label for selected listbox
         self.selected_label = tk.Label(
@@ -58,7 +58,7 @@ class CsvPlotter:
 
         # Selected listbox
         self.selected_listbox = tk.Listbox(
-            self.selected_frame, selectmode="multiple", exportselection=False, height=5
+            self.selected_frame, selectmode="multiple", exportselection=False, height=10
         )
         self.selected_listbox.pack(side="top", fill="both", expand=True)
         self.selected_listbox.bind("<Double-Button-1>", self.remove_from_selected)
@@ -71,7 +71,7 @@ class CsvPlotter:
 
         # Frame for non-selected listbox and search
         self.non_selected_frame = tk.Frame(self.y_frame)
-        self.non_selected_frame.pack(side="left", fill="both", expand=True)
+        self.non_selected_frame.pack(side="left", fill="both", expand=True, padx=5)
 
         # Label for non-selected listbox
         self.non_selected_label = tk.Label(

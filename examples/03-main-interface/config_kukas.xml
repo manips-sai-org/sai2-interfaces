@@ -43,6 +43,19 @@
 			<otg type="disabled"/>
 		</task>
 	</controller>
+
+	<controller name="cartesian_controller">
+		<task name="cartesian_task" type="motion_force_task">
+			<linkName>end-effector</linkName>
+			<velocitySaturation enabled="true" linear_velocity_limit="0.25" angular_velocity_limit="0.78" />
+			<otg type="disabled"/>
+		</task>
+
+		<task name="joint_task" type="joint_task">
+			<otg type="disabled" />
+		</task>
+	</controller>
+
 </robotControlConfiguration>
 
 <robotControlConfiguration robotName="Kuka2">
