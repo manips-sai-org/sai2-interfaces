@@ -15,7 +15,7 @@ const std::string RESET_KEY = "sai2::interfaces::main_interface::reset";
 std::atomic<bool> controllers_stop_signal = false;
 std::atomic<bool> simviz_stop_signal = false;
 std::atomic<bool> external_stop_signal = false;
-void stop(int i) { external_stop_signal = true; }
+void stop(int i) { ::external_stop_signal = true; }
 
 bool start_simviz = false;
 bool simviz_was_stop_by_config_change = false;
@@ -38,17 +38,17 @@ MainRedisInterface::MainRedisInterface(const std::string& config_folder_path,
 	std::thread interface_thread(&MainRedisInterface::runInterfaceLoop, this);
 
 	// main loop that runs the graphics and simulation if needed
-	while (!external_stop_signal) {
+	while (!::external_stop_signal) {
 		if (start_simviz) {
 			_simviz_interface =
 				make_unique<SimVizRedisInterface>(*_simviz_config.get(), false);
 			sim_initialized = true;
-			_simviz_interface->run(simviz_stop_signal);
+			_simviz_interface->run(::simviz_stop_signal);
 			if (simviz_was_stop_by_config_change) {
 				simviz_was_stop_by_config_change = false;
 				start_simviz = false;
 			} else {
-				external_stop_signal = true;
+				::external_stop_signal = true;
 			}
 		}
 		_simviz_interface.reset();
@@ -87,43 +87,61 @@ bool MainRedisInterface::parseConfig(const std::string& config_file_name) {
 	return true;
 }
 
+std::vector<std::string> getControllerNameAndTasksFromSingleConfig(
+	const std::pair<
+		std::string,
+		std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>>
+		single_controller_config) {
+	std::string controller_name = single_controller_config.first;
+	std::string controller_tasks_names = "[";
+	std::string controller_tasks_types = "[";
+	for (int i = 0; i < single_controller_config.second.size(); i++) {
+		const auto& task = single_controller_config.second.at(i);
+		if (std::holds_alternative<JointTaskConfig>(task)) {
+			controller_tasks_types += "\"joint_task\"";
+			controller_tasks_names +=
+				"\"" + get<JointTaskConfig>(task).task_name + "\"";
+		} else if (std::holds_alternative<MotionForceTaskConfig>(task)) {
+			controller_tasks_types += "\"motion_force_task\"";
+			controller_tasks_names +=
+				"\"" + get<MotionForceTaskConfig>(task).task_name + "\"";
+		} else {
+			std::cerr << "Error: Unknown task type in generating ui html.\n";
+		}
+		if (i != single_controller_config.second.size() - 1) {
+			controller_tasks_names += ", ";
+			controller_tasks_types += ", ";
+		}
+	}
+	controller_tasks_names += "]";
+	controller_tasks_types += "]";
+	return std::vector<std::string>{controller_name, controller_tasks_names,
+									controller_tasks_types};
+}
+
 std::vector<std::string> generateControllerNamesAndTasksForUI(
 	const RobotControllerConfig& config) {
 	std::string controller_names = "[";
 	std::string controller_tasks_names = "[";
 	std::string controller_tasks_types = "[";
 
-	for (const auto& pair : config.controllers_configs) {
-		controller_names += "\"" + pair.first + "\"";
-		controller_tasks_names += "[";
-		controller_tasks_types += "[";
-		for (int i = 0; i < pair.second.size(); i++) {
-			const auto& task = pair.second.at(i);
-			if (std::holds_alternative<JointTaskConfig>(task)) {
-				controller_tasks_types += "\"joint_task\"";
-				controller_tasks_names +=
-					"\"" + get<JointTaskConfig>(task).task_name + "\"";
-			} else if (std::holds_alternative<MotionForceTaskConfig>(task)) {
-				controller_tasks_types += "\"motion_force_task\"";
-				controller_tasks_names +=
-					"\"" + get<MotionForceTaskConfig>(task).task_name + "\"";
-			} else {
-				std::cerr
-					<< "Error: Unknown task type in generating ui html.\n";
-			}
-			if (i != pair.second.size() - 1) {
-				controller_tasks_names += ", ";
-				controller_tasks_types += ", ";
-			}
-		}
-		controller_tasks_names += "]";
-		controller_tasks_types += "]";
-		if (pair.first != config.controllers_configs.rbegin()->first) {
+	for (auto it = config.controllers_configs.begin();
+		 it != config.controllers_configs.end(); ++it) {
+		const auto& pair = *it;
+		const auto& controller_name = pair.first;
+
+		auto controller_ui_specs =
+			getControllerNameAndTasksFromSingleConfig(pair);
+		if (it != config.controllers_configs.begin()) {
 			controller_names += ", ";
 			controller_tasks_names += ", ";
 			controller_tasks_types += ", ";
 		}
+		controller_names += "\"" + controller_ui_specs[0] + "\"";
+		controller_tasks_names += controller_ui_specs[1];
+		controller_tasks_types += controller_ui_specs[2];
 	}
+
 	controller_names += "]";
 	controller_tasks_names += "]";
 	controller_tasks_types += "]";
@@ -146,7 +164,9 @@ void MainRedisInterface::generateUiFile() {
 	templateHtml.close();
 
 	std::string additionalContent;
-	if (_controllers_configs.size() == 1) {
+	if (_controllers_configs.size() == 0) {
+		// do nothing
+	} else if (_controllers_configs.size() == 1) {
 		std::vector<std::string> controller_names_and_tasks =
 			generateControllerNamesAndTasksForUI(_controllers_configs[0]);
 		additionalContent =
@@ -212,7 +232,7 @@ void MainRedisInterface::runInterfaceLoop() {
 	redis_client.set(CONFIG_FILE_NAME_KEY, _config_file_name);
 	redis_client.setBool(RESET_KEY, true);
 
-	while (!external_stop_signal) {
+	while (!::external_stop_signal) {
 		std::string new_config_file_name =
 			redis_client.get(CONFIG_FILE_NAME_KEY);
 
@@ -228,8 +248,8 @@ void MainRedisInterface::runInterfaceLoop() {
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
-	controllers_stop_signal = true;
-	simviz_stop_signal = true;
+	::controllers_stop_signal = true;
+	::simviz_stop_signal = true;
 }
 
 void MainRedisInterface::reset() {
@@ -244,7 +264,7 @@ void MainRedisInterface::reset() {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 	} else if (!_simviz_config && _simviz_interface) {
-		simviz_stop_signal = true;
+		::simviz_stop_signal = true;
 		simviz_was_stop_by_config_change = true;
 	} else if (_simviz_config && _simviz_interface) {
 		_simviz_interface->reset(*_simviz_config);
@@ -258,20 +278,20 @@ void MainRedisInterface::reset() {
 }
 
 void MainRedisInterface::startNewControllers() {
-	controllers_stop_signal = false;
+	::controllers_stop_signal = false;
 	_controllers_threads.clear();
 	for (const auto& config : _controllers_configs) {
 		_controllers_interfaces[config.robot_name] =
 			make_unique<RobotControllerRedisInterface>(config, false);
 		_controllers_threads.push_back(std::thread([&]() {
 			_controllers_interfaces.at(config.robot_name)
-				->run(controllers_stop_signal);
+				->run(::controllers_stop_signal);
 		}));
 	}
 }
 
 void MainRedisInterface::stopRunningControllers() {
-	controllers_stop_signal = true;
+	::controllers_stop_signal = true;
 	for (auto& thread : _controllers_threads) {
 		thread.join();
 	}

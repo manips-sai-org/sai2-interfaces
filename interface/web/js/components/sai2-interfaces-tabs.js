@@ -1,5 +1,5 @@
 import { EVENT_RESET_DISPLAYS } from '../config.js';
-import { post_redis_key_val } from '../redis.js';
+import { post_redis_key_val, get_redis_val } from '../redis.js';
 
 class Sai2InterfacesTabs extends HTMLElement {
 	constructor() {
@@ -7,7 +7,7 @@ class Sai2InterfacesTabs extends HTMLElement {
 		Sai2InterfacesTabs.counter = (Sai2InterfacesTabs.counter || 0) + 1;
 	}
 
-	connectedCallback() {
+	async connectedCallback() {
 		const name = this.getAttribute('name').replace(/\s+/g, '_');
 		this.uniqueId = name + Sai2InterfacesTabs.counter;
 		const tabsContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-CONTENT');
@@ -16,12 +16,30 @@ class Sai2InterfacesTabs extends HTMLElement {
 		const color = this.getAttribute('color') || 'rgb(0, 110, 255)';
 		const key = this.getAttribute('key');
 
-		// Retrieve the active tab name from sessionStorage
+		// create map of tab values to names
+		const tabValueToName = {};
+		tabsContent.forEach((tabContent) => {
+			const tabName = tabContent.getAttribute('name').replace(/\s+/g, '_');
+			const tabValue = tabContent.getAttribute('value');
+			tabValueToName[tabValue] = this.uniqueId + "_" + tabName + "-tab";
+		});
+
 		let activeTabName = sessionStorage.getItem(`${this.uniqueId}_activeTabName`);
 		if (!activeTabName) {
 			// Set the first tab as active if no active tab is stored
 			const tabName = tabsContent[0].getAttribute('name').replace(/\s+/g, '_');
 			activeTabName = this.uniqueId + "_" + tabName + "-tab";
+		}
+
+		if (key) {
+			try {
+				const value = await get_redis_val(key);
+				if (value && tabValueToName[value]) {
+					activeTabName = tabValueToName[value];
+				}
+			} catch (error) {
+				console.error("Error occurred while getting value from Redis:", error);
+			}
 		}
 
 		// Create the tabs HTML
