@@ -6,6 +6,7 @@ flask
 flask-socketio
 multitimer
 matplotlib
+plotly
 
 # if using periodic_timer (linux only)
 # uncomment following dependency

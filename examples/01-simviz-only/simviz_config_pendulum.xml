@@ -1,0 +1,18 @@
+<simvizConfiguration>
+	<worldFilePath>resources/urdf/world_files/world_pendulums.urdf</worldFilePath>
+
+	<simParameters>
+		<timestep>0.001</timestep>
+		<enableJointLimits>true</enableJointLimits>
+		<coeffFriction>0.5</coeffFriction>
+		<collisionRestitution>0.0</collisionRestitution>
+	</simParameters>
+
+	<forceSensor>
+		<robotName>RBot</robotName>
+		<linkName>eef</linkName>
+		<origin xyz="0 0 0" rpy="0 0 0" />
+		<filterCutoff>5.0</filterCutoff>
+	</forceSensor>
+
+</simvizConfiguration>

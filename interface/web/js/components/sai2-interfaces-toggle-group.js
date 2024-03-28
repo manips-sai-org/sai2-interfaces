@@ -4,122 +4,122 @@ import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <style>
-    .sai2-interfaces-toggle-group-top {
-      display: flex;
-      flex-direction: column;
-      flex-wrap: wrap;
-    }
-  </style>
-  <div class="sai2-interfaces-toggle-group-top">
-    <label>
-      <input type="checkbox">
-      <span class="checkable"></span>
-    </label>
-  </div>
+<style>
+	.sai2-interfaces-toggle-group-top {
+		display: flex;
+		flex-direction: column;
+		flex-wrap: wrap;
+	}
+</style>
+<div class="sai2-interfaces-toggle-group-top">
+	<label>
+		<input type="checkbox">
+		<span class="checkable"></span>
+	</label>
+</div>
 `;
 
 class Sai2InterfacesToggleGroup extends HTMLElement {
-  constructor() {
-    super();
-    this.template = template;
-    this.enabled = false;
-  }
+	constructor() {
+		super();
+		this.template = template;
+	}
 
-  connectedCallback() {
-    let template_node = this.template.content.cloneNode(true);
+	connectedCallback() {
+		let template_node = this.template.content.cloneNode(true);
 
-    this.key = this.getAttribute("key");
-    this.display = this.getAttribute("name");
+		this.key = this.getAttribute("key");
+		this.display = this.getAttribute("name");
+		this.enabled = this.getAttribute("enabled") === "true";
 
-    this.container = template_node.querySelector(".sai2-interfaces-toggle-group-container");
-    this.checkbox = template_node.querySelector("input");
-    this.label = template_node.querySelector("span");
-    this.label.innerHTML = this.display;
+		this.container = template_node.querySelector(".sai2-interfaces-toggle-group-container");
+		this.checkbox = template_node.querySelector("input");
+		this.label = template_node.querySelector("span");
+		this.label.innerHTML = this.display;
 
-    if (this.key) {
-      get_redis_val(this.key).then(value => {
-        this.enabled = value;
-        this.checkbox.checked = value;
-        this.updateGroups();
-      });
-    }
+		if (this.key) {
+			get_redis_val(this.key).then(value => {
+				this.enabled = value;
+				this.checkbox.checked = value;
+				this.updateGroups();
+			});
+		}
 
-    this.checkbox.onchange = e => {
-      this.enabled = e.target.checked;
+		this.checkbox.onchange = e => {
+			this.enabled = e.target.checked;
 
-      // push update to redis if not in memory
-      if (this.key) {
-        post_redis_key_val(this.key, this.enabled ? 1 : 0);
-      }
-      
-      this.updateGroups();
-    };
+			// push update to redis if not in memory
+			if (this.key) {
+				post_redis_key_val(this.key, this.enabled ? 1 : 0);
+			}
 
-    if (!this.key) {
-      setTimeout(() => this.updateGroups(), 100);
-    }
+			this.updateGroups();
+		};
 
-    this.prepend(template_node);
-  }
+		if (!this.key) {
+			setTimeout(() => this.updateGroups(), 100);
+		}
 
-  updateGroups() {
-    let enabled_group = this.querySelectorAll(':scope > sai2-interfaces-toggle-group-enabled');
-    let disabled_group = this.querySelectorAll(':scope > sai2-interfaces-toggle-group-disabled');
+		this.prepend(template_node);
+	}
 
-    enabled_group = $(enabled_group);
-    disabled_group = $(disabled_group);
+	updateGroups() {
+		let enabled_group = this.querySelectorAll(':scope > sai2-interfaces-toggle-group-enabled');
+		let disabled_group = this.querySelectorAll(':scope > sai2-interfaces-toggle-group-disabled');
 
-    if (this.enabled) {
-      enabled_group.each(function() {
-        for (let child of this.children) {
-          if (typeof child.refresh == 'function') {
-            child.refresh();
-          }
-        }
-      });
-      enabled_group.show();
-      disabled_group.hide();
-    } else {
-      enabled_group.hide();
-      disabled_group.show();
-      disabled_group.each(function() {
-        for (let child of this.children) {
-          if (typeof child.refresh == 'function') {
-            child.refresh();
-          }
-        }
-      });
-    }
-  }
+		enabled_group = $(enabled_group);
+		disabled_group = $(disabled_group);
 
-  refresh() {
-    for (let child of this.children) {
-      if (typeof child.refresh == 'function') {
-        child.refresh();
-      }
-    }
-  }
+		if (this.enabled) {
+			disabled_group.hide();
+			enabled_group.each(function () {
+				for (let child of this.children) {
+					if (typeof child.refresh == 'function') {
+						child.refresh();
+					}
+				}
+			});
+			enabled_group.show();
+		} else {
+			enabled_group.hide();
+			disabled_group.each(function () {
+				for (let child of this.children) {
+					if (typeof child.refresh == 'function') {
+						child.refresh();
+					}
+				}
+			});
+			disabled_group.show();
+		}
+	}
+
+	refresh() {
+		for (let child of this.children) {
+			if (typeof child.refresh == 'function') {
+				child.refresh();
+			}
+		}
+	}
 }
 
 class ToggleGroupChildEnabled extends HTMLElement {
-  refresh() {
-    for (let child of this.children) {
-      if (typeof child.refresh == 'function') {
-        child.refresh();
-      }
-    }
-  }
+	refresh() {
+		for (let child of this.children) {
+			if (typeof child.refresh == 'function') {
+				child.refresh();
+			}
+		}
+	}
 }
 
 class ToggleGroupChildDisabled extends HTMLElement {
-  refresh() {
-    for (let child of this.children) {
-      if (typeof child.refresh == 'function') {
-        child.refresh();
-      }
-    }
-  }
+	refresh() {
+		for (let child of this.children) {
+			if (typeof child.refresh == 'function') {
+				child.refresh();
+			}
+		}
+	}
 }
 
 customElements.define('sai2-interfaces-toggle-group', Sai2InterfacesToggleGroup);

@@ -4,7 +4,7 @@
  */
 
 export const EVENT_CONTROLLER_STATUS = 'controller-status';
-
+export const EVENT_RESET_DISPLAYS = 'reset-displays';
 /**
  * Redis key for the controller status.
  * @constant

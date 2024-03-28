@@ -4,10 +4,7 @@
  * <br>
  * <pre>
  * Example usage:
- * <sai2-interface-enum key="long_key_name" display="friendly_key_name">
- *   <option>A</option>
- *   <option>B</option>
- *   <option>C</option>
+ * <sai2-interface-enum key="long_key_name" display="friendly_key_name" values="[A,B,C]">
  * </sai2-interface-enum>
  * </pre>
  * @module ./module/sai2-interface-enum
@@ -17,69 +14,73 @@ import { get_redis_val, post_redis_key_val } from '../redis.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <label></label>
-  <select>
-  </select>
+<div class="form-floating">
+	<select class="form-select border border-primary"></select>
+	<label></label>
+</div>
 `;
 
 customElements.define('sai2-interfaces-enum', class extends HTMLElement {
-  constructor() {
-    super();
-    this.template = template;
-    this.display = this.getAttribute('display');
-    this.key = this.getAttribute('key');
+	constructor() {
+		super();
+		this.template = template;
+		this.display = this.getAttribute('display');
+		this.key = this.getAttribute('key');
+		this.values = JSON.parse(this.getAttribute('values') || '[]');
 
-    // assumption: values are strings/numbers
-    this.value_map = {};
+		// assumption: values are strings/numbers
+		this.value_map = {};
 
-    this.get_redis_val_and_update = this.get_redis_val_and_update.bind(this);
-  }
+		this.get_redis_val_and_update = this.get_redis_val_and_update.bind(this);
+	}
 
-  connectedCallback() {
-    let template_node = this.template.content.cloneNode(true);
-    this.label_node = template_node.querySelector('label');
-    this.selector_dom = template_node.querySelector('select');
+	connectedCallback() {
+		let template_node = this.template.content.cloneNode(true);
+		this.label_node = template_node.querySelector('label');
+		this.label_node.setAttribute('for', this.key);
+		this.selector_dom = template_node.querySelector('select');
+		this.selector_dom.id = this.key;
 
-    this.label_node.innerHTML = this.display || this.key;
+		this.label_node.innerHTML = this.display || this.key;
 
-    // insert children from parent index.html into <select>
-    while (this.children.length) {
-      let option = this.children[0];
-      this.selector_dom.appendChild(option);
-      this.value_map[option.value] = option.innerHTML;
-    }
+		this.values.forEach(option => {
+			let option_node = document.createElement('option');
+			option_node.value = option;
+			option_node.innerHTML = option;
+			this.selector_dom.appendChild(option_node);
+			this.value_map[option] = option;
+		});
 
-    this.selector_dom.onchange = e => {
-      let raw_option = e.target.value;
+		this.selector_dom.onchange = e => {
+			let raw_option = e.target.value;
 
-      // attempt to parse as number
-      let option = parseFloat(raw_option);
-      if (isNaN(option))
-        option = raw_option;
-        
-      post_redis_key_val(this.key, option);
-    }
+			// attempt to parse as number
+			let option = parseFloat(raw_option);
+			if (isNaN(option))
+				option = raw_option;
 
-    // fetch initial value from redis
-    this.get_redis_val_and_update();
+			post_redis_key_val(this.key, option);
+		}
 
-    // append to document
-    this.appendChild(template_node);
-  }
+		// fetch initial value from redis
+		this.get_redis_val_and_update();
 
-  /**
-   * Fetches the latest value of the key attribute from 
-   * Redis, and updates the internal value of this enum.
-   */
-  get_redis_val_and_update() {
-    get_redis_val(this.key).then(option => {
-      if (!(option in this.value_map)) {
-        alert(option + ' not found in enum');
-      } else {
-        this.selector_dom.value = option;
-      }
+		// append to document
+		this.appendChild(template_node);
+	}
 
-      this.selector_dom.value = option;
-    });
-  }
+	/**
+	 * Fetches the latest value of the key attribute from 
+	 * Redis, and updates the internal value of this enum.
+	 */
+	get_redis_val_and_update() {
+		get_redis_val(this.key).then(option => {
+			if (!(option in this.value_map)) {
+				this.selector_dom.value = this.values[0];
+				post_redis_key_val(this.key, this.values[0])
+			} else {
+				this.selector_dom.value = option;
+			}
+		});
+	}
 });

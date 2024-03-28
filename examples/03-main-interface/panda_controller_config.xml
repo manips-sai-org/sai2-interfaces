@@ -1,0 +1,75 @@
+<controlConfiguration>
+
+	<robotModelFile>resources/urdf/robot_models/panda/panda_arm_sphere.urdf</robotModelFile>
+	<baseFrame xyz="0 0 0" rpy="0 0 0" />
+	<worldGravity xyz="0 0 -9.81" />
+
+	<timestep>0.001</timestep>
+
+	<logger>
+		<logFolderName>control_log_files</logFolderName>
+		<logFrequency>100</logFrequency>
+		<startWithController>true</startWithController>
+		<timestampInFilename>false</timestampInFilename>
+	</logger>
+
+	<controller name="cartesian_controller">
+		<task name="cartesian_task" type="motion_force_task">
+			<linkName>end-effector</linkName>
+			<compliantFrame xyz="0 0 0" rpy="0 0 0" />
+			<parametrizatonInCompliantFrame>false</parametrizatonInCompliantFrame>
+			<useDynamicDecoupling>true</useDynamicDecoupling>
+
+			<controlledDirectionsTranslation>
+				<direction xyz="1 0 0" />
+				<direction xyz="0 1 0" />
+				<direction xyz="0 0 1" />
+			</controlledDirectionsTranslation>
+			<controlledDirectionsRotation>
+				<direction xyz="1 0 0" />
+				<direction xyz="0 1 0" />
+				<direction xyz="0 0 1" />
+			</controlledDirectionsRotation>
+
+			<closedLoopForceControl>false</closedLoopForceControl>
+			<forceSensorFameInLinkFrame xyz="0 0 0" rpy="0 0 0" />
+			<forceSpaceParametrization dim="0" direction="1 0 0"/>
+			<momentSpaceParametrization dim="0" direction="1 0 0"/>
+
+			<velocitySaturation enabled="false" linear_velocity_limit="0.35" angular_velocity_limit="0.78" />
+			<otg type="disabled" 
+				max_linear_velocity="0.35" 
+				max_linear_acceleration="1.5" 
+				max_linear_jerk="5.0" 
+				max_angular_velocity="1.0" 
+				max_angular_acceleration="3.0" 
+				max_angular_jerk="100" />
+
+			<positionGains kp="100.0 110.0 100.0" kv="20.0" />
+			<orientationGains kp="100.0" kv="20.0" />
+			<forceGains kp="1.0" kv="20.0" ki="1.5" />
+			<momentGains kp="1.0" kv="20.0" ki="1.5" />
+		</task>
+
+		<task name="joint_task" type="joint_task">
+			<otg type="disabled" />
+		</task>
+	</controller>
+
+	<controller name="joint_controller">
+		<task name="joint_task" type="joint_task">
+			<controlledJointNames></controlledJointNames>
+			<useDynamicDecoupling>true</useDynamicDecoupling>
+			<otg type="disabled"/>
+		</task>
+	</controller>
+
+	<controller name="floating_controller">
+		<task name="joint_task_zero_gains" type="joint_task">
+			<gains kp="0.0" kv="0.0" ki="0.0" />
+			<velocitySaturation enabled="false"/>
+			<otg type="disabled"/>
+		</task>
+	</controller>
+
+</controlConfiguration>

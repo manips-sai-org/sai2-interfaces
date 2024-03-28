@@ -24,72 +24,72 @@ import { get_redis_val, post_redis_key_val } from '../redis.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
-  <select class="primitive_selector">
-  </select>
+	<select class="primitive_selector">
+	</select>
 `;
 
 customElements.define('sai2-interfaces-select', class extends HTMLElement {
-    constructor() {
-      super();
-      this.template = template;
-      this.get_redis_val_and_update = this.get_redis_val_and_update.bind(this);
-    }
+	constructor() {
+		super();
+		this.template = template;
+		this.get_redis_val_and_update = this.get_redis_val_and_update.bind(this);
+	}
 
-    connectedCallback() {
-      let template_node = this.template.content.cloneNode(true);
-      let current_primitive_key = this.getAttribute("currentPrimitiveKey");
+	connectedCallback() {
+		let template_node = this.template.content.cloneNode(true);
+		let current_primitive_key = this.getAttribute("currentPrimitiveKey");
 
-      this.selector_dom = template_node.querySelector('select');
+		this.selector_dom = template_node.querySelector('select');
 
-      // generate options
-      for (let child of this.children) {
-        let option = document.createElement('option');
-        option.value = child.getAttribute("key");
-        option.innerHTML = child.getAttribute("name");
-        this.selector_dom.appendChild(option);
-      }
+		// generate options
+		for (let child of this.children) {
+			let option = document.createElement('option');
+			option.value = child.getAttribute("key");
+			option.innerHTML = child.getAttribute("name");
+			this.selector_dom.appendChild(option);
+		}
 
-      this.selector_dom.onchange = e => {
-        let option = e.target.value;
-        post_redis_key_val(current_primitive_key, option);
-        this.show_module(option);
-      };
+		this.selector_dom.onchange = e => {
+			let option = e.target.value;
+			post_redis_key_val(current_primitive_key, option);
+			this.show_module(option);
+		};
 
-      // fetch initial value from redis
-      this.get_redis_val_and_update();
+		// fetch initial value from redis
+		this.get_redis_val_and_update();
 
-      // append to document
-      this.prepend(template_node);
-    }
+		// append to document
+		this.prepend(template_node);
+	}
 
-    show_module(option) {
-      // hide all modules
-      $('sai2-interfaces-select-option').hide();
+	show_module(option) {
+		// hide all modules
+		$('sai2-interfaces-select-option').hide();
 
-      // find & reshow
-      for (let child of this.children) {
-        if (child.getAttribute("key") === option) {
-          this.selector_dom.value = option;
-          
-          // TODO: timing hack 
-          setTimeout(() => {
-            if (typeof child.refresh === 'function') {
-              $(child).show();
+		// find & reshow
+		for (let child of this.children) {
+			if (child.getAttribute("key") === option) {
+				this.selector_dom.value = option;
 
-              setTimeout(() => {
-                child.refresh();
-              }, 100);
-            }
-          }, 100);
-        }
-      }
-    }
+				// TODO: timing hack 
+				setTimeout(() => {
+					if (typeof child.refresh === 'function') {
+						$(child).show();
 
-    // read from redis on page load
-    get_redis_val_and_update() {
-      get_redis_val(this.getAttribute('currentPrimitiveKey')).then(option => {
-        this.show_module(option);
-        this.selector_dom.value = option;
-      });
-    }
+						setTimeout(() => {
+							child.refresh();
+						}, 100);
+					}
+				}, 100);
+			}
+		}
+	}
+
+	// read from redis on page load
+	get_redis_val_and_update() {
+		get_redis_val(this.getAttribute('currentPrimitiveKey')).then(option => {
+			this.show_module(option);
+			this.selector_dom.value = option;
+		});
+	}
 });
