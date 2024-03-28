@@ -1,5 +1,7 @@
 # sai2-interfaces
 
+TODO: update this README as it is obsolete right now
+
 sai2-interfaces is intended to enable SAI2 developers to quickly build a user-friendly interface to debug or interact with a robot. It is split into two parts: the frontend (HTML/CSS/JS) and the backend server.
 
 ## Quickstart
