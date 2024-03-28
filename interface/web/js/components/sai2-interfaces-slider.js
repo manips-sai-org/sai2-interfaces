@@ -19,6 +19,7 @@
 
 import { EVENT_RESET_DISPLAYS } from '../config.js';
 import { get_redis_val, post_redis_key_val } from '../redis.js';
+import { throttle } from '../index.js';
 import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 
@@ -146,10 +147,8 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 				}
 			}
 
-			// issue redis write when value manually changed
-			slider_value_input.onchange = () => {
-				sliding_value_input_callback();
-			};
+			// issue redis write when value manually changed, only once per 100 ms
+			slider_value_input.oninput = throttle(sliding_value_input_callback, 100);
 
 			//   // set up mousewheel event for manual input
 			//   slider_value_input.addEventListener('wheel', e => {
@@ -167,7 +166,8 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider.max = (Array.isArray(this.max)) ? this.max[i] : this.max;
 			slider.step = (Array.isArray(this.step)) ? this.step[i] : this.step;
 			slider.value = (Array.isArray(this.value)) ? this.value[i] : this.value;
-			slider.oninput = () => {
+
+			let slider_move_callback = () => {
 				let slider_val = parseFloat(slider.value);
 				if (Array.isArray(this.value))
 					this.value[i] = slider_val;
@@ -183,7 +183,8 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 				if (this.onvaluechange) {
 					this.onvaluechange(this.value);
 				}
-			};
+			}
+			slider.oninput = throttle(slider_move_callback, 100);
 
 			//   slider.addEventListener('wheel', e => {
 			//     e.preventDefault();

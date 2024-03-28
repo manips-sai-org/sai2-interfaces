@@ -1,4 +1,5 @@
 import { post_redis_key_val } from '../redis.js';
+import { throttle } from '../index.js';
 import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 const template = document.createElement('template');
@@ -120,7 +121,8 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 		this.slider.setAttribute('min', -3.14);
 		this.slider.setAttribute('max', 3.14);
 		this.slider.setAttribute('step', 0.01);
-		this.slider.onvaluechange = euler_angle_delta => {
+
+		let slider_on_value_change_callback = euler_angle_delta => {
 			/*
 			 * We have a rotation matrix which usually means end-effector wrt to world.
 			 * We will call this R_w_ee.
@@ -159,6 +161,7 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 			let R_w_ee = block_mat_mat_mult(R_w_wprime, R_wprime_ee);
 			post_redis_key_val(this.key, R_w_ee);
 		};
+		this.slider.onvaluechange = throttle(slider_on_value_change_callback, 100);
 
 		this.reset_button = document.createElement('button');
 		this.reset_button.innerHTML = 'Center Sliders';
