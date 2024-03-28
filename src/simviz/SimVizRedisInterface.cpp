@@ -1,9 +1,9 @@
 #include "SimVizRedisInterface.h"
 
+#include <filesystem>
 #include <signal.h>
 
-#include <filesystem>
-#include <thread>
+#include "timer/LoopTimer.h"
 
 namespace Sai2Interfaces {
 

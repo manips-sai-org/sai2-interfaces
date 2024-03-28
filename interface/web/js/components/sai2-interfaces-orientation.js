@@ -110,7 +110,7 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 
 	onMount() {
 		this.key = this.getAttribute('key');
-		this.refreshRate = this.getAttribute('refreshRate');
+		this.refreshRate = this.getAttribute('refreshRate') || 1;
 
 		let left_div = this.template_node.querySelector('.sai2-interfaces-orientation-left');
 

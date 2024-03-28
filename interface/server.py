@@ -321,7 +321,7 @@ def handle_trajectory_run_stop():
 @click.option("-rh", "--redis_host", help="Redis hostname (default: localhost)", default="localhost", type=click.STRING)
 @click.option("-rp", "--redis_port", help="Redis port (default: 6379)", default=6379, type=click.INT)
 @click.option("-rd", "--redis_db", help="Redis database number (default: 0)", default=0, type=click.INT)
-@click.option("-rate", "--cache-refresh-rate", help="How often to load keys from Redis (default: 0.0333)", default=0.0333, type=click.FLOAT)
+@click.option("-rate", "--cache-refresh-rate", help="How often to load keys from Redis (default: 0.1)", default=0.1, type=click.FLOAT)
 @click.argument('example', type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True))
 def server(http_port, redis_host, redis_port, redis_db, cache_refresh_rate, example):
     global redis_client, redis_cache, redis_logger, example_to_serve, plot_manager

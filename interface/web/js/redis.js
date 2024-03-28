@@ -18,7 +18,7 @@ export function post_redis_key_val(key, val) {
 	};
 
 	return fetch('/redis', fetchOptions)
-		.catch(data => alert('set redis error: ' + toString(data) + " for key: " + key));
+		.catch(error => console.error('error posting redis key: ' + key + '. Error: ' + error));
 }
 
 /**
@@ -37,7 +37,7 @@ export function get_redis_val(key) {
 
 	return fetch('/redis?' + params.toString(), fetchOptions)
 		.then(response => response.json())
-		.catch(data => alert('get redis error in get redis val: ' + toString(data) + " for key: " + key));
+		.catch(error => console.error('error posting redis key: ' + key + '. Error: ' + error));
 }
 
 /**
@@ -54,5 +54,5 @@ export function get_redis_all_keys() {
 
 	return fetch('/redis/keys', fetchOptions)
 		.then(response => response.json())
-		.catch(data => alert('get redis error in get redis all keys: ' + toString(data)));
+		.catch(error => console.error('error posting redis key: ' + key + '. Error: ' + error));
 }

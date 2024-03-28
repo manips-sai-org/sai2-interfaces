@@ -12,7 +12,6 @@
 #include "SimVizConfig.h"
 #include "logger/Logger.h"
 #include "redis/RedisClient.h"
-#include "timer/LoopTimer.h"
 
 namespace Sai2Interfaces {
 

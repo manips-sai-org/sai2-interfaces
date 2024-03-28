@@ -133,7 +133,7 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
 
 	onMount() {
 		this.key = this.getAttribute('key');
-		this.refreshRate = this.getAttribute('refreshRate');
+		this.refreshRate = this.getAttribute('refreshRate') || 1;
 		this.decimalPlaces = this.getAttribute('decimalPlaces') || 3;
 		this.display_text = this.getAttribute('display') || this.key;
 		this.display_row_vector = this.hasAttribute('displayAsRowVector');
