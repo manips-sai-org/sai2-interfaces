@@ -2,12 +2,12 @@
 
 <world name="demo_world" gravity="0.0 0.0 -9.81">
 
-	<robot name="Panda">
-		<model dir="resources/urdf/robot_models/panda" path="panda_arm_sphere.urdf" name="panda" />
+	<robot name="RBot">
+		<model dir="${SAI2_MODEL_URDF_FOLDER}/simple_models" path="rbot.urdf" name="RBot_description" />
 	</robot>
 
 	<static_object name="Floor">
-		<origin xyz="0.0 0.0 -0.05" rpy="0 0 0" />
+		<origin xyz="0.0 0.0 -1.5" rpy="0 0 0" />
 		<visual>
 			<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 			<geometry>
@@ -26,7 +26,7 @@
 	</static_object>
 
 	<dynamic_object name="Box1">
-		<origin xyz="0.3 0.5 0.4" rpy="0 0 0" />
+		<origin xyz="0.3 0.5 0.0" rpy="0 0 0" />
 		<inertial>
 			<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 			<mass value="1" />
@@ -35,7 +35,7 @@
 		<visual>
 			<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 			<geometry>
-				<box size="0.1 0.1 0.1" />
+				<box size="0.2 0.2 0.2" />
 			</geometry>
 			<material name="material_green">
 				<color rgba="0.1 0.5 0.1 1.0" />
@@ -44,13 +44,13 @@
 		<collision>
 			<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 			<geometry>
-				<box size="0.1 0.1 0.1" />
+				<box size="0.2 0.2 0.2" />
 			</geometry>
 		</collision>
 	</dynamic_object>
 
 	<dynamic_object name="Box2">
-		<origin xyz="0.3 -0.5 0.4" rpy="0 0 0" />
+		<origin xyz="0.3 -0.5 0.0" rpy="0 0 0" />
 		<inertial>
 			<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 			<mass value="1" />
@@ -59,7 +59,7 @@
 		<visual>
 			<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 			<geometry>
-				<box size="0.1 0.1 0.1" />
+				<box size="0.2 0.2 0.2" />
 			</geometry>
 			<material name="material_green">
 				<color rgba="0.1 0.5 0.1 1.0" />
@@ -68,7 +68,7 @@
 		<collision>
 			<origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
 			<geometry>
-				<box size="0.1 0.1 0.1" />
+				<box size="0.2 0.2 0.2" />
 			</geometry>
 		</collision>
 	</dynamic_object>
@@ -86,9 +86,7 @@
 	<camera name="camera_fixed">
 		<position xyz="2.0 0.0 1.0" />
 		<vertical xyz="0.0 0.0 1.0" />
-		<lookat xyz="0.0 0.0 0.5" />
+		<lookat xyz="0.0 0.0 -0.5" />
 	</camera>
-
-	<!-- TODO: support stereo specification -->
 
 </world>
