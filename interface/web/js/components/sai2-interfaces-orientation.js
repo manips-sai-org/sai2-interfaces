@@ -161,7 +161,7 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 			let R_w_ee = block_mat_mat_mult(R_w_wprime, R_wprime_ee);
 			post_redis_key_val(this.key, R_w_ee);
 		};
-		this.slider.onvaluechange = throttle(slider_on_value_change_callback, 100);
+		this.slider.onvaluechange = throttle(slider_on_value_change_callback, 10);
 
 		this.reset_button = document.createElement('button');
 		this.reset_button.innerHTML = 'Center Sliders';
