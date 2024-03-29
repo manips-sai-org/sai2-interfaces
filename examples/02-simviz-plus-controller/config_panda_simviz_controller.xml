@@ -1,0 +1,146 @@
+<simvizConfiguration>
+	<worldFilePath>${WORLD_FILES_FOLDER}/world_panda.urdf</worldFilePath>
+
+	<simParameters>
+		<coeffFriction>0.5</coeffFriction>
+	</simParameters>
+
+	<forceSensor>
+		<robotName>Panda</robotName>
+		<linkName>end-effector</linkName>
+		<filterCutoff>5.0</filterCutoff>
+	</forceSensor>
+</simvizConfiguration>
+
+<!-- One of those per robot to control. In this example, only one is used because there is only one robot -->
+<!-- The robotName attribute is necessary and is used to define the redis keys -->
+<robotControlConfiguration robotName="Panda">
+
+	<!-- required -->
+	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf</robotModelFile>
+
+	<!-- optional. Base frame of the robot. Defaults to Identity -->
+	<baseFrame xyz="0 0 0" rpy="0 0 0" />
+
+	<!-- optional. Gravity vector in world frame. Defaults to 0 0 -9.81 -->
+	<worldGravity xyz="0 0 -9.81" />
+
+	<!-- optional. Defaults to 1000 Hz -->
+	<controlFrequency>1000</controlFrequency>
+
+	<!-- optional. The following are the default values in case one or more are missing -->
+	<logger>
+		<logFolderName>logs_control</logFolderName>
+		<logFrequency>100</logFrequency>
+		<startWithController>false</startWithController>
+		<timestampInFilename>true</timestampInFilename>
+	</logger>
+
+	<!-- We can define several controllers and switch between them at runtime -->
+	<!-- The controller initially active is the one defined first in the config file -->
+	<!-- each controller is defined by a list of tasks -->
+	<!-- each controller must have a unique, non empty name -->
+	<controller name="cartesian_controller">
+		<!-- each task from a given controller must have a unique (within the controller) non empty name -->
+		<!-- the task type can be either "joint_task" or "motion_force_task" -->
+		<task name="cartesian_task" type="motion_force_task">
+			<!-- required. Name of the link to control -->
+			<linkName>end-effector</linkName>
+			<!-- optional. defaults to identity -->
+			<compliantFrame xyz="0 0 0" rpy="0 0 0" />
+			<!-- optional. defaults to false -->
+			<parametrizatonInCompliantFrame>false</parametrizatonInCompliantFrame>
+			<!-- optional. defaults to true -->
+			<useDynamicDecoupling>true</useDynamicDecoupling>
+
+			<!-- optional. those are the controlled directions in translation for the task -->
+			<!-- if not specified, all directions are controlled -->
+			<!-- the controlled translation space is the range of the vectors provided here -->
+			<controlledDirectionsTranslation>
+				<direction xyz="1 0 0" />
+				<direction xyz="0 1 0" />
+				<direction xyz="0 0 1" />
+			</controlledDirectionsTranslation>
+			<!-- same for the controlled rotation space -->
+			<controlledDirectionsRotation>
+				<direction xyz="1 0 0" />
+				<direction xyz="0 1 0" />
+				<direction xyz="0 0 1" />
+			</controlledDirectionsRotation>
+
+			<!-- optional. defaults to false -->
+			<closedLoopForceControl>false</closedLoopForceControl>
+			<!-- optional. Defaults to identity -->
+			<forceSensorFameInLinkFrame xyz="0 0 0" rpy="0 0 0" />
+			<!-- optional. defaults to a full motion control -->
+			<forceSpaceParametrization dim="0" direction="0 0 1"/>
+			<!-- optional. defaults to a full motion control -->
+			<momentSpaceParametrization dim="0" direction="0 0 1"/>
+
+			<!-- optional. the attributes are:
+			- enabled: defaults to false
+			- linear_velocity_limit: defaults to 0.3
+			- angular_velocity_limit: defaults to pi/3 -->
+			<velocitySaturation enabled="true" linear_velocity_limit="0.35" angular_velocity_limit="0.78" />
+			<!-- optional. the attributes are:
+			- type: can be "disabled" "acceleration" or "jerk". defaults to acceleration
+			- max_linear_velocity: defaults to 0.3
+			- max_linear_acceleration: defaults to 2.0
+			- max_linear_jerk: defaults to 10.0
+			- max_angular_velocity: defaults to pi/3
+			- max_angular_acceleration: defaults to 2*pi
+			- max_angular_jerk: defaults to 10*pi -->
+			<otg type="disabled" max_linear_velocity="0.35" max_linear_acceleration="1.5" max_linear_jerk="5.0" max_angular_velocity="1.0" max_angular_acceleration="3.0" max_angular_jerk="100" />
+
+			<!-- all gains are optional. they can be defined with the attributes kp, kv and ki.
+			if there are 3 values, the gains will be different in each direction. -->
+			<!-- positionGains defauls to kp=100, kv=20, ki=0
+			orientationGains defaults to kp=200, kv=28.3, ki=0
+			forceGains defaults to kp=0.7, kv=10, ki=1.3
+			momentGains defaults to kp=0.7, kv=10, ki=1.3 -->
+			<positionGains kp="100.0 110.0 100.0" kv="20.0" />
+			<orientationGains kp="100.0" kv="20.0" />
+			<forceGains kp="1.0" kv="20.0" ki="1.5" />
+			<momentGains kp="1.0" kv="20.0" ki="1.5" />
+		</task>
+
+		<task name="joint_task" type="joint_task">
+			<otg type="disabled" />
+		</task>
+	</controller>
+
+	<controller name="joint_controller">
+		<task name="joint_task" type="joint_task">
+			<!-- optional. defaults to all the robot joints. if left empty, it will mean all the robot joints -->
+			<controlledJointNames>
+				joint1
+				joint2
+				joint3
+				joint4
+				joint5
+				joint6
+				joint7
+			</controlledJointNames>
+			<!-- optional. Defaults to true -->
+			<useDynamicDecoupling>true</useDynamicDecoupling>
+			<!-- optional. the attributes are:
+			- enabled: defaults to false
+			- velocity_limit: can be a single number or a list of the correct size (one element per joint)
+				defaults to pi/3 on all joints -->
+			<velocitySaturation enabled="false" velocity_limit="1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7" />
+			<!-- optional. the attributes are:
+			- type: can be "disabled" "acceleration" or "jerk". defaults to acceleration
+			- max_velocity: can be a single number or a list of the correct size
+				defaults to pi/3 on all joints
+			- max_acceleration: can be a single number or a list of the correct size
+				defaults to 2*pi on all joints
+			- max_jerk: can be a single number or a list of the correct size
+				defaults to 10*pi on all joints -->
+			<otg type="acceleration" max_velocity="1.05" max_acceleration="6.28" max_jerk="31.4" />
+			<!-- optional. the gains can be defined as a single number or a list of the correct size.
+			the default values are kp=500, kv=14, ki=0 -->
+			<gains kp="50.0" kv="14.0" ki="0.0" />
+		</task>
+	</controller>
+
+</robotControlConfiguration>

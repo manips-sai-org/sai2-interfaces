@@ -1,5 +1,6 @@
 .DS_Store
 build
+examples/03-main-interface/webui.html
 
 # python files
 # Byte-compiled / optimized / DLL files
