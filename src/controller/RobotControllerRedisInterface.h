@@ -4,10 +4,9 @@
 #include <string>
 
 #include "RobotControllerConfig.h"
+#include "Sai2Common.h"
 #include "Sai2Model.h"
 #include "Sai2Primitives.h"
-#include "logger/Logger.h"
-#include "redis/RedisClient.h"
 
 namespace Sai2Interfaces {
 

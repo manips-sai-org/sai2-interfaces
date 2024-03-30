@@ -3,8 +3,6 @@
 #include <filesystem>
 #include <signal.h>
 
-#include "timer/LoopTimer.h"
-
 namespace Sai2Interfaces {
 
 namespace {

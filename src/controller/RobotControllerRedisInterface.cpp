@@ -4,8 +4,6 @@
 
 #include <filesystem>
 
-#include "timer/LoopTimer.h"
-
 using namespace std;
 using namespace Eigen;
 
