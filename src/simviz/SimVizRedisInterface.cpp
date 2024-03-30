@@ -1,7 +1,8 @@
 #include "SimVizRedisInterface.h"
 
-#include <filesystem>
 #include <signal.h>
+
+#include <filesystem>
 
 namespace Sai2Interfaces {
 
@@ -70,7 +71,8 @@ void SimVizRedisInterface::resetInternal() {
 	_simulation->setCollisionRestitution(_config.collision_restitution);
 	_simulation->setCoeffFrictionStatic(_config.friction_coefficient);
 
-	_redis_client.setBool(GRAV_COMP_ENABLED_KEY, _config.enable_gravity_compensation);
+	_redis_client.setBool(GRAV_COMP_ENABLED_KEY,
+						  _config.enable_gravity_compensation);
 	_simulation->enableGravityCompensation(_config.enable_gravity_compensation);
 
 	_robot_ui_torques.clear();
