@@ -50,7 +50,6 @@ runs:
       uses: manips-sai-org/sai2-common/custom_github_actions/sai2-primitives@master
       with:
         token: ${{ inputs.token }}
-        repo-name: sai2-primitives
 
     - name: Build Sai2-Interfaces
       shell: bash
