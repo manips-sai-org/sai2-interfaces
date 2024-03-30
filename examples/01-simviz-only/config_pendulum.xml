@@ -1,0 +1,7 @@
+<simvizConfiguration>
+	<worldFilePath>${WORLD_FILES_FOLDER}/world_pendulums.urdf</worldFilePath>
+
+	<simParameters>
+		<enableGravityCompensation>false</enableGravityCompensation>
+	</simParameters>
+</simvizConfiguration>

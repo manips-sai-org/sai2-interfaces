@@ -1,9 +1,8 @@
 #include "RobotControllerRedisInterface.h"
 
 #include <signal.h>
-#include <filesystem>
 
-#include "timer/LoopTimer.h"
+#include <filesystem>
 
 using namespace std;
 using namespace Eigen;
@@ -54,7 +53,7 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 void RobotControllerRedisInterface::run(
 	const std::atomic<bool>& user_stop_signal) {
 	// create timer
-	Sai2Common::LoopTimer timer(1.0 / _config.timestep);
+	Sai2Common::LoopTimer timer(_config.control_frequency);
 	timer.setTimerName("RobotControllerRedisInterface Timer for robot: " +
 					   _config.robot_name);
 
@@ -158,7 +157,7 @@ void RobotControllerRedisInterface::initialize() {
 				// create joint task
 				auto joint_task = make_shared<Sai2Primitives::JointTask>(
 					_robot_model, S, joint_task_config.task_name,
-					_config.timestep);
+					1.0 / _config.control_frequency);
 
 				ordered_tasks_list.push_back(joint_task);
 
@@ -194,7 +193,7 @@ void RobotControllerRedisInterface::initialize() {
 						motion_force_task_config.task_name,
 						motion_force_task_config
 							.is_parametrization_in_compliant_frame,
-						_config.timestep);
+						1.0 / _config.control_frequency);
 
 				ordered_tasks_list.push_back(motion_force_task);
 			}

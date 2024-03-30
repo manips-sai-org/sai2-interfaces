@@ -141,7 +141,7 @@ struct RobotControllerConfig {
 	std::string robot_name = "";
 	Eigen::Affine3d robot_base_in_world = Eigen::Affine3d::Identity();
 	Eigen::Vector3d world_gravity = Eigen::Vector3d(0, 0, -9.81);
-	double timestep = 0.001;
+	double control_frequency = 1000.0;
 
 	ControllerLoggerConfig logger_config;
 

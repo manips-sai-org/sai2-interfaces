@@ -1,12 +1,5 @@
 <simvizConfiguration>
-	<worldFilePath>resources/urdf/world_files/world_kukas.urdf</worldFilePath>
-
-	<simParameters>
-		<timestep>0.001</timestep>
-		<enableJointLimits>true</enableJointLimits>
-		<coeffFriction>0.5</coeffFriction>
-		<collisionRestitution>0.0</collisionRestitution>
-	</simParameters>
+	<worldFilePath>${WORLD_FILES_FOLDER}/world_kukas.urdf</worldFilePath>
 
 	<logger>
 		<logFolderName>logs_simviz_kukas</logFolderName>
@@ -25,26 +18,15 @@
 		<origin xyz="0 0 0" rpy="0 0 0" />
 		<filterCutoff>15.0</filterCutoff>
 	</forceSensor>
-
 </simvizConfiguration>
 
 <robotControlConfiguration robotName="Kuka1">
-	<robotModelFile>resources/urdf/robot_models/iiwa7/kuka_iiwa.urdf</robotModelFile>
-	<baseFrame xyz="0 0 0" rpy="0 0 0" />
-	<worldGravity xyz="0 0 -9.81" />
-
-	<timestep>0.001</timestep>
+	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/iiwa7/kuka_iiwa.urdf</robotModelFile>
+	<baseFrame xyz="0.0 -0.3 0.0" rpy="0 0 0" />
 
 	<logger>
 		<logFolderName>logs_controllers_kukas</logFolderName>
 	</logger>
-
-	<controller name="joint_controller">
-		<task name="joint_task" type="joint_task">
-			<useDynamicDecoupling>true</useDynamicDecoupling>
-			<otg type="disabled"/>
-		</task>
-	</controller>
 
 	<controller name="cartesian_controller">
 		<task name="cartesian_task" type="motion_force_task">
@@ -58,18 +40,22 @@
 		</task>
 	</controller>
 
+	<controller name="joint_controller">
+		<task name="joint_task" type="joint_task">
+			<velocitySaturation enabled="true"/>
+			<otg type="disabled"/>
+		</task>
+	</controller>
+
 </robotControlConfiguration>
 
 <robotControlConfiguration robotName="Kuka2">
-	<robotModelFile>resources/urdf/robot_models/iiwa7/kuka_iiwa.urdf</robotModelFile>
-	<baseFrame xyz="0 0 0" rpy="0 0 0" />
-	<worldGravity xyz="0 0 -9.81" />
-
-	<timestep>0.001</timestep>
+	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/iiwa7/kuka_iiwa.urdf</robotModelFile>
+	<baseFrame xyz="0.0 0.3 0.0" rpy="0 0 0" />
 
 	<controller name="joint_controller">
 		<task name="joint_task" type="joint_task">
-			<useDynamicDecoupling>true</useDynamicDecoupling>
+			<velocitySaturation enabled="true"/>
 			<otg type="disabled"/>
 		</task>
 	</controller>

@@ -70,14 +70,6 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 			config_file);
 	}
 
-	// read the config from the referenced file if it exists
-	tinyxml2::XMLElement* simviz_config_xml_2;
-	if (simviz_config_xml->Attribute("file")) {
-		const std::string internal_config_file =
-			simviz_config_xml->Attribute("file");
-		return parseConfig(internal_config_file);
-	}
-
 	// Extract the worldFilePath
 	tinyxml2::XMLElement* worldFilePath =
 		simviz_config_xml->FirstChildElement("worldFilePath");
@@ -127,6 +119,11 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 			config.collision_restitution =
 				simParams->FirstChildElement("collisionRestitution")
 					->DoubleText();
+		}
+
+		if(simParams->FirstChildElement("enableGravityCompensation")) {
+			config.enable_gravity_compensation =
+				simParams->FirstChildElement("enableGravityCompensation")->BoolText();
 		}
 	}
 

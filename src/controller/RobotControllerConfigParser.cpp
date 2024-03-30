@@ -84,19 +84,33 @@ Vector3d parseVector3dLocal(const char* xyz_str) {
 	return Vector3d(vec.x, vec.y, vec.z);
 }
 
-vector<string> splitString(const string& str) {
-	vector<string> tokens;
-	istringstream iss(str);
-	string token1, token2;
+std::vector<std::string> splitString(const std::string& str,
+									 const std::vector<char>& separators = {
+										 ' ', '\t', '\n', ','}) {
+	std::vector<std::string> tokens;
+	std::istringstream iss(str);
+	std::string token;
 
-	while (getline(iss, token1, ' ')) {
-		if (!token1.empty()) {
-			istringstream iss2(token1);
-			while (getline(iss2, token2, '\t')) {
-				if (!token2.empty()) {
-					tokens.push_back(token2);
+	while (std::getline(iss, token)) {
+		std::string current;
+		bool inToken = false;
+
+		for (char ch : token) {
+			if (std::find(separators.begin(), separators.end(), ch) !=
+				separators.end()) {
+				if (inToken) {
+					tokens.push_back(current);
+					current.clear();
+					inToken = false;
 				}
+			} else {
+				current += ch;
+				inToken = true;
 			}
+		}
+
+		if (inToken) {
+			tokens.push_back(current);
 		}
 	}
 
@@ -436,29 +450,28 @@ std::vector<RobotControllerConfig> RobotControllerConfigParser::parseConfig(
 		const std::string robot_name =
 			robotControlConfiguration->Attribute("robotName");
 
-		if (robotControlConfiguration->Attribute("file")) {
-			const std::string internal_controller_config_file =
-				robotControlConfiguration->Attribute("file");
-			tinyxml2::XMLDocument doc_internal;
-			if (doc_internal.LoadFile(
-					internal_controller_config_file.c_str()) !=
-				tinyxml2::XML_SUCCESS) {
-				throw runtime_error("Could not load controller config file: " +
-									internal_controller_config_file);
-			}
-			if (doc_internal.FirstChildElement("controlConfiguration") ==
-				nullptr) {
-				throw runtime_error(
-					"no 'controlConfiguration' element found in config "
-					"file " +
-					internal_controller_config_file);
-			}
-			configs.push_back(parseControllersConfig(
-				doc_internal.FirstChildElement("controlConfiguration")));
-		} else {
-			configs.push_back(
-				parseControllersConfig(robotControlConfiguration));
-		}
+		// if (robotControlConfiguration->Attribute("file")) {
+		// 	const std::string internal_controller_config_file =
+		// 		robotControlConfiguration->Attribute("file");
+		// 	tinyxml2::XMLDocument doc_internal;
+		// 	if (doc_internal.LoadFile(
+		// 			internal_controller_config_file.c_str()) !=
+		// 		tinyxml2::XML_SUCCESS) {
+		// 		throw runtime_error("Could not load controller config file: " +
+		// 							internal_controller_config_file);
+		// 	}
+		// 	if (doc_internal.FirstChildElement("robotControlConfiguration") ==
+		// 		nullptr) {
+		// 		throw runtime_error(
+		// 			"no 'robotControlConfiguration' element found in config "
+		// 			"file " +
+		// 			internal_controller_config_file);
+		// 	}
+		// 	configs.push_back(parseControllersConfig(
+		// 		doc_internal.FirstChildElement("robotControlConfiguration")));
+		// } else {
+		configs.push_back(parseControllersConfig(robotControlConfiguration));
+		// }
 		configs.back().robot_name = robot_name;
 	}
 
@@ -493,11 +506,11 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 		config.world_gravity = parseVector3dLocal(worldGravity);
 	}
 
-	// timestep
-	tinyxml2::XMLElement* timestep =
-		controlConfiguration->FirstChildElement("timestep");
-	if (timestep) {
-		config.timestep = timestep->DoubleText();
+	// frequency
+	tinyxml2::XMLElement* frequency =
+		controlConfiguration->FirstChildElement("controlFrequency");
+	if (frequency) {
+		config.control_frequency = frequency->DoubleText();
 	}
 
 	// extract logger config
@@ -563,6 +576,9 @@ vector<variant<JointTaskConfig, MotionForceTaskConfig>>
 RobotControllerConfigParser::parseSingleControllerConfig(
 	tinyxml2::XMLElement* xml) {
 	vector<variant<JointTaskConfig, MotionForceTaskConfig>> configs;
+
+	vector<string> controller_task_names;
+
 	// loop over tasks
 	for (tinyxml2::XMLElement* task = xml->FirstChildElement("task"); task;
 		 task = task->NextSiblingElement("task")) {
@@ -574,8 +590,24 @@ RobotControllerConfigParser::parseSingleControllerConfig(
 		}
 		if (string(type) == "joint_task") {
 			configs.push_back(parseJointTaskConfig(task));
+			if (find(controller_task_names.begin(), controller_task_names.end(),
+					 get<JointTaskConfig>(configs.back()).task_name) !=
+				controller_task_names.end()) {
+				throw runtime_error(
+					"tasks from the same controller must have a unique name in "
+					"config file: " +
+					_config_file_name);
+			}
 		} else if (string(type) == "motion_force_task") {
 			configs.push_back(parseMotionForceTaskConfig(task));
+			if (find(controller_task_names.begin(), controller_task_names.end(),
+					 get<MotionForceTaskConfig>(configs.back()).task_name) !=
+				controller_task_names.end()) {
+				throw runtime_error(
+					"tasks from the same controller must have a unique name in "
+					"config file: " +
+					_config_file_name);
+			}
 		} else {
 			throw runtime_error("Unknown task type: " + string(type));
 		}
@@ -591,6 +623,11 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 	if (!name) {
 		throw runtime_error("tasks must have a name in config file: " +
 							_config_file_name);
+	}
+	if (string(name) == "") {
+		throw runtime_error(
+			"tasks must have a non-empty name in config file: " +
+			_config_file_name);
 	}
 	config.task_name = name;
 
@@ -641,6 +678,11 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	if (!name) {
 		throw runtime_error("tasks must have a name in config file: " +
 							_config_file_name);
+	}
+	if (string(name) == "") {
+		throw runtime_error(
+			"tasks must have a non-empty name in config file: " +
+			_config_file_name);
 	}
 	config.task_name = name;
 

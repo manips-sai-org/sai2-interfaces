@@ -3,51 +3,45 @@
 #include "simviz/SimVizConfigParser.h"
 #include "simviz/SimVizRedisInterface.h"
 
-const std::string config_file_1 = "resources/simviz_config_panda.xml";
-const std::string config_file_2 = "resources/simviz_config_kukas.xml";
-const std::string config_file_3 = "resources/simviz_config_pendulum.xml";
+const std::string config_folder =
+	std::string(EXAMPLE_FOLDER_PATH) + "/01-simviz-only";
+const std::string config_file_key =
+	"sai2::interfaces::simviz::config_file_name";
 
-void auxThreadRun(std::atomic<bool>& stop_simviz,
-				  Sai2Interfaces::SimVizRedisInterface& simviz) {
+bool stop_aux_thread = false;
+
+void auxThreadRun(Sai2Interfaces::SimVizRedisInterface& simviz) {
+	Sai2Common::RedisClient redis_client;
+	redis_client.connect();
+
 	Sai2Interfaces::SimVizConfigParser parser;
+	std::string config_file_name = "config_panda.xml";
+	redis_client.set(config_file_key, config_file_name);
 
-	for (int i = 0; i < 100; ++i) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		if (stop_simviz) {
-			return;
+	while (!stop_aux_thread) {
+		std::string new_config_file = redis_client.get(config_file_key);
+		if (new_config_file != config_file_name) {
+			config_file_name = new_config_file;
+			simviz.reset(
+				parser.parseConfig(config_folder + "/" + config_file_name));
 		}
-	}
-	simviz.reset(parser.parseConfig(config_file_2));
-
-	for (int i = 0; i < 100; ++i) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		if (stop_simviz) {
-			return;
-		}
 	}
-	simviz.reset(parser.parseConfig(config_file_3));
-
-	for (int i = 0; i < 100; ++i) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		if (stop_simviz) {
-			return;
-		}
-	}
-	stop_simviz = true;
 }
 
 int main(int argc, char** argv) {
+	// add world file folder to search path for parser
+	Sai2Model::URDF_FOLDERS["WORLD_FILES_FOLDER"] =
+		std::string(EXAMPLE_FOLDER_PATH) + "/world_files";
+
 	Sai2Interfaces::SimVizConfigParser parser;
 	Sai2Interfaces::SimVizRedisInterface simviz(
-		parser.parseConfig(config_file_1));
+		parser.parseConfig(config_folder + "/config_panda.xml"));
 
-	std::atomic<bool> stop_simviz = false;
-	std::thread aux_thread(auxThreadRun, std::ref(stop_simviz),
-						   std::ref(simviz));
+	std::thread aux_thread(auxThreadRun, std::ref(simviz));
 
-	simviz.run(stop_simviz);
-	stop_simviz = true;
-
+	simviz.run();
+	stop_aux_thread = true;
 	aux_thread.join();
 
 	return 0;

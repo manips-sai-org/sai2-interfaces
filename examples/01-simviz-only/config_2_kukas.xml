@@ -1,0 +1,15 @@
+<simvizConfiguration>
+	<worldFilePath>${WORLD_FILES_FOLDER}/world_kukas.urdf</worldFilePath>
+
+	<forceSensor>
+		<robotName>Kuka1</robotName>
+		<linkName>end-effector</linkName>
+		<filterCutoff>15.0</filterCutoff>
+	</forceSensor>
+
+	<forceSensor>
+		<robotName>Kuka2</robotName>
+		<linkName>end-effector</linkName>
+		<filterCutoff>15.0</filterCutoff>
+	</forceSensor>
+</simvizConfiguration>

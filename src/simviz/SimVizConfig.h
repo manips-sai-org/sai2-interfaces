@@ -48,6 +48,7 @@ struct SimVizConfig
 {
     std::string world_file = "";
     bool enable_joint_limits = true;
+	bool enable_gravity_compensation = true;
     double friction_coefficient = 0.0;
     double collision_restitution = 0.0;
     double timestep = 0.001;

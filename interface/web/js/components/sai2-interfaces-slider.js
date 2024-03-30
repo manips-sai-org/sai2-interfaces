@@ -147,8 +147,8 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 				}
 			}
 
-			// issue redis write when value manually changed, only once per 100 ms
-			slider_value_input.oninput = throttle(sliding_value_input_callback, 100);
+			// issue redis write when value manually changed, only once per 10 ms
+			slider_value_input.oninput = throttle(sliding_value_input_callback, 10);
 
 			//   // set up mousewheel event for manual input
 			//   slider_value_input.addEventListener('wheel', e => {
@@ -184,7 +184,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 					this.onvaluechange(this.value);
 				}
 			}
-			slider.oninput = throttle(slider_move_callback, 100);
+			slider.oninput = throttle(slider_move_callback, 10);
 
 			//   slider.addEventListener('wheel', e => {
 			//     e.preventDefault();

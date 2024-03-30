@@ -7,17 +7,17 @@
 #include <mutex>
 #include <string>
 
+#include "Sai2Common.h"
 #include "Sai2Graphics.h"
 #include "Sai2Simulation.h"
 #include "SimVizConfig.h"
-#include "logger/Logger.h"
-#include "redis/RedisClient.h"
 
 namespace Sai2Interfaces {
 
 class SimVizRedisInterface {
 public:
-	SimVizRedisInterface(const SimVizConfig& config, const bool setup_signal_handler = true);
+	SimVizRedisInterface(const SimVizConfig& config,
+						 const bool setup_signal_handler = true);
 	~SimVizRedisInterface() = default;
 
 	void reset(const SimVizConfig& config);
