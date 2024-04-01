@@ -105,6 +105,11 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 				simParams->FirstChildElement("timestep")->DoubleText();
 		}
 
+		if (simParams->FirstChildElement("speedupFactor")) {
+			config.speedup_factor =
+				simParams->FirstChildElement("speedupFactor")->DoubleText();
+		}
+
 		if (simParams->FirstChildElement("enableJointLimits")) {
 			config.enable_joint_limits =
 				simParams->FirstChildElement("enableJointLimits")->BoolText();
@@ -121,9 +126,10 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 					->DoubleText();
 		}
 
-		if(simParams->FirstChildElement("enableGravityCompensation")) {
+		if (simParams->FirstChildElement("enableGravityCompensation")) {
 			config.enable_gravity_compensation =
-				simParams->FirstChildElement("enableGravityCompensation")->BoolText();
+				simParams->FirstChildElement("enableGravityCompensation")
+					->BoolText();
 		}
 	}
 

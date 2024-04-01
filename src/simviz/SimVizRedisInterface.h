@@ -38,7 +38,7 @@ private:
 
 	void vizLoopRun(const std::atomic<bool>& user_stop_signal);
 	void simLoopRun(const std::atomic<bool>& user_stop_signal);
-	void processSimParametrization();
+	void processSimParametrization(Sai2Common::LoopTimer& timer);
 
 	SimVizConfig _config;
 	SimVizConfig _new_config;
@@ -68,7 +68,6 @@ private:
 	bool _logging_on;
 	bool _pause;
 	bool _reset;
-	bool _reset_config;
 	bool _enable_grav_comp;
 
 	bool _reset_complete;

@@ -17,7 +17,6 @@ const std::string group_name = "simviz_redis_group_name";
 
 const std::string LOGGING_ON_KEY = "sai2::interfaces::simviz::logging_on";
 const std::string SIM_PAUSE_KEY = "sai2::interfaces::simviz::pause";
-const std::string SIM_RESET_KEY = "sai2::interfaces::simviz::reset";
 const std::string GRAV_COMP_ENABLED_KEY =
 	"sai2::interfaces::simviz::gravity_comp_enabled";
 
@@ -37,7 +36,6 @@ SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
 	  _new_config(config),
 	  _pause(false),
 	  _reset(false),
-	  _reset_config(false),
 	  _enable_grav_comp(true),
 	  _logging_on(false),
 	  _reset_complete(false),
@@ -63,7 +61,7 @@ SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
 void SimVizRedisInterface::reset(const SimVizConfig& config) {
 	_reset_complete = false;
 	_new_config = config;
-	_reset_config = true;
+	_reset = true;
 }
 
 void SimVizRedisInterface::resetInternal() {
@@ -194,8 +192,6 @@ void SimVizRedisInterface::initializeRedisDatabase() {
 	_redis_client.createNewReceiveGroup(sim_param_group_name);
 	_redis_client.addToReceiveGroup(SIM_PAUSE_KEY, _pause,
 									sim_param_group_name);
-	_redis_client.addToReceiveGroup(SIM_RESET_KEY, _reset,
-									sim_param_group_name);
 	_redis_client.addToReceiveGroup(GRAV_COMP_ENABLED_KEY, _enable_grav_comp,
 									sim_param_group_name);
 	_redis_client.addToReceiveGroup(LOGGING_ON_KEY, _logging_on,
@@ -255,20 +251,13 @@ void SimVizRedisInterface::vizLoopRun(
 
 void SimVizRedisInterface::simLoopRun(
 	const std::atomic<bool>& user_stop_signal) {
-	Sai2Common::LoopTimer timer(1.0 / _simulation->timestep());
-	timer.setTimerName("Simviz Redis Interfae Loop Timer");
+	Sai2Common::LoopTimer timer(_config.speedup_factor /
+								_simulation->timestep());
+	timer.setTimerName("Simviz Redis Interface Loop Timer");
 
 	while (!user_stop_signal && !external_stop_signal) {
 		_redis_client.receiveAllFromGroup(sim_param_group_name);
-		processSimParametrization();
-
-		if (_reset) {
-			timer.resetLoopFrequency(1.0 / _simulation->timestep());
-			timer.reinitializeTimer();
-		}
-
-		_reset = false;
-		_redis_client.setInt(SIM_RESET_KEY, _reset);
+		processSimParametrization(timer);
 
 		if (_pause) {
 			timer.stop();
@@ -319,14 +308,18 @@ void SimVizRedisInterface::simLoopRun(
 	timer.printInfoPostRun();
 }
 
-void SimVizRedisInterface::processSimParametrization() {
-	if (_reset || _reset_config) {
+void SimVizRedisInterface::processSimParametrization(
+	Sai2Common::LoopTimer& timer) {
+	if (_reset) {
 		std::lock_guard<mutex> lock(_mutex_parametrization);
 		_config = _new_config;
-		_reset_config = false;
 		_simulation->resetWorld(_config.world_file);
 		_graphics->resetWorld(_config.world_file);
 		resetInternal();
+		timer.resetLoopFrequency(_config.speedup_factor /
+								 _simulation->timestep());
+		timer.reinitializeTimer(1e6);
+		_reset = false;
 	}
 
 	if (_enable_grav_comp != _simulation->isGravityCompensationEnabled()) {
