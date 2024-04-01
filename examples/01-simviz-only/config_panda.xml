@@ -9,6 +9,7 @@
 	<!-- optional. The following are the default values if one ore more are not specified -->
 	<simParameters>
 		<timestep>0.001</timestep>
+		<speedupFactor>1.0</speedupFactor>
 		<enableJointLimits>true</enableJointLimits>
 		<enableGravityCompensation>true</enableGravityCompensation>
 		<coeffFriction>0.5</coeffFriction>

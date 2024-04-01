@@ -52,6 +52,7 @@ struct SimVizConfig
     double friction_coefficient = 0.0;
     double collision_restitution = 0.0;
     double timestep = 0.001;
+	double speedup_factor = 1.0;
 
 	SimVizMode mode = SimVizMode::SIMVIZ;
 
