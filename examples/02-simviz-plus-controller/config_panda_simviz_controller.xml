@@ -14,7 +14,9 @@
 
 <!-- One of those per robot to control. In this example, only one is used because there is only one robot -->
 <!-- The robotName attribute is necessary and is used to define the redis keys -->
-<robotControlConfiguration robotName="Panda">
+<!-- The controlFrequency is optional and defaults to 1000 Hz -->
+<!-- the redisPrefix is optional and defaults to "sai2::interfaces" -->
+<robotControlConfiguration robotName="Panda" controlFrequency="1000.0" redisPrefix="sai2::interfaces">
 
 	<!-- required -->
 	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf</robotModelFile>
@@ -24,9 +26,6 @@
 
 	<!-- optional. Gravity vector in world frame. Defaults to 0 0 -9.81 -->
 	<worldGravity xyz="0 0 -9.81" />
-
-	<!-- optional. Defaults to 1000 Hz -->
-	<controlFrequency>1000</controlFrequency>
 
 	<!-- optional. The following are the default values in case one or more are missing -->
 	<logger>

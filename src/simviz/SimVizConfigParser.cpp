@@ -79,6 +79,11 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	}
 	config.world_file = worldFilePath->GetText();
 
+	// get the redis prefix
+	if (simviz_config_xml->Attribute("redisPrefix")) {
+		config.redis_prefix = simviz_config_xml->Attribute("redisPrefix");
+	}
+
 	// Extract the simviz mode
 	tinyxml2::XMLElement* mode = simviz_config_xml->FirstChildElement("mode");
 	if (mode) {

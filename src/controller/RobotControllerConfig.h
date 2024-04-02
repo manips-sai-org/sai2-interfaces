@@ -34,7 +34,7 @@ struct GainsConfig {
 };
 
 struct ControllerLoggerConfig {
-	std::string folder_name = "logs_control";
+	std::string folder_name = "log_files/controller";
 	double frequency = 100.0;
 	bool start_with_logger_on = false;
 	bool add_timestamp_to_filename = true;
@@ -139,6 +139,7 @@ struct MotionForceTaskConfig {
 struct RobotControllerConfig {
 	std::string robot_model_file = "";
 	std::string robot_name = "";
+	std::string redis_prefix = "sai2::interfaces";
 	Eigen::Affine3d robot_base_in_world = Eigen::Affine3d::Identity();
 	Eigen::Vector3d world_gravity = Eigen::Vector3d(0, 0, -9.81);
 	double control_frequency = 1000.0;

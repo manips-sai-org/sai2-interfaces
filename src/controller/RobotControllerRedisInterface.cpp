@@ -16,20 +16,6 @@ void stop(int i) { external_stop_signal = true; }
 
 const std::string reset_inputs_redis_group = "reset_input_group";
 
-std::string getActiveControllerKey(const std::string& robot_name) {
-	return "sai2::interfaces::controller::" + robot_name +
-		   "::active_controller_name";
-}
-
-std::string getLoggingOnKey(const std::string& robot_name) {
-	return "sai2::interfaces::controller::" + robot_name + "::logging_on";
-}
-
-const std::string ROBOT_COMMAND_TORQUES_PREFIX =
-	"sai2::interfaces::robot_command_torques::";
-const std::string ROBOT_Q_PREFIX = "sai2::interfaces::robot_q::";
-const std::string ROBOT_DQ_PREFIX = "sai2::interfaces::robot_dq::";
-const std::string FORCE_SENSOR_PREFIX = "sai2::interfaces::force_sensor::";
 }  // namespace
 
 RobotControllerRedisInterface::RobotControllerRedisInterface(
@@ -61,8 +47,9 @@ void RobotControllerRedisInterface::run(
 		timer.waitForNextLoop();
 
 		// switch controller if needed
-		switchController(
-			_redis_client.get(getActiveControllerKey(_config.robot_name)));
+		switchController(_redis_client.get(
+			_config.redis_prefix + "::controller::" + _config.robot_name +
+			"::active_controller_name"));
 
 		// read from redis
 		_redis_client.receiveAllFromGroup();
@@ -96,8 +83,9 @@ void RobotControllerRedisInterface::run(
 		}
 	}
 
-	_redis_client.setEigen(ROBOT_COMMAND_TORQUES_PREFIX + _config.robot_name,
-						   Eigen::VectorXd::Zero(_robot_model->dof()));
+	_redis_client.setEigen(
+		_config.redis_prefix + "::robot_command_torques::" + _config.robot_name,
+		Eigen::VectorXd::Zero(_robot_model->dof()));
 
 	timer.printInfoPostRun();
 }
@@ -112,14 +100,15 @@ void RobotControllerRedisInterface::initialize() {
 	_robot_command_torques.setZero(_robot_model->dof());
 
 	_redis_client.addToSendGroup(
-		ROBOT_COMMAND_TORQUES_PREFIX + _config.robot_name,
+		_config.redis_prefix + "::robot_command_torques::" + _config.robot_name,
 		_robot_command_torques);
 
-	_redis_client.addToReceiveGroup(ROBOT_Q_PREFIX + _config.robot_name,
-									_robot_q);
-	_redis_client.addToReceiveGroup(ROBOT_DQ_PREFIX + _config.robot_name,
-									_robot_dq);
-	_redis_client.addToReceiveGroup(getLoggingOnKey(_config.robot_name),
+	_redis_client.addToReceiveGroup(
+		_config.redis_prefix + "::robot_q::" + _config.robot_name, _robot_q);
+	_redis_client.addToReceiveGroup(
+		_config.redis_prefix + "::robot_dq::" + _config.robot_name, _robot_dq);
+	_redis_client.addToReceiveGroup(_config.redis_prefix + "::controller::" +
+										_config.robot_name + "::logging_on",
 									_logging_on);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -213,7 +202,8 @@ void RobotControllerRedisInterface::initialize() {
 	initializeRedisTasksIO();
 
 	switchController(_config.initial_active_controller_name);
-	_redis_client.set(getActiveControllerKey(_config.robot_name),
+	_redis_client.set(_config.redis_prefix + "::controller::" +
+						  _config.robot_name + "::active_controller_name",
 					  _active_controller_name);
 }
 
@@ -261,7 +251,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 	_redis_client.createNewSendGroup(reset_inputs_redis_group);
 
 	if (!std::filesystem::exists(_config.logger_config.folder_name)) {
-		std::filesystem::create_directory(_config.logger_config.folder_name);
+		std::filesystem::create_directories(_config.logger_config.folder_name);
 	}
 
 	_robot_logger = std::make_unique<Sai2Common::Logger>(
@@ -311,7 +301,8 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 									  "is_active");
 
 				const string& key_prefix =
-					"sai2::interfaces::controller::" + _config.robot_name +
+					_config.redis_prefix +
+					"::controller::" + _config.robot_name +
 					"::" + controller_name + "::" + task_name + "::";
 
 				// dynamic decoupling
@@ -487,7 +478,8 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 									  "is_active");
 
 				const string key_prefix =
-					"sai2::interfaces::controller::" + _config.robot_name +
+					_config.redis_prefix +
+					"::controller::" + _config.robot_name +
 					"::" + controller_name + "::" + task_name + "::";
 
 				// dynamic decoupling
@@ -830,12 +822,14 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_input.desired_moment,
 					reset_inputs_redis_group);
 				_redis_client.addToSendGroup(
-					FORCE_SENSOR_PREFIX + _config.robot_name +
+					_config.redis_prefix +
+						"::force_sensor::" + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::force",
 					motion_force_task_input.sensed_force_sensor_frame,
 					reset_inputs_redis_group);
 				_redis_client.addToSendGroup(
-					FORCE_SENSOR_PREFIX + _config.robot_name +
+					_config.redis_prefix +
+						"::force_sensor::" + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::moment",
 					motion_force_task_input.sensed_moment_sensor_frame,
 					reset_inputs_redis_group);
@@ -868,12 +862,14 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					key_prefix + "desired_moment",
 					motion_force_task_input.desired_moment, controller_name);
 				_redis_client.addToReceiveGroup(
-					FORCE_SENSOR_PREFIX + _config.robot_name +
+					_config.redis_prefix +
+						"::force_sensor::" + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::force",
 					motion_force_task_input.sensed_force_sensor_frame,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					FORCE_SENSOR_PREFIX + _config.robot_name +
+					_config.redis_prefix +
+						"::force_sensor::" + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::moment",
 					motion_force_task_input.sensed_moment_sensor_frame,
 					controller_name);

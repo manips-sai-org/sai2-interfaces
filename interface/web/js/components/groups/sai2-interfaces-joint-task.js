@@ -4,7 +4,11 @@ class Sai2InterfacesJointTask extends HTMLElement {
 		this.robotName = this.getAttribute('robotName');
 		this.controllerName = this.getAttribute('controllerName');
 		this.taskName = this.getAttribute('taskName');
-		this.redisPrefix = "sai2::interfaces::controller::" + this.robotName + "::" + this.controllerName + "::" + this.taskName;
+		this.redisPrefix = "sai2::interfaces::controller::";
+		if (this.getAttribute('redisPrefix')) {
+			this.redisPrefix = this.getAttribute('redisPrefix') + "::controller::";
+		}
+		this.redisPrefix += this.robotName + "::" + this.controllerName + "::" + this.taskName;
 
 		// Fetch the HTML template
 		fetch('html/component_groups_templates/sai2-interfaces-joint-task.html')

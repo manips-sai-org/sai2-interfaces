@@ -15,19 +15,6 @@ const std::string sim_param_group_name = "simviz_redis_sim_param_group_name";
 // redis keys
 const std::string group_name = "simviz_redis_group_name";
 
-const std::string LOGGING_ON_KEY = "sai2::interfaces::simviz::logging_on";
-const std::string SIM_PAUSE_KEY = "sai2::interfaces::simviz::pause";
-const std::string GRAV_COMP_ENABLED_KEY =
-	"sai2::interfaces::simviz::gravity_comp_enabled";
-
-const std::string ROBOT_COMMAND_TORQUES_PREFIX =
-	"sai2::interfaces::robot_command_torques::";
-const std::string ROBOT_Q_PREFIX = "sai2::interfaces::robot_q::";
-const std::string ROBOT_DQ_PREFIX = "sai2::interfaces::robot_dq::";
-const std::string OBJECT_POSE_PREFIX = "sai2::interfaces::simviz::obj_pose::";
-const std::string OBJECT_VELOCITY_PREFIX =
-	"sai2::interfaces::simviz::obj_velocity::";
-const std::string FORCE_SENSOR_PREFIX = "sai2::interfaces::force_sensor::";
 }  // namespace
 
 SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
@@ -69,8 +56,9 @@ void SimVizRedisInterface::resetInternal() {
 	_simulation->setCollisionRestitution(_config.collision_restitution);
 	_simulation->setCoeffFrictionStatic(_config.friction_coefficient);
 
-	_redis_client.setBool(GRAV_COMP_ENABLED_KEY,
-						  _config.enable_gravity_compensation);
+	_redis_client.setBool(
+		_config.redis_prefix + "::simviz::gravity_comp_enabled",
+		_config.enable_gravity_compensation);
 	_simulation->enableGravityCompensation(_config.enable_gravity_compensation);
 
 	_robot_ui_torques.clear();
@@ -89,11 +77,12 @@ void SimVizRedisInterface::resetInternal() {
 
 	_loggers.clear();
 	if (!std::filesystem::exists(_config.logger_config.folder_name)) {
-		std::filesystem::create_directory(_config.logger_config.folder_name);
+		std::filesystem::create_directories(_config.logger_config.folder_name);
 	}
 
 	_logging_on = _config.logger_config.start_with_logger_on;
-	_redis_client.setBool(LOGGING_ON_KEY, _logging_on);
+	_redis_client.setBool(_config.redis_prefix + "::simviz::logging_on",
+						  _logging_on);
 	_logging_state = _logging_on ? LoggingState::START : LoggingState::OFF;
 
 	for (auto& robot_name : _simulation->getRobotNames()) {
@@ -114,12 +103,14 @@ void SimVizRedisInterface::resetInternal() {
 
 		// redis
 		_redis_client.addToReceiveGroup(
-			ROBOT_COMMAND_TORQUES_PREFIX + robot_name,
+			_config.redis_prefix + "::robot_command_torques::" + robot_name,
 			_robot_control_torques.at(robot_name), group_name);
-		_redis_client.addToSendGroup(ROBOT_Q_PREFIX + robot_name,
-									 _robot_q.at(robot_name), group_name);
-		_redis_client.addToSendGroup(ROBOT_DQ_PREFIX + robot_name,
-									 _robot_dq.at(robot_name), group_name);
+		_redis_client.addToSendGroup(
+			_config.redis_prefix + "::robot_q::" + robot_name,
+			_robot_q.at(robot_name), group_name);
+		_redis_client.addToSendGroup(
+			_config.redis_prefix + "::robot_dq::" + robot_name,
+			_robot_dq.at(robot_name), group_name);
 
 		// logger
 		_loggers[robot_name] = std::make_unique<Sai2Common::Logger>(
@@ -139,10 +130,12 @@ void SimVizRedisInterface::resetInternal() {
 			_simulation->getObjectPose(object_name).matrix();
 		_object_vel[object_name] = _simulation->getObjectVelocity(object_name);
 
-		_redis_client.addToSendGroup(OBJECT_POSE_PREFIX + object_name,
-									 _object_pose.at(object_name), group_name);
-		_redis_client.addToSendGroup(OBJECT_VELOCITY_PREFIX + object_name,
-									 _object_vel.at(object_name), group_name);
+		_redis_client.addToSendGroup(
+			_config.redis_prefix + "::simviz::obj_pose::" + object_name,
+			_object_pose.at(object_name), group_name);
+		_redis_client.addToSendGroup(
+			_config.redis_prefix + "::simiz::obj_velocity::" + object_name,
+			_object_vel.at(object_name), group_name);
 
 		_graphics->addUIForceInteraction(object_name);
 		_object_ui_torques[object_name] = Eigen::VectorXd::Zero(6);
@@ -169,11 +162,13 @@ void SimVizRedisInterface::resetInternal() {
 	for (auto& force_sensor_data : _force_sensor_data) {
 		_graphics->addForceSensorDisplay(force_sensor_data);
 		_redis_client.addToSendGroup(
-			FORCE_SENSOR_PREFIX + force_sensor_data.robot_name +
+			_config.redis_prefix +
+				"::force_sensor::" + force_sensor_data.robot_name +
 				"::" + force_sensor_data.link_name + "::force",
 			force_sensor_data.force_local_frame, group_name);
 		_redis_client.addToSendGroup(
-			FORCE_SENSOR_PREFIX + force_sensor_data.robot_name +
+			_config.redis_prefix +
+				"::force_sensor::" + force_sensor_data.robot_name +
 				"::" + force_sensor_data.link_name + "::moment",
 			force_sensor_data.moment_local_frame, group_name);
 
@@ -190,12 +185,14 @@ void SimVizRedisInterface::resetInternal() {
 
 void SimVizRedisInterface::initializeRedisDatabase() {
 	_redis_client.createNewReceiveGroup(sim_param_group_name);
-	_redis_client.addToReceiveGroup(SIM_PAUSE_KEY, _pause,
-									sim_param_group_name);
-	_redis_client.addToReceiveGroup(GRAV_COMP_ENABLED_KEY, _enable_grav_comp,
-									sim_param_group_name);
-	_redis_client.addToReceiveGroup(LOGGING_ON_KEY, _logging_on,
-									sim_param_group_name);
+	_redis_client.addToReceiveGroup(_config.redis_prefix + "::simviz::pause",
+									_pause, sim_param_group_name);
+	_redis_client.addToReceiveGroup(
+		_config.redis_prefix + "::simviz::gravity_comp_enabled",
+		_enable_grav_comp, sim_param_group_name);
+	_redis_client.addToReceiveGroup(
+		_config.redis_prefix + "::simviz::logging_on", _logging_on,
+		sim_param_group_name);
 }
 
 void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
