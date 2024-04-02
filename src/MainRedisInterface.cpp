@@ -3,6 +3,8 @@
 #include <signal.h>
 #include <tinyxml2.h>
 
+#include <filesystem>
+
 #include "controller/RobotControllerConfigParser.h"
 #include "simviz/SimVizConfigParser.h"
 
