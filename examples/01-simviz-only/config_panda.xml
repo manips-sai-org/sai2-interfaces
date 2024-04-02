@@ -1,4 +1,6 @@
-<simvizConfiguration>
+<!-- the redisPrefix parameter is optional, defualts to "sai2::interfaces" 
+and is used to define the prefix of the redis keys used by the interface -->
+<simvizConfiguration redisPrefix="sai2::interfaces">
 
 	<!-- required -->
 	<worldFilePath>${WORLD_FILES_FOLDER}/world_panda.urdf</worldFilePath>

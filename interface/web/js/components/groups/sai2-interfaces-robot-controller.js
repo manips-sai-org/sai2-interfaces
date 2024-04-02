@@ -4,6 +4,7 @@ class Sai2InterfacesRobotController extends HTMLElement {
 	constructor() {
 		super();
 		this.robot_name = this.getAttribute('robotName');
+		this.redis_prefix = this.getAttribute('redisPrefix') || 'sai2::interfaces';
 	}
 
 	connectedCallback() {
@@ -25,13 +26,13 @@ class Sai2InterfacesRobotController extends HTMLElement {
 			return
 		}
 
-		const redis_key_prefix = 'sai2::interfaces::controller::' + this.robot_name + '::';
+		const redis_key_prefix_controller_robot = this.redis_prefix + '::controller::' + this.robot_name + '::';
 
 		let controller_tabs = document.createElement('sai2-interfaces-tabs');
 		controller_tabs.setAttribute('tabsPosition', 'left');
 		controller_tabs.setAttribute('color', '#cc7a00');
 		controller_tabs.setAttribute('name', this.robot_name + '_controller_selection');
-		controller_tabs.setAttribute('key', redis_key_prefix + 'active_controller_name');
+		controller_tabs.setAttribute('key', redis_key_prefix_controller_robot + 'active_controller_name');
 
 		for (let i = 0; i < controller_names.length; i++) {
 			let controller_tab_content = document.createElement('sai2-interfaces-tab-content');
@@ -44,6 +45,7 @@ class Sai2InterfacesRobotController extends HTMLElement {
 				task_ui_element.setAttribute('robotName', this.robot_name);
 				task_ui_element.setAttribute('controllerName', controller_names[i]);
 				task_ui_element.setAttribute('taskName', controller_task_names[i][0]);
+				task_ui_element.setAttribute('redisPrefix', this.redis_prefix);
 
 				controller_tab_content.appendChild(task_ui_element);
 			} else {
@@ -60,6 +62,7 @@ class Sai2InterfacesRobotController extends HTMLElement {
 					task_ui_element.setAttribute('robotName', this.robot_name);
 					task_ui_element.setAttribute('controllerName', controller_names[i]);
 					task_ui_element.setAttribute('taskName', controller_task_names[i][j]);
+					task_ui_element.setAttribute('redisPrefix', this.redis_prefix);
 
 					task_tab_content.appendChild(task_ui_element);
 					task_tabs.appendChild(task_tab_content);
@@ -70,7 +73,7 @@ class Sai2InterfacesRobotController extends HTMLElement {
 		}
 
 		let logging_button = document.createElement('sai2-interfaces-toggle');
-		logging_button.setAttribute('key', redis_key_prefix + 'logging_on');
+		logging_button.setAttribute('key', redis_key_prefix_controller_robot + 'logging_on');
 		logging_button.setAttribute('display', 'Logging');
 
 		let logging_div = document.createElement('div');

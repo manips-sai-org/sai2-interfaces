@@ -473,6 +473,18 @@ std::vector<RobotControllerConfig> RobotControllerConfigParser::parseConfig(
 		configs.push_back(parseControllersConfig(robotControlConfiguration));
 		// }
 		configs.back().robot_name = robot_name;
+
+		// get the redis prefix
+		if (robotControlConfiguration->Attribute("redisPrefix")) {
+			configs.back().redis_prefix =
+				robotControlConfiguration->Attribute("redisPrefix");
+		}
+
+		// get the controller frequency
+		if (robotControlConfiguration->Attribute("controlFrequency")) {
+			configs.back().control_frequency =
+				robotControlConfiguration->DoubleAttribute("controlFrequency");
+		}
 	}
 
 	return configs;
@@ -504,13 +516,6 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 		controlConfiguration->FirstChildElement("worldGravity");
 	if (worldGravity) {
 		config.world_gravity = parseVector3dLocal(worldGravity);
-	}
-
-	// frequency
-	tinyxml2::XMLElement* frequency =
-		controlConfiguration->FirstChildElement("controlFrequency");
-	if (frequency) {
-		config.control_frequency = frequency->DoubleText();
 	}
 
 	// extract logger config

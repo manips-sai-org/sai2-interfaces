@@ -3,6 +3,8 @@
 #include <signal.h>
 #include <tinyxml2.h>
 
+#include <filesystem>
+
 #include "controller/RobotControllerConfigParser.h"
 #include "simviz/SimVizConfigParser.h"
 
@@ -11,6 +13,9 @@ namespace {
 const std::string CONFIG_FILE_NAME_KEY =
 	"sai2::interfaces::main_interface::config_file_name";
 const std::string RESET_KEY = "sai2::interfaces::main_interface::reset";
+
+const std::string WEBUI_TEMPLATE_FILE_PATH =
+	std::string(UI_FOLDER) + "/web/html/webui_template.html";
 
 std::atomic<bool> controllers_stop_signal = false;
 std::atomic<bool> simviz_stop_signal = false;
@@ -150,7 +155,7 @@ std::vector<std::string> generateControllerNamesAndTasksForUI(
 }
 
 void MainRedisInterface::generateUiFile() {
-	std::ifstream templateHtml(_config_folder_path + "/webui_template.html");
+	std::ifstream templateHtml(WEBUI_TEMPLATE_FILE_PATH);
 	if (!templateHtml) {
 		std::cerr << "Error: Unable to open template HTML file.\n";
 		return;
@@ -172,7 +177,8 @@ void MainRedisInterface::generateUiFile() {
 		additionalContent =
 			"<div class='row mx-3'>\n<sai2-interfaces-robot-controller "
 			"robotName='" +
-			_controllers_configs[0].robot_name + "'\ncontrollerNames='" +
+			_controllers_configs[0].robot_name + "'\nredisPrefix='" +
+			_controllers_configs[0].redis_prefix + "'\ncontrollerNames='" +
 			controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
 			controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
 			controller_names_and_tasks[2] + "' />\n</div>\n";
@@ -190,10 +196,11 @@ void MainRedisInterface::generateUiFile() {
 			additionalContent +=
 				"<div class='row my-3'>\n<sai2-interfaces-robot-controller "
 				"robotName='" +
-				config.robot_name + "'\ncontrollerNames='" +
-				controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
-				controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
-				controller_names_and_tasks[2] + "' />\n</div>\n";
+				config.robot_name + "'\nredisPrefix='" + config.redis_prefix +
+				"'\ncontrollerNames='" + controller_names_and_tasks[0] +
+				"'\ncontrollerTaskNames='" + controller_names_and_tasks[1] +
+				"'\ncontrollerTaskTypes='" + controller_names_and_tasks[2] +
+				"' />\n</div>\n";
 
 			additionalContent += "</sai2-interfaces-tab-content>\n";
 		}
@@ -212,7 +219,10 @@ void MainRedisInterface::generateUiFile() {
 	}
 
 	// Write the modified content to a new file
-	std::ofstream modifiedFile(_config_folder_path + "/webui.html");
+	const std::string webui_generated_dir =
+		_config_folder_path + "/webui_generated_file";
+	std::filesystem::create_directories(webui_generated_dir);
+	std::ofstream modifiedFile(webui_generated_dir + "/webui.html");
 	if (!modifiedFile) {
 		std::cerr << "Error: Unable to create modified HTML file.\n";
 	}

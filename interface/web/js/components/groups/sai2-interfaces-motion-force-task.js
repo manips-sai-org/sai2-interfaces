@@ -33,6 +33,12 @@ class Sai2InterfacesMotionForceTask extends HTMLElement {
 		force_control.setAttribute('controllerName', this.controllerName);
 		force_control.setAttribute('taskName', this.taskName);
 
+		if (this.getAttribute('redisPrefix')) {
+			this.redisPrefix = this.getAttribute('redisPrefix');
+			motion_control.setAttribute('redisPrefix', this.redisPrefix);
+			force_control.setAttribute('redisPrefix', this.redisPrefix);
+		}
+
 		this.replaceWith(template_node);
 
 	}

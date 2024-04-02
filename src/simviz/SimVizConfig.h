@@ -30,7 +30,7 @@ struct SimForceSensorConfig
 };
 
 struct SimLoggerConfig {
-	std::string folder_name = "logs_simviz";
+	std::string folder_name = "log_files/simviz";
 	double frequency = 100.0;
 	bool start_with_logger_on = false;
 	bool add_timestamp_to_filename = true;
@@ -47,6 +47,7 @@ struct SimLoggerConfig {
 struct SimVizConfig
 {
     std::string world_file = "";
+	std::string redis_prefix = "sai2::interfaces";
     bool enable_joint_limits = true;
 	bool enable_gravity_compensation = true;
     double friction_coefficient = 0.0;

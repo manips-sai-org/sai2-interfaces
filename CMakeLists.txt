@@ -62,6 +62,9 @@ SET(SAI2_INTERFACES_SOURCE
 SET(SAI2-INTERFACES_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/src)
 INCLUDE_DIRECTORIES (${SAI2-INTERFACES_INCLUDE_DIRS})
 
+set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/interface)
+add_definitions(-DUI_FOLDER="${SAI2-INTERFACES_UI_DIR}")
+
 # Create the library
 ADD_LIBRARY (sai2-interfaces STATIC
 	${SAI2_INTERFACES_SOURCE}
@@ -83,7 +86,6 @@ ADD_SUBDIRECTORY(examples)
 # 
 # export package
 # 
-set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/interface)
 
 # export package for use from the build tree
 export(TARGETS sai2-interfaces
