@@ -80,11 +80,10 @@ sai2-interfaces
 
 ADD_SUBDIRECTORY(examples)
 
-# SET (SAI2-INTERFACES_DEFINITIONS ${PROJECT_DEFINITIONS})
-
 # 
 # export package
 # 
+set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/interface)
 
 # export package for use from the build tree
 export(TARGETS sai2-interfaces
@@ -92,7 +91,6 @@ export(TARGETS sai2-interfaces
 export(PACKAGE SAI2-INTERFACES)
 
 # configure package
-# message(Project definitions : \n ${SAI2-INTERFACES_UI_DIR} \n\n)
 set(CONF_INCLUDE_DIRS ${SAI2-INTERFACES_INCLUDE_DIRS})
 set(CONF_LIBRARIES ${SAI2-INTERFACES_LIBRARIES})
 
