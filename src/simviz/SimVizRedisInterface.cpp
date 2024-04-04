@@ -225,16 +225,12 @@ void SimVizRedisInterface::initializeRedisDatabase() {
 
 void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
 	std::thread sim_thread;
-	if (_config.mode != SimVizMode::VIZ_ONLY) {
-		sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this,
-								 std::ref(user_stop_signal));
-	}
+	sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this,
+							 std::ref(user_stop_signal));
 	if (_config.mode != SimVizMode::SIM_ONLY) {
 		vizLoopRun(user_stop_signal);
 	}
-	if (_config.mode != SimVizMode::VIZ_ONLY) {
-		sim_thread.join();
-	}
+	sim_thread.join();
 }
 
 void SimVizRedisInterface::vizLoopRun(
@@ -288,6 +284,12 @@ void SimVizRedisInterface::simLoopRun(
 		_redis_client.receiveAllFromGroup(sim_param_group_name);
 		processSimParametrization(timer);
 
+		if (_config.mode == SimVizMode::VIZ_ONLY) {
+			timer.waitForNextLoop();
+			_redis_client.receiveAllFromGroup(group_name);
+			continue;
+		}
+
 		if (_pause) {
 			timer.stop();
 			_simulation->pause();
@@ -334,7 +336,9 @@ void SimVizRedisInterface::simLoopRun(
 		logger.second->stop();
 	}
 
-	timer.printInfoPostRun();
+	if (_config.mode != SimVizMode::VIZ_ONLY) {
+		timer.printInfoPostRun();
+	}
 }
 
 void SimVizRedisInterface::processSimParametrization(
