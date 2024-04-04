@@ -1,4 +1,4 @@
-<simvizConfiguration>
+<simvizConfiguration redisPrefix="sai2::interfaces">
 	<worldFilePath>${WORLD_FILES_FOLDER}/world_panda.urdf</worldFilePath>
 
 	<simParameters>
