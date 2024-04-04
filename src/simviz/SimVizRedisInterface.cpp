@@ -86,60 +86,64 @@ void SimVizRedisInterface::resetInternal() {
 	_logging_state = _logging_on ? LoggingState::START : LoggingState::OFF;
 
 	for (auto& robot_name : _simulation->getRobotNames()) {
-		if (_config.enable_joint_limits) {
-			_simulation->enableJointLimits(robot_name);
-		} else {
-			_simulation->disableJointLimits(robot_name);
-		}
-
+		// dof and joint positions and velocities initially
 		const int robot_dof = _simulation->dof(robot_name);
-		_graphics->addUIForceInteraction(robot_name);
-		_robot_ui_torques[robot_name] = VectorXd::Zero(robot_dof);
-
-		_robot_control_torques[robot_name] = VectorXd::Zero(robot_dof);
-
 		_robot_q[robot_name] = _simulation->getJointPositions(robot_name);
 		_robot_dq[robot_name] = _simulation->getJointVelocities(robot_name);
 
-		// redis
-		_redis_client.addToReceiveGroup(
-			_config.redis_prefix + "::robot_command_torques::" + robot_name,
-			_robot_control_torques.at(robot_name), group_name);
-		_redis_client.addToSendGroup(
-			_config.redis_prefix + "::robot_q::" + robot_name,
-			_robot_q.at(robot_name), group_name);
-		_redis_client.addToSendGroup(
-			_config.redis_prefix + "::robot_dq::" + robot_name,
-			_robot_dq.at(robot_name), group_name);
-
-		// logger
+		// logger for all modes
 		_loggers[robot_name] = std::make_unique<Sai2Common::Logger>(
 			_config.logger_config.folder_name + "/" + robot_name,
 			_config.logger_config.add_timestamp_to_filename);
 		_loggers.at(robot_name)->addToLog(_robot_q.at(robot_name), "q");
 		_loggers.at(robot_name)->addToLog(_robot_dq.at(robot_name), "dq");
-		_loggers.at(robot_name)
-			->addToLog(_robot_control_torques.at(robot_name),
-					   "command_torques");
-		_loggers.at(robot_name)
-			->addToLog(_robot_ui_torques.at(robot_name), "ui_torques");
+
+		// setup if there is simulation
+		if (_config.mode != SimVizMode::VIZ_ONLY) {
+			if (_config.enable_joint_limits) {
+				_simulation->enableJointLimits(robot_name);
+			} else {
+				_simulation->disableJointLimits(robot_name);
+			}
+
+			_graphics->addUIForceInteraction(robot_name);
+			_robot_ui_torques[robot_name] = VectorXd::Zero(robot_dof);
+			_robot_control_torques[robot_name] = VectorXd::Zero(robot_dof);
+
+			// redis
+			_redis_client.addToReceiveGroup(
+				_config.redis_prefix + "::robot_command_torques::" + robot_name,
+				_robot_control_torques.at(robot_name), group_name);
+			_redis_client.addToSendGroup(
+				_config.redis_prefix + "::robot_q::" + robot_name,
+				_robot_q.at(robot_name), group_name);
+			_redis_client.addToSendGroup(
+				_config.redis_prefix + "::robot_dq::" + robot_name,
+				_robot_dq.at(robot_name), group_name);
+
+			// logger
+			_loggers.at(robot_name)
+				->addToLog(_robot_control_torques.at(robot_name),
+						   "command_torques");
+			_loggers.at(robot_name)
+				->addToLog(_robot_ui_torques.at(robot_name), "ui_torques");
+		} else {  // setup for viz only
+			_redis_client.addToReceiveGroup(
+				_config.redis_prefix + "::robot_q::" + robot_name,
+				_robot_q.at(robot_name), group_name);
+			_redis_client.addToReceiveGroup(
+				_config.redis_prefix + "::robot_dq::" + robot_name,
+				_robot_dq.at(robot_name), group_name);
+		}
 	}
 
 	for (auto& object_name : _simulation->getObjectNames()) {
+		// initial object pose and velocity
 		_object_pose[object_name] =
 			_simulation->getObjectPose(object_name).matrix();
 		_object_vel[object_name] = _simulation->getObjectVelocity(object_name);
 
-		_redis_client.addToSendGroup(
-			_config.redis_prefix + "::simviz::obj_pose::" + object_name,
-			_object_pose.at(object_name), group_name);
-		_redis_client.addToSendGroup(
-			_config.redis_prefix + "::simiz::obj_velocity::" + object_name,
-			_object_vel.at(object_name), group_name);
-
-		_graphics->addUIForceInteraction(object_name);
-		_object_ui_torques[object_name] = Eigen::VectorXd::Zero(6);
-
+		// logger for all modes
 		_loggers[object_name] = std::make_unique<Sai2Common::Logger>(
 			_config.logger_config.folder_name + "/" + object_name,
 			_config.logger_config.add_timestamp_to_filename);
@@ -147,37 +151,61 @@ void SimVizRedisInterface::resetInternal() {
 			->addToLog(_object_pose.at(object_name), "pose");
 		_loggers.at(object_name)
 			->addToLog(_object_vel.at(object_name), "velocity");
-		_loggers.at(object_name)
-			->addToLog(_object_ui_torques.at(object_name), "ui_torques");
+
+		// setup if there is simulation
+		if (_config.mode != SimVizMode::VIZ_ONLY) {
+			_redis_client.addToSendGroup(
+				_config.redis_prefix + "::simviz::obj_pose::" + object_name,
+				_object_pose.at(object_name), group_name);
+			_redis_client.addToSendGroup(
+				_config.redis_prefix + "::simiz::obj_velocity::" + object_name,
+				_object_vel.at(object_name), group_name);
+
+			_graphics->addUIForceInteraction(object_name);
+			_object_ui_torques[object_name] = Eigen::VectorXd::Zero(6);
+
+			_loggers.at(object_name)
+				->addToLog(_object_ui_torques.at(object_name), "ui_torques");
+		} else {  // setup for viz only
+			_redis_client.addToReceiveGroup(
+				_config.redis_prefix + "::simviz::obj_pose::" + object_name,
+				_object_pose.at(object_name), group_name);
+			_redis_client.addToReceiveGroup(
+				_config.redis_prefix + "::simviz::obj_velocity::" + object_name,
+				_object_vel.at(object_name), group_name);
+		}
 	}
 
-	for (const auto& force_sensor_config : _config.force_sensors) {
-		_simulation->addSimulatedForceSensor(
-			force_sensor_config.robot_name, force_sensor_config.link_name,
-			force_sensor_config.transform_in_link,
-			force_sensor_config.cutoff_frequency);
-	}
+	// force sensors only if there is simulation
+	if (_config.mode != SimVizMode::VIZ_ONLY) {
+		for (const auto& force_sensor_config : _config.force_sensors) {
+			_simulation->addSimulatedForceSensor(
+				force_sensor_config.robot_name, force_sensor_config.link_name,
+				force_sensor_config.transform_in_link,
+				force_sensor_config.cutoff_frequency);
+		}
 
-	_force_sensor_data = _simulation->getAllForceSensorData();
-	for (auto& force_sensor_data : _force_sensor_data) {
-		_graphics->addForceSensorDisplay(force_sensor_data);
-		_redis_client.addToSendGroup(
-			_config.redis_prefix +
-				"::force_sensor::" + force_sensor_data.robot_name +
-				"::" + force_sensor_data.link_name + "::force",
-			force_sensor_data.force_local_frame, group_name);
-		_redis_client.addToSendGroup(
-			_config.redis_prefix +
-				"::force_sensor::" + force_sensor_data.robot_name +
-				"::" + force_sensor_data.link_name + "::moment",
-			force_sensor_data.moment_local_frame, group_name);
+		_force_sensor_data = _simulation->getAllForceSensorData();
+		for (auto& force_sensor_data : _force_sensor_data) {
+			_graphics->addForceSensorDisplay(force_sensor_data);
+			_redis_client.addToSendGroup(
+				_config.redis_prefix +
+					"::force_sensor::" + force_sensor_data.robot_name +
+					"::" + force_sensor_data.link_name + "::force",
+				force_sensor_data.force_local_frame, group_name);
+			_redis_client.addToSendGroup(
+				_config.redis_prefix +
+					"::force_sensor::" + force_sensor_data.robot_name +
+					"::" + force_sensor_data.link_name + "::moment",
+				force_sensor_data.moment_local_frame, group_name);
 
-		_loggers.at(force_sensor_data.robot_name)
-			->addToLog(force_sensor_data.force_local_frame,
-					   force_sensor_data.link_name + "_sensed_force");
-		_loggers.at(force_sensor_data.robot_name)
-			->addToLog(force_sensor_data.moment_local_frame,
-					   force_sensor_data.link_name + "_sensed_moment");
+			_loggers.at(force_sensor_data.robot_name)
+				->addToLog(force_sensor_data.force_local_frame,
+						   force_sensor_data.link_name + "_sensed_force");
+			_loggers.at(force_sensor_data.robot_name)
+				->addToLog(force_sensor_data.moment_local_frame,
+						   force_sensor_data.link_name + "_sensed_moment");
+		}
 	}
 
 	_reset_complete = true;
@@ -197,16 +225,12 @@ void SimVizRedisInterface::initializeRedisDatabase() {
 
 void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
 	std::thread sim_thread;
-	if (_config.mode != SimVizMode::VIZ_ONLY) {
-		sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this,
-								 std::ref(user_stop_signal));
-	}
+	sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this,
+							 std::ref(user_stop_signal));
 	if (_config.mode != SimVizMode::SIM_ONLY) {
 		vizLoopRun(user_stop_signal);
 	}
-	if (_config.mode != SimVizMode::VIZ_ONLY) {
-		sim_thread.join();
-	}
+	sim_thread.join();
 }
 
 void SimVizRedisInterface::vizLoopRun(
@@ -219,28 +243,32 @@ void SimVizRedisInterface::vizLoopRun(
 		timer.waitForNextLoop();
 
 		std::lock_guard<std::mutex> lock(_mutex_parametrization);
-		for (auto& robot_name : _simulation->getRobotNames()) {
+		for (auto& robot_name : _graphics->getRobotNames()) {
 			_graphics->updateRobotGraphics(robot_name, _robot_q.at(robot_name),
 										   _robot_dq.at(robot_name));
 		}
-		for (auto& object_name : _simulation->getObjectNames()) {
+		for (auto& object_name : _graphics->getObjectNames()) {
 			_graphics->updateObjectGraphics(
 				object_name, Eigen::Affine3d(_object_pose.at(object_name)),
 				_object_vel.at(object_name));
 		}
-		for (auto& force_sensor_data : _force_sensor_data) {
-			_graphics->updateDisplayedForceSensor(force_sensor_data);
+		if (_config.mode != SimVizMode::VIZ_ONLY) {
+			for (auto& force_sensor_data : _force_sensor_data) {
+				_graphics->updateDisplayedForceSensor(force_sensor_data);
+			}
 		}
 		_graphics->renderGraphicsWorld();
-		for (auto& robot_name : _simulation->getRobotNames()) {
-			std::lock_guard<std::mutex> lock(_mutex_torques);
-			_robot_ui_torques.at(robot_name) =
-				_graphics->getUITorques(robot_name);
-		}
-		for (auto& object_name : _simulation->getObjectNames()) {
-			std::lock_guard<std::mutex> lock(_mutex_torques);
-			_object_ui_torques.at(object_name) =
-				_graphics->getUITorques(object_name);
+		if (_config.mode != SimVizMode::VIZ_ONLY) {
+			for (auto& robot_name : _graphics->getRobotNames()) {
+				std::lock_guard<std::mutex> lock(_mutex_torques);
+				_robot_ui_torques.at(robot_name) =
+					_graphics->getUITorques(robot_name);
+			}
+			for (auto& object_name : _graphics->getObjectNames()) {
+				std::lock_guard<std::mutex> lock(_mutex_torques);
+				_object_ui_torques.at(object_name) =
+					_graphics->getUITorques(object_name);
+			}
 		}
 	}
 	external_stop_signal = true;
@@ -255,6 +283,12 @@ void SimVizRedisInterface::simLoopRun(
 	while (!user_stop_signal && !external_stop_signal) {
 		_redis_client.receiveAllFromGroup(sim_param_group_name);
 		processSimParametrization(timer);
+
+		if (_config.mode == SimVizMode::VIZ_ONLY) {
+			timer.waitForNextLoop();
+			_redis_client.receiveAllFromGroup(group_name);
+			continue;
+		}
 
 		if (_pause) {
 			timer.stop();
@@ -302,7 +336,9 @@ void SimVizRedisInterface::simLoopRun(
 		logger.second->stop();
 	}
 
-	timer.printInfoPostRun();
+	if (_config.mode != SimVizMode::VIZ_ONLY) {
+		timer.printInfoPostRun();
+	}
 }
 
 void SimVizRedisInterface::processSimParametrization(
