@@ -6,7 +6,7 @@ and is used to define the prefix of the redis keys used by the interface -->
 	<worldFilePath>${WORLD_FILES_FOLDER}/world_panda.urdf</worldFilePath>
 
 	<!-- optional. default value is simviz, possible values are simviz, simOnly, vizOnly -->
-	<mode>simviz</mode>
+	<mode>vizOnly</mode>
 
 	<!-- optional. The following are the default values if one ore more are not specified -->
 	<simParameters>

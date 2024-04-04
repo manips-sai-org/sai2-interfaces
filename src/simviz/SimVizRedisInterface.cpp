@@ -86,17 +86,17 @@ void SimVizRedisInterface::resetInternal() {
 	_logging_state = _logging_on ? LoggingState::START : LoggingState::OFF;
 
 	for (auto& robot_name : _simulation->getRobotNames()) {
+		// dof and joint positions and velocities initially
+		const int robot_dof = _simulation->dof(robot_name);
+		_robot_q[robot_name] = _simulation->getJointPositions(robot_name);
+		_robot_dq[robot_name] = _simulation->getJointVelocities(robot_name);
+
 		// logger for all modes
 		_loggers[robot_name] = std::make_unique<Sai2Common::Logger>(
 			_config.logger_config.folder_name + "/" + robot_name,
 			_config.logger_config.add_timestamp_to_filename);
 		_loggers.at(robot_name)->addToLog(_robot_q.at(robot_name), "q");
 		_loggers.at(robot_name)->addToLog(_robot_dq.at(robot_name), "dq");
-
-		// dof and joint positions and velocities initially
-		const int robot_dof = _simulation->dof(robot_name);
-		_robot_q[robot_name] = _simulation->getJointPositions(robot_name);
-		_robot_dq[robot_name] = _simulation->getJointVelocities(robot_name);
 
 		// setup if there is simulation
 		if (_config.mode != SimVizMode::VIZ_ONLY) {
@@ -138,6 +138,11 @@ void SimVizRedisInterface::resetInternal() {
 	}
 
 	for (auto& object_name : _simulation->getObjectNames()) {
+		// initial object pose and velocity
+		_object_pose[object_name] =
+			_simulation->getObjectPose(object_name).matrix();
+		_object_vel[object_name] = _simulation->getObjectVelocity(object_name);
+
 		// logger for all modes
 		_loggers[object_name] = std::make_unique<Sai2Common::Logger>(
 			_config.logger_config.folder_name + "/" + object_name,
@@ -146,11 +151,6 @@ void SimVizRedisInterface::resetInternal() {
 			->addToLog(_object_pose.at(object_name), "pose");
 		_loggers.at(object_name)
 			->addToLog(_object_vel.at(object_name), "velocity");
-
-		// initial object pose and velocity
-		_object_pose[object_name] =
-			_simulation->getObjectPose(object_name).matrix();
-		_object_vel[object_name] = _simulation->getObjectVelocity(object_name);
 
 		// setup if there is simulation
 		if (_config.mode != SimVizMode::VIZ_ONLY) {
@@ -247,28 +247,32 @@ void SimVizRedisInterface::vizLoopRun(
 		timer.waitForNextLoop();
 
 		std::lock_guard<std::mutex> lock(_mutex_parametrization);
-		for (auto& robot_name : _simulation->getRobotNames()) {
+		for (auto& robot_name : _graphics->getRobotNames()) {
 			_graphics->updateRobotGraphics(robot_name, _robot_q.at(robot_name),
 										   _robot_dq.at(robot_name));
 		}
-		for (auto& object_name : _simulation->getObjectNames()) {
+		for (auto& object_name : _graphics->getObjectNames()) {
 			_graphics->updateObjectGraphics(
 				object_name, Eigen::Affine3d(_object_pose.at(object_name)),
 				_object_vel.at(object_name));
 		}
-		for (auto& force_sensor_data : _force_sensor_data) {
-			_graphics->updateDisplayedForceSensor(force_sensor_data);
+		if (_config.mode != SimVizMode::VIZ_ONLY) {
+			for (auto& force_sensor_data : _force_sensor_data) {
+				_graphics->updateDisplayedForceSensor(force_sensor_data);
+			}
 		}
 		_graphics->renderGraphicsWorld();
-		for (auto& robot_name : _simulation->getRobotNames()) {
-			std::lock_guard<std::mutex> lock(_mutex_torques);
-			_robot_ui_torques.at(robot_name) =
-				_graphics->getUITorques(robot_name);
-		}
-		for (auto& object_name : _simulation->getObjectNames()) {
-			std::lock_guard<std::mutex> lock(_mutex_torques);
-			_object_ui_torques.at(object_name) =
-				_graphics->getUITorques(object_name);
+		if (_config.mode != SimVizMode::VIZ_ONLY) {
+			for (auto& robot_name : _graphics->getRobotNames()) {
+				std::lock_guard<std::mutex> lock(_mutex_torques);
+				_robot_ui_torques.at(robot_name) =
+					_graphics->getUITorques(robot_name);
+			}
+			for (auto& object_name : _graphics->getObjectNames()) {
+				std::lock_guard<std::mutex> lock(_mutex_torques);
+				_object_ui_torques.at(object_name) =
+					_graphics->getUITorques(object_name);
+			}
 		}
 	}
 	external_stop_signal = true;
