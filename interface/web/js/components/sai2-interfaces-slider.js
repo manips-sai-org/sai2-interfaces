@@ -61,7 +61,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 		super(template);
 
 		document.addEventListener(EVENT_RESET_DISPLAYS, async (event) => {
-			console.log('Reset sliders event caught!', event.detail.message);
+			// console.log('Reset sliders event caught!', event.detail.message);
 			await new Promise(r => setTimeout(r, 100));
 			this.refresh();
 		});
@@ -147,8 +147,17 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 				}
 			}
 
-			// issue redis write when value manually changed, only once per 10 ms
-			slider_value_input.oninput = throttle(sliding_value_input_callback, 10);
+			// Event listener for blur event (when input box loses focus)
+			slider_value_input.addEventListener('blur', function () {
+				sliding_value_input_callback();
+			});
+
+			// Event listener for keypress event (to detect when Enter key is pressed)
+			slider_value_input.addEventListener('keypress', function (event) {
+				if (event.key === "Enter") {
+					sliding_value_input_callback();
+				}
+			});
 
 			//   // set up mousewheel event for manual input
 			//   slider_value_input.addEventListener('wheel', e => {
@@ -184,7 +193,8 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 					this.onvaluechange(this.value);
 				}
 			}
-			slider.oninput = throttle(slider_move_callback, 10);
+			// slider.oninput = throttle(slider_move_callback, 10);
+			slider.oninput = slider_move_callback;
 
 			//   slider.addEventListener('wheel', e => {
 			//     e.preventDefault();
@@ -261,7 +271,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 	refresh() {
 		// clear old nodes
 		while (this.firstChild) {
-			this.removeChild(this.firstChild);
+		this.removeChild(this.firstChild);
 		}
 
 		this.template_node = this.template.content.cloneNode(true);

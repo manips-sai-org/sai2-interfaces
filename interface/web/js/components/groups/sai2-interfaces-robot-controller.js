@@ -28,63 +28,42 @@ class Sai2InterfacesRobotController extends HTMLElement {
 
 		const redis_key_prefix_controller_robot = this.redis_prefix + '::controller::' + this.robot_name + '::';
 
-		let controller_tabs = document.createElement('sai2-interfaces-tabs');
-		controller_tabs.setAttribute('tabsPosition', 'left');
-		controller_tabs.setAttribute('color', '#cc7a00');
-		controller_tabs.setAttribute('name', this.robot_name + '_controller_selection');
-		controller_tabs.setAttribute('key', redis_key_prefix_controller_robot + 'active_controller_name');
+		let htmlString = `<sai2-interfaces-tabs tabsPosition="left" color="#cc7a00" name="${this.robot_name}_controller_selection" key="${redis_key_prefix_controller_robot}active_controller_name">`;
 
 		for (let i = 0; i < controller_names.length; i++) {
-			let controller_tab_content = document.createElement('sai2-interfaces-tab-content');
-			controller_tab_content.setAttribute('name', controller_display_names[i]);
-			controller_tab_content.setAttribute('value', controller_names[i]);
+			let controller_tab_content = `<sai2-interfaces-tab-content name="${controller_display_names[i]}" value="${controller_names[i]}">`;
 
 			if (controller_task_types[i].length == 1) {
 				let task_ui_type = controller_task_types[i][0] == 'motion_force_task' ? 'sai2-interfaces-motion-force-task' : 'sai2-interfaces-joint-task';
-				let task_ui_element = document.createElement(task_ui_type);
-				task_ui_element.setAttribute('robotName', this.robot_name);
-				task_ui_element.setAttribute('controllerName', controller_names[i]);
-				task_ui_element.setAttribute('taskName', controller_task_names[i][0]);
-				task_ui_element.setAttribute('redisPrefix', this.redis_prefix);
-
-				controller_tab_content.appendChild(task_ui_element);
+				let task_ui_element = `<${task_ui_type} robotName="${this.robot_name}" controllerName="${controller_names[i]}" taskName="${controller_task_names[i][0]}" redisPrefix="${this.redis_prefix}"/>`;
+				controller_tab_content += task_ui_element;
 			} else {
-				let task_tabs = document.createElement('sai2-interfaces-tabs');
-				task_tabs.setAttribute('name', controller_display_names[i] + '_task_selection');
-				task_tabs.setAttribute('color', '#730099');
+				let task_tabs = `<sai2-interfaces-tabs name="${controller_display_names[i]}_task_selection" color="#730099">`;
 
 				for (let j = 0; j < controller_task_types[i].length; j++) {
-					let task_tab_content = document.createElement('sai2-interfaces-tab-content');
-					task_tab_content.setAttribute('name', task_display_names[i][j]);
-
+					let task_tab_content = `<sai2-interfaces-tab-content name="${task_display_names[i][j]}">`;
 					let task_ui_type = controller_task_types[i][j] == 'motion_force_task' ? 'sai2-interfaces-motion-force-task' : 'sai2-interfaces-joint-task';
-					let task_ui_element = document.createElement(task_ui_type);
-					task_ui_element.setAttribute('robotName', this.robot_name);
-					task_ui_element.setAttribute('controllerName', controller_names[i]);
-					task_ui_element.setAttribute('taskName', controller_task_names[i][j]);
-					task_ui_element.setAttribute('redisPrefix', this.redis_prefix);
-
-					task_tab_content.appendChild(task_ui_element);
-					task_tabs.appendChild(task_tab_content);
+					let task_ui_element = `<${task_ui_type} robotName="${this.robot_name}" controllerName="${controller_names[i]}" taskName="${controller_task_names[i][j]}" redisPrefix="${this.redis_prefix}"/>`;
+					task_tab_content += task_ui_element;
+					task_tab_content += `</sai2-interfaces-tab-content>`;
+					task_tabs += task_tab_content;
 				}
-				controller_tab_content.appendChild(task_tabs);
+				task_tabs += `</sai2-interfaces-tabs>`;
+				controller_tab_content += task_tabs;
 			}
-			controller_tabs.appendChild(controller_tab_content);
+			controller_tab_content += `</sai2-interfaces-tab-content>`;
+			htmlString += controller_tab_content;
 		}
 
-		let logging_button = document.createElement('sai2-interfaces-toggle');
-		logging_button.setAttribute('key', redis_key_prefix_controller_robot + 'logging_on');
-		logging_button.setAttribute('display', 'Logging');
+		htmlString += `
+		<sai2-interfaces-tab-inline-content>
+			<div class="row mt-3 p-2">
+				<sai2-interfaces-toggle key="${redis_key_prefix_controller_robot}logging_on" display="Logging"/>
+			</div>
+		</sai2-interfaces-tab-inline-content>`;
+		htmlString += `</sai2-interfaces-tabs>`;
 
-		let logging_div = document.createElement('div');
-		logging_div.classList.add('row');
-		logging_div.classList.add('mt-3');
-		logging_div.classList.add('p-2');
-
-		logging_div.appendChild(logging_button);
-		controller_tabs.appendChild(logging_div);
-
-		this.replaceWith(controller_tabs);
+		this.innerHTML = htmlString;
 
 	}
 

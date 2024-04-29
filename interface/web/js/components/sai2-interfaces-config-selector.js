@@ -47,7 +47,7 @@ class Sai2InterfacesConfigSelector extends Sai2InterfacesComponent {
 			return new Promise(resolve => {
 				const checkValue = () => {
 					get_redis_val(this.reset_key).then(value => {
-						console.log(value);
+						// console.log(value);
 						if (value != val) {
 							setTimeout(checkValue, 500);
 						} else {

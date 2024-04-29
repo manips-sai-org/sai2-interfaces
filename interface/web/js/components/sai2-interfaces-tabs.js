@@ -1,17 +1,29 @@
-import { EVENT_RESET_DISPLAYS } from '../config.js';
+import { EVENT_RESET_DISPLAYS, EVENT_RESET_ACTIVE_TABS_FROM_REDIS } from '../config.js';
 import { post_redis_key_val, get_redis_val } from '../redis.js';
 
 class Sai2InterfacesTabs extends HTMLElement {
 	constructor() {
 		super();
 		Sai2InterfacesTabs.counter = (Sai2InterfacesTabs.counter || 0) + 1;
+		this.counter = Sai2InterfacesTabs.counter;
 	}
 
-	async connectedCallback() {
+	setActiveTab(tabName) {
+		const tabToActivate = this.querySelector(`.nav-link[id="${tabName}"]`);
+		if (tabToActivate) {
+			tabToActivate.click(); // Simulate a click event on the tab element
+		} else {
+			console.error(`Tab with id "${tabName}" not found.`);
+		}
+	}
+
+	connectedCallback() {
 		const name = this.getAttribute('name').replace(/\s+/g, '_');
-		this.uniqueId = name + Sai2InterfacesTabs.counter;
+		this.uniqueId = name + this.counter;
+
 		const tabsContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-CONTENT');
-		const otherContent = Array.from(this.children).filter(child => child.tagName != 'SAI2-INTERFACES-TAB-CONTENT');
+		const otherContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-INLINE-CONTENT');
+
 		const position = this.getAttribute('tabsPosition') || 'top';
 		const color = this.getAttribute('color') || 'rgb(0, 110, 255)';
 		const key = this.getAttribute('key');
@@ -25,21 +37,18 @@ class Sai2InterfacesTabs extends HTMLElement {
 		});
 
 		let activeTabName = sessionStorage.getItem(`${this.uniqueId}_activeTabName`);
-		if (!activeTabName) {
+		if (!activeTabName && tabsContent.length > 0) {
 			// Set the first tab as active if no active tab is stored
 			const tabName = tabsContent[0].getAttribute('name').replace(/\s+/g, '_');
 			activeTabName = this.uniqueId + "_" + tabName + "-tab";
 		}
 
 		if (key) {
-			try {
-				const value = await get_redis_val(key);
+			get_redis_val(key).then(value => {
 				if (value && tabValueToName[value]) {
-					activeTabName = tabValueToName[value];
+					this.setActiveTab(tabValueToName[value]);
 				}
-			} catch (error) {
-				console.error("Error occurred while getting value from Redis:", error);
-			}
+			})
 		}
 
 		// Create the tabs HTML
@@ -72,7 +81,8 @@ class Sai2InterfacesTabs extends HTMLElement {
 		}).join('');
 
 		// Construct the tabs structure
-		const navType = position === 'left' ? 'nav-pills flex-column' : 'nav-tabs flex-row';
+		const navType1 = position === 'left' ? 'nav-pills' : 'nav-tabs';
+		const navType2 = position === 'left' ? 'flex-column' : 'flex-row';
 		const tabsClass = position === 'left' ? 'col-md-2' : 'row';
 		const contentClass = position === 'left' ? 'col-md-10' : 'row';
 
@@ -97,9 +107,9 @@ class Sai2InterfacesTabs extends HTMLElement {
 			}
 		</style>
 
-		<div class="row">
+		<div class="row" name="tabs">
 			<div class="${tabsClass}">
-				<ul class="nav ${navType} ${this.uniqueId}" id="${this.uniqueId}" role="tablist">
+				<ul class="nav ${navType1} ${navType2} ${this.uniqueId}" id="${this.uniqueId}" role="tablist">
 					${tabsHTML}
 				</ul>
 			</div>
@@ -109,7 +119,7 @@ class Sai2InterfacesTabs extends HTMLElement {
 				</div>
 			</div>
 		</div>
-        `;
+		`;
 
 		// Add the other content to the tabs div
 		let row = this.querySelector('.row');
@@ -119,12 +129,31 @@ class Sai2InterfacesTabs extends HTMLElement {
 			ulDiv.appendChild(content);
 		});
 
+		// add event listener to refresh the active tab from redis if applicable
+		document.addEventListener(EVENT_RESET_ACTIVE_TABS_FROM_REDIS, event => {
+			if (key && event.detail.identifier != this.uniqueId) {
+				get_redis_val(key).then(value => {
+					if (value && tabValueToName[value]) {
+						this.setActiveTab(tabValueToName[value]);
+					}
+				})
+			}
+		});
+
 		// Add event listener to tabs for refreshing the page on tab switch 
 		// and remembering which one is active
 		this.querySelectorAll('.nav-link').forEach((tabLink) => {
 			tabLink.addEventListener('show.bs.tab', () => {
+				// dispatch a tab reset event in case the active active tab key of subtabs has been changed
+				document.dispatchEvent(new CustomEvent(EVENT_RESET_ACTIVE_TABS_FROM_REDIS, {
+					bubbles: true,
+					detail: {
+						identifier: this.uniqueId,
+					}
+				}));
+
 				if (tabLink.getAttribute('id').startsWith(this.uniqueId)) {
-					console.log('Tab clicked!', this.uniqueId, tabLink.getAttribute('id'));
+					// console.log('Tab clicked!', this.uniqueId, tabLink.getAttribute('id'));
 					sessionStorage.setItem(`${this.uniqueId}_activeTabName`, tabLink.getAttribute('id'));
 
 					const resetDisplaysEvent = new CustomEvent(EVENT_RESET_DISPLAYS, {
@@ -143,11 +172,18 @@ class Sai2InterfacesTabs extends HTMLElement {
 				}
 			});
 		});
-
 	}
 }
 
+// for content to be displayed in the page and displayed when one tab is selected
 class Sai2InterfacesTabContent extends HTMLElement {
+	constructor() {
+		super();
+	}
+}
+
+// for content to appear in the tab area iteslf, at al times
+class Sai2InterfacesTabInlineContent extends HTMLElement {
 	constructor() {
 		super();
 	}
@@ -155,3 +191,4 @@ class Sai2InterfacesTabContent extends HTMLElement {
 
 customElements.define('sai2-interfaces-tabs', Sai2InterfacesTabs);
 customElements.define('sai2-interfaces-tab-content', Sai2InterfacesTabContent);
+customElements.define('sai2-interfaces-tab-inline-content', Sai2InterfacesTabInlineContent);
