@@ -60,9 +60,10 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 	constructor() {
 		super(template);
 
-		document.addEventListener(EVENT_RESET_DISPLAYS, async (event) => {
+		this.creating_sliders = false;
+
+		document.addEventListener(EVENT_RESET_DISPLAYS, () => {
 			// console.log('Reset sliders event caught!', event.detail.message);
-			await new Promise(r => setTimeout(r, 100));
 			this.refresh();
 		});
 	}
@@ -82,6 +83,18 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 	}
 
 	create_sliders(len) {
+		if (this.creating_sliders) {
+			console.log('Already creating sliders, returning');
+			return;
+		}
+		this.creating_sliders = true;
+
+		while (this.firstChild) {
+			this.removeChild(this.firstChild);
+		}
+		this.template_node = this.template.content.cloneNode(true);
+		this.container = this.template_node.querySelector('div');
+
 		// generate appropriate number of sliders
 		for (let i = 0; i < len; i++) {
 			/* 
@@ -119,6 +132,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider_value_input.max = (Array.isArray(this.max)) ? this.max[i] : this.max;
 			slider_value_input.step = (Array.isArray(this.step)) ? this.step[i] : this.step;
 			slider_value_input.value = (Array.isArray(this.value)) ? this.value[i] : this.value;
+			slider_value_input.value = Math.min(slider_value_input.max, Math.max(slider_value_input.min, slider_value_input.value));
 
 			// set up typing event
 			let sliding_value_input_callback = () => {
@@ -175,6 +189,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider.max = (Array.isArray(this.max)) ? this.max[i] : this.max;
 			slider.step = (Array.isArray(this.step)) ? this.step[i] : this.step;
 			slider.value = (Array.isArray(this.value)) ? this.value[i] : this.value;
+			slider.value = Math.min(slider.max, Math.max(slider.min, slider.value));
 
 			let slider_move_callback = () => {
 				let slider_val = parseFloat(slider.value);
@@ -213,6 +228,9 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider_div.append(slider);
 			this.container.append(slider_div);
 		}
+		this.appendChild(this.template_node);
+
+		this.creating_sliders = false;
 	}
 
 	onMount() {
@@ -239,8 +257,6 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 		this.step = this.parseSliderAttribute(this.step);
 
 		// create sliders
-		this.container = this.template_node.querySelector('div');
-
 		if (this.key) {
 			get_redis_val(this.key).then(value => {
 				// determine iteration bounds: 1 if scalar key, array size if vector
@@ -269,14 +285,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 	}
 
 	refresh() {
-		// clear old nodes
-		while (this.firstChild) {
-		this.removeChild(this.firstChild);
-		}
-
-		this.template_node = this.template.content.cloneNode(true);
 		this.onMount();
-		this.appendChild(this.template_node);
 	}
 
 	onUnmount() {
