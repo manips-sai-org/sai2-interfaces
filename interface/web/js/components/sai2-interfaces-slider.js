@@ -134,6 +134,12 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider_value_input.value = (Array.isArray(this.value)) ? this.value[i] : this.value;
 			slider_value_input.value = Math.min(slider_value_input.max, Math.max(slider_value_input.min, slider_value_input.value));
 
+			// also clamp the this.value in case it was out of bounds
+			if (Array.isArray(this.value))
+				this.value[i] = parseFloat(slider_value_input.value);
+			else
+				this.value = parseFloat(slider_value_input.value);
+
 			// set up typing event
 			let sliding_value_input_callback = () => {
 				let slider_val = parseFloat(slider_value_input.value);
@@ -228,6 +234,12 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider_div.append(slider);
 			this.container.append(slider_div);
 		}
+
+		// post to redis in case the values were clamped
+		if (this.key) {
+			post_redis_key_val(this.key, this.value);
+		}
+
 		this.appendChild(this.template_node);
 
 		this.creating_sliders = false;
