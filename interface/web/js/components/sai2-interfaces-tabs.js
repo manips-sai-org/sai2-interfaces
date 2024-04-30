@@ -1,5 +1,5 @@
 import { EVENT_RESET_DISPLAYS, EVENT_RESET_ACTIVE_TABS_FROM_REDIS } from '../config.js';
-import { post_redis_key_val, get_redis_val } from '../redis.js';
+import { post_redis_key_val, get_redis_val, wait_for_redis_val } from '../redis.js';
 
 class Sai2InterfacesTabs extends HTMLElement {
 	constructor() {
@@ -143,7 +143,7 @@ class Sai2InterfacesTabs extends HTMLElement {
 		// Add event listener to tabs for refreshing the page on tab switch 
 		// and remembering which one is active
 		this.querySelectorAll('.nav-link').forEach((tabLink) => {
-			tabLink.addEventListener('show.bs.tab', () => {
+			tabLink.addEventListener('show.bs.tab', async () => {
 				// dispatch a tab reset event in case the active active tab key of subtabs has been changed
 				document.dispatchEvent(new CustomEvent(EVENT_RESET_ACTIVE_TABS_FROM_REDIS, {
 					bubbles: true,
@@ -155,19 +155,20 @@ class Sai2InterfacesTabs extends HTMLElement {
 				if (tabLink.getAttribute('id').startsWith(this.uniqueId)) {
 					// console.log('Tab clicked!', this.uniqueId, tabLink.getAttribute('id'));
 					sessionStorage.setItem(`${this.uniqueId}_activeTabName`, tabLink.getAttribute('id'));
-
+					
+					if (key) {
+						const value = tabLink.getAttribute('data-value');
+						if (value && value !== 'null') {
+							post_redis_key_val(key, value);
+							await wait_for_redis_val(key, value);
+						}
+					}
 					const resetDisplaysEvent = new CustomEvent(EVENT_RESET_DISPLAYS, {
 						bubbles: true,
 						detail: { message: 'Reset the displays' }
 					});
 					document.dispatchEvent(resetDisplaysEvent);
 
-					if (key) {
-						const value = tabLink.getAttribute('data-value');
-						if (value && value !== 'null') {
-							post_redis_key_val(key, value);
-						}
-					}
 
 				}
 			});
