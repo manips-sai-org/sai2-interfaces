@@ -4,7 +4,7 @@ hiredis
 eventlet
 flask==2.0.3
 flask-socketio==4.3.1
-Werkzeug==2.0.3
+Werkzeug==3.0.3
 multitimer
 matplotlib
 plotly
