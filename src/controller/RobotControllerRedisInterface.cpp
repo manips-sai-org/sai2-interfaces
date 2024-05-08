@@ -955,11 +955,11 @@ void RobotControllerRedisInterface::processInputs() {
 			// dynamic decoupling
 			if (joint_task_config.use_dynamic_decoupling) {
 				joint_task->setDynamicDecouplingType(
-					Sai2Primitives::JointTask::DynamicDecouplingType::
+					Sai2Primitives::DynamicDecouplingType::
 						BOUNDED_INERTIA_ESTIMATES);
 			} else {
 				joint_task->setDynamicDecouplingType(
-					Sai2Primitives::JointTask::DynamicDecouplingType::
+					Sai2Primitives::DynamicDecouplingType::
 						IMPEDANCE);
 			}
 
@@ -1063,11 +1063,11 @@ void RobotControllerRedisInterface::processInputs() {
 
 			if (motion_force_task_config.use_dynamic_decoupling) {
 				motion_force_task->setDynamicDecouplingType(
-					Sai2Primitives::MotionForceTask::DynamicDecouplingType::
+					Sai2Primitives::DynamicDecouplingType::
 						BOUNDED_INERTIA_ESTIMATES);
 			} else {
 				motion_force_task->setDynamicDecouplingType(
-					Sai2Primitives::MotionForceTask::DynamicDecouplingType::
+					Sai2Primitives::DynamicDecouplingType::
 						IMPEDANCE);
 			}
 
