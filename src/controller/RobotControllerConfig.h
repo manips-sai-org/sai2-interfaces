@@ -40,6 +40,15 @@ struct ControllerLoggerConfig {
 	bool add_timestamp_to_filename = true;
 };
 
+struct InterfaceConfig {
+	std::string min_goal_position = "[-0.5,-0.5,0.0]";
+	std::string max_goal_position = "[0.5,0.5,0.8]";
+	std::string min_desired_force = "-50";
+	std::string max_desired_force = "50";
+	std::string min_desired_moment = "-5";
+	std::string max_desired_moment = "5";
+};
+
 struct JointTaskConfig {
 	struct JointVelSatConfig {
 		bool enabled = JointTaskDefaultParams::use_velocity_saturation;
@@ -145,6 +154,8 @@ struct RobotControllerConfig {
 	double control_frequency = 1000.0;
 
 	ControllerLoggerConfig logger_config;
+
+	InterfaceConfig interface_config;
 
 	std::string initial_active_controller_name = "";
 

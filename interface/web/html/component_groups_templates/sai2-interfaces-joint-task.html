@@ -5,7 +5,7 @@
 	<div class="col-md-6">
 		<div class="section p-3 mt-2 mb-2 border border-primary rounded">
 			<h3>Desired Position</h3>
-			<sai2-interfaces-slider key="{{_prefix_}}::goal_position" display="desired_position" min="-3.14" max="3.14"
+			<sai2-interfaces-slider key="{{_prefix_}}::goal_position" display="desired_position" min="{{_joint_lower_limits_}}" max="{{_joint_upper_limits_}}"
 				step="0.01" />
 		</div>
 	</div>
