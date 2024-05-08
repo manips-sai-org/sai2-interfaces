@@ -125,6 +125,37 @@ enum GainsType {
 	MOTFORCE_MOMENT
 };
 
+InterfaceConfig parseInterfaceConfig(tinyxml2::XMLElement* interface_xml) {
+	InterfaceConfig interface_config;
+
+	if (interface_xml->Attribute("minGoalPosition")) {
+		interface_config.min_goal_position =
+			interface_xml->Attribute("minGoalPosition");
+	}
+	if (interface_xml->Attribute("maxGoalPosition")) {
+		interface_config.max_goal_position =
+			interface_xml->Attribute("maxGoalPosition");
+	}
+	if (interface_xml->Attribute("minDesiredForce")) {
+		interface_config.min_desired_force =
+			interface_xml->Attribute("minDesiredForce");
+	}
+	if (interface_xml->Attribute("maxDesiredForce")) {
+		interface_config.max_desired_force =
+			interface_xml->Attribute("maxDesiredForce");
+	}
+	if (interface_xml->Attribute("minDesiredMoment")) {
+		interface_config.min_desired_moment =
+			interface_xml->Attribute("minDesiredMoment");
+	}
+	if (interface_xml->Attribute("maxDesiredMoment")) {
+		interface_config.max_desired_moment =
+			interface_xml->Attribute("maxDesiredMoment");
+	}
+
+	return interface_config;
+}
+
 GainsConfig parseGainsConfig(tinyxml2::XMLElement* xml,
 							 const string& config_file_name,
 							 const GainsType gains_type) {
@@ -505,10 +536,10 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 	config.robot_model_file = robotModelFile->GetText();
 
 	// robot base in world
-	tinyxml2::XMLElement* robotBaseInWorld =
-		controlConfiguration->FirstChildElement("robotBaseInWorld");
-	if (robotBaseInWorld) {
-		config.robot_base_in_world = parsePoseLocal(robotBaseInWorld);
+	tinyxml2::XMLElement* baseFrame =
+		controlConfiguration->FirstChildElement("baseFrame");
+	if (baseFrame) {
+		config.robot_base_in_world = parsePoseLocal(baseFrame);
 	}
 
 	// world gravity
@@ -541,6 +572,12 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 			config.logger_config.add_timestamp_to_filename =
 				logger->FirstChildElement("timestampInFilename")->BoolText();
 		}
+	}
+
+	// interface config
+	tinyxml2::XMLElement* interface = controlConfiguration->FirstChildElement("interface");
+	if (interface) {
+		config.interface_config = parseInterfaceConfig(interface);
 	}
 
 	// parse all controller configs

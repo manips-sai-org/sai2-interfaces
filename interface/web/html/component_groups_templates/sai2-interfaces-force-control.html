@@ -40,10 +40,9 @@
 	<div class="col-md-6">
 		<div class="section p-3 mt-2 mb-2 border border-primary rounded">
 			<div class="row">
-
 				<h3>Desired Force</h3>
 				<sai2-interfaces-slider key="{{_prefix_}}::desired_force" display='["Fx", "Fy", "Fz"]'
-					min="[-50,-50,-50]" max="[50,50,50]" step="0.1" />
+					min="{{_min_desired_force_}}" max="{{_max_desired_force_}}" step="0.1" />
 			</div>
 			<div class="row">
 				<sai2-interfaces-display key="{{_prefix_}}::sensed_force" display="sensed force" displayAsRowVector />
@@ -54,10 +53,9 @@
 	<div class="col-md-6">
 		<div class="section p-3 mt-2 mb-2 border border-primary rounded">
 			<div class="row">
-
 				<h3>Desired Moment</h3>
 				<sai2-interfaces-slider key="{{_prefix_}}::desired_moment" display='["Mx", "My", "Mz"]'
-					min="[-10,-10,-10]" max="[10,10,10]" step="0.1" />
+					min="{{_min_desired_moment_}}" max="{{_max_desired_moment_}}" step="0.1" />
 			</div>
 			<div class="row">
 				<sai2-interfaces-display key="{{_prefix_}}::sensed_moment" display="sensed moment" displayAsRowVector />

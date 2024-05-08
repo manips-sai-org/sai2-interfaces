@@ -27,11 +27,29 @@ class Sai2InterfacesMotionForceTask extends HTMLElement {
 		motion_control.setAttribute('robotName', this.robotName);
 		motion_control.setAttribute('controllerName', this.controllerName);
 		motion_control.setAttribute('taskName', this.taskName);
+		if (this.hasAttribute('minGoalPosition')) {
+			motion_control.setAttribute('minGoalPosition', this.getAttribute('minGoalPosition'));
+		}
+		if (this.hasAttribute('maxGoalPosition')) {
+			motion_control.setAttribute('maxGoalPosition', this.getAttribute('maxGoalPosition'));
+		}
 
 		let force_control = template_node.querySelector('sai2-interfaces-force-control');
 		force_control.setAttribute('robotName', this.robotName);
 		force_control.setAttribute('controllerName', this.controllerName);
 		force_control.setAttribute('taskName', this.taskName);
+		if (this.hasAttribute('minDesiredForce')) {
+			force_control.setAttribute('minDesiredForce', this.getAttribute('minDesiredForce'));
+		}
+		if (this.hasAttribute('maxDesiredForce')) {
+			force_control.setAttribute('maxDesiredForce', this.getAttribute('maxDesiredForce'));
+		}
+		if (this.hasAttribute('minDesiredMoment')) {
+			force_control.setAttribute('minDesiredMoment', this.getAttribute('minDesiredMoment'));
+		}
+		if (this.hasAttribute('maxDesiredMoment')) {
+			force_control.setAttribute('maxDesiredMoment', this.getAttribute('maxDesiredMoment'));
+		}
 
 		if (this.getAttribute('redisPrefix')) {
 			this.redisPrefix = this.getAttribute('redisPrefix');

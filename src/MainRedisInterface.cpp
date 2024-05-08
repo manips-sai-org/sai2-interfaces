@@ -10,6 +10,25 @@
 
 namespace {
 
+std::string vectorXdToString(const Eigen::VectorXd& vec) {
+	std::string str = "\'[";
+	for (int i = 0; i < vec.size(); i++) {
+		std::cout << vec(i) << std::endl;
+		if (vec(i) == -std::numeric_limits<double>::max()) {
+			str += "-6.28";
+		} else if (vec(i) == std::numeric_limits<double>::max()) {
+			str += "6.28";
+		} else {
+			str += std::to_string(vec(i));
+		}
+		if (i != vec.size() - 1) {
+			str += ",";
+		}
+	}
+	str += "]\'";
+	return str;
+}
+
 const std::string CONFIG_FILE_NAME_KEY =
 	"sai2::interfaces::main_interface::config_file_name";
 const std::string RESET_KEY = "sai2::interfaces::main_interface::reset";
@@ -181,7 +200,37 @@ void MainRedisInterface::generateUiFile() {
 			_controllers_configs[0].redis_prefix + "'\ncontrollerNames='" +
 			controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
 			controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
-			controller_names_and_tasks[2] + "' />\n</div>\n";
+			controller_names_and_tasks[2] + "'";
+
+		// joint limits in interface
+		Sai2Model::Sai2Model model = Sai2Model::Sai2Model(
+			_controllers_configs[0].robot_model_file, false);
+		additionalContent += "\nlowerJointLimits=" +
+							 vectorXdToString(model.jointLimitsPositionLower());
+		additionalContent += "\nupperJointLimits=" +
+							 vectorXdToString(model.jointLimitsPositionUpper());
+
+		// interface config for positions and force slider limits
+		additionalContent +=
+			"\nminGoalPosition='" +
+			_controllers_configs[0].interface_config.min_goal_position + "'";
+		additionalContent +=
+			"\nmaxGoalPosition='" +
+			_controllers_configs[0].interface_config.max_goal_position + "'";
+		additionalContent +=
+			"\nminDesiredForce='" +
+			_controllers_configs[0].interface_config.min_desired_force + "'";
+		additionalContent +=
+			"\nmaxDesiredForce='" +
+			_controllers_configs[0].interface_config.max_desired_force + "'";
+		additionalContent +=
+			"\nminDesiredMoment='" +
+			_controllers_configs[0].interface_config.min_desired_moment + "'";
+		additionalContent +=
+			"\nmaxDesiredMoment='" +
+			_controllers_configs[0].interface_config.max_desired_moment + "'";
+
+		additionalContent += " />\n</div>\n";
 	} else {
 		additionalContent += "<div class='row mx-3'>\n";
 		additionalContent +=
@@ -200,7 +249,39 @@ void MainRedisInterface::generateUiFile() {
 				"'\ncontrollerNames='" + controller_names_and_tasks[0] +
 				"'\ncontrollerTaskNames='" + controller_names_and_tasks[1] +
 				"'\ncontrollerTaskTypes='" + controller_names_and_tasks[2] +
-				"' />\n</div>\n";
+				"'";
+
+			// joint limits in interface
+			Sai2Model::Sai2Model model =
+				Sai2Model::Sai2Model(config.robot_model_file, false);
+			additionalContent +=
+				"\nlowerJointLimits=" +
+				vectorXdToString(model.jointLimitsPositionLower());
+			additionalContent +=
+				"\nupperJointLimits=" +
+				vectorXdToString(model.jointLimitsPositionUpper());
+
+			// interface config for positions and force slider limits
+			additionalContent += "\nminGoalPosition='" +
+								 config.interface_config.min_goal_position +
+								 "'";
+			additionalContent += "\nmaxGoalPosition='" +
+								 config.interface_config.max_goal_position +
+								 "'";
+			additionalContent += "\nminDesiredForce='" +
+								 config.interface_config.min_desired_force +
+								 "'";
+			additionalContent += "\nmaxDesiredForce='" +
+								 config.interface_config.max_desired_force +
+								 "'";
+			additionalContent += "\nminDesiredMoment='" +
+								 config.interface_config.min_desired_moment +
+								 "'";
+			additionalContent += "\nmaxDesiredMoment='" +
+								 config.interface_config.max_desired_moment +
+								 "'";
+
+			additionalContent += " />\n</div>\n";
 
 			additionalContent += "</sai2-interfaces-tab-content>\n";
 		}
