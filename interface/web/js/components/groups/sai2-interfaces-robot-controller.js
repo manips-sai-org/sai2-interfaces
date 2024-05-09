@@ -16,6 +16,34 @@ class Sai2InterfacesRobotController extends HTMLElement {
 		const controller_display_names = controller_names.map(name => name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
 		const task_display_names = controller_task_names.map(task_names => task_names.map(name => name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())));
 
+		let optional_ui_joint_task = "";
+		if (this.hasAttribute('lowerJointLimits')) {
+			optional_ui_joint_task += `lowerJointLimits="${this.getAttribute('lowerJointLimits')}" `;
+		}
+		if (this.hasAttribute('upperJointLimits')) {
+			optional_ui_joint_task += `upperJointLimits="${this.getAttribute('upperJointLimits')}" `;
+		}
+
+		let optional_ui_motion_force_task = "";
+		if (this.hasAttribute('minGoalPosition')) {
+			optional_ui_motion_force_task += `minGoalPosition="${this.getAttribute('minGoalPosition')}" `;
+		}
+		if (this.hasAttribute('maxGoalPosition')) {
+			optional_ui_motion_force_task += `maxGoalPosition="${this.getAttribute('maxGoalPosition')}" `;
+		}
+		if (this.hasAttribute('minDesiredForce')) {
+			optional_ui_motion_force_task += `minDesiredForce="${this.getAttribute('minDesiredForce')}" `;
+		}
+		if (this.hasAttribute('maxDesiredForce')) {
+			optional_ui_motion_force_task += `maxDesiredForce="${this.getAttribute('maxDesiredForce')}" `;
+		}
+		if (this.hasAttribute('minDesiredMoment')) {
+			optional_ui_motion_force_task += `minDesiredMoment="${this.getAttribute('minDesiredMoment')}" `;
+		}
+		if (this.hasAttribute('maxDesiredMoment')) {
+			optional_ui_motion_force_task += `maxDesiredMoment="${this.getAttribute('maxDesiredMoment')}" `;
+		}
+
 		if (!this.checkAttributesValidity(controller_names, controller_task_types, controller_task_names)) {
 			const errorMessage = document.createElement('div');
 			errorMessage.textContent = 'Attributes of sai2-interfaces-robot-controller are not valid';
@@ -35,7 +63,9 @@ class Sai2InterfacesRobotController extends HTMLElement {
 
 			if (controller_task_types[i].length == 1) {
 				let task_ui_type = controller_task_types[i][0] == 'motion_force_task' ? 'sai2-interfaces-motion-force-task' : 'sai2-interfaces-joint-task';
-				let task_ui_element = `<${task_ui_type} robotName="${this.robot_name}" controllerName="${controller_names[i]}" taskName="${controller_task_names[i][0]}" redisPrefix="${this.redis_prefix}"/>`;
+				let task_ui_element = `<${task_ui_type} robotName="${this.robot_name}" controllerName="${controller_names[i]}" taskName="${controller_task_names[i][0]}" redisPrefix="${this.redis_prefix}" `;
+				task_ui_element += controller_task_types[i][0] == 'joint_task' ? optional_ui_joint_task : optional_ui_motion_force_task;
+				task_ui_element += `/>`;
 				controller_tab_content += task_ui_element;
 			} else {
 				let task_tabs = `<sai2-interfaces-tabs name="${controller_display_names[i]}_task_selection" color="#730099">`;
@@ -43,7 +73,9 @@ class Sai2InterfacesRobotController extends HTMLElement {
 				for (let j = 0; j < controller_task_types[i].length; j++) {
 					let task_tab_content = `<sai2-interfaces-tab-content name="${task_display_names[i][j]}">`;
 					let task_ui_type = controller_task_types[i][j] == 'motion_force_task' ? 'sai2-interfaces-motion-force-task' : 'sai2-interfaces-joint-task';
-					let task_ui_element = `<${task_ui_type} robotName="${this.robot_name}" controllerName="${controller_names[i]}" taskName="${controller_task_names[i][j]}" redisPrefix="${this.redis_prefix}"/>`;
+					let task_ui_element = `<${task_ui_type} robotName="${this.robot_name}" controllerName="${controller_names[i]}" taskName="${controller_task_names[i][j]}" redisPrefix="${this.redis_prefix}" `;
+					task_ui_element += controller_task_types[i][j] == 'joint_task' ? optional_ui_joint_task : optional_ui_motion_force_task;
+					task_ui_element += `/>`
 					task_tab_content += task_ui_element;
 					task_tab_content += `</sai2-interfaces-tab-content>`;
 					task_tabs += task_tab_content;
@@ -64,7 +96,6 @@ class Sai2InterfacesRobotController extends HTMLElement {
 		htmlString += `</sai2-interfaces-tabs>`;
 
 		this.innerHTML = htmlString;
-
 	}
 
 	checkAttributesValidity(controller_names, controller_task_types, controller_task_names) {

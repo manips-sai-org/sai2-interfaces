@@ -19,7 +19,7 @@
 
 import { EVENT_RESET_DISPLAYS } from '../config.js';
 import { get_redis_val, post_redis_key_val } from '../redis.js';
-import { throttle } from '../index.js';
+import { parse_maybe_array_attribute, throttle } from '../index.js';
 import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 
@@ -66,20 +66,6 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			// console.log('Reset sliders event caught!', event.detail.message);
 			this.refresh();
 		});
-	}
-
-	parseSliderAttribute(attr) {
-		let parsed_attr;
-		try {
-			parsed_attr = JSON.parse(attr);
-			for (let i = 0; i < parsed_attr.length; i++) {
-				parsed_attr[i] = parseFloat(parsed_attr[i]);
-			}
-		} catch (e) {
-			parsed_attr = parseFloat(attr);
-		}
-
-		return parsed_attr;
 	}
 
 	create_sliders(len) {
@@ -264,9 +250,9 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			this.display = raw_disp;
 		}
 
-		this.min = this.parseSliderAttribute(this.min);
-		this.max = this.parseSliderAttribute(this.max);
-		this.step = this.parseSliderAttribute(this.step);
+		this.min = parse_maybe_array_attribute(this.min);
+		this.max = parse_maybe_array_attribute(this.max);
+		this.step = parse_maybe_array_attribute(this.step);
 
 		// create sliders
 		if (this.key) {

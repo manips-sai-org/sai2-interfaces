@@ -59,3 +59,16 @@ export function throttle(func, limit) {
         }
     };
 }
+
+export function parse_maybe_array_attribute(attr) {
+	let parsed_attr;
+	try {
+		parsed_attr = JSON.parse(attr);
+		for (let i = 0; i < parsed_attr.length; i++) {
+			parsed_attr[i] = parseFloat(parsed_attr[i]);
+		}
+	} catch (e) {
+		parsed_attr = parseFloat(attr);
+	}
+	return parsed_attr;
+}

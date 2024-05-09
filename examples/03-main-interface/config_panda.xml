@@ -32,6 +32,18 @@
 		<timestampInFilename>false</timestampInFilename>
 	</logger>
 
+	<!-- We can set limits for interface sliders here. This is optionnal.
+	This only affects the sliders in the interface, not the actual robot.
+	The following are the default values
+	The limits for the joint position sliders are set directly from the joint limits -->
+	<interface  minGoalPosition='[-0.5,-0.5,0.0]'
+				maxGoalPosition='[0.5,0.5,0.8]' 
+				minDesiredForce='-50'
+				maxDesiredForce='50'
+				minDesiredMoment='-5'
+				maxDesiredMoment='5'
+	/>
+
 	<controller name="cartesian_controller">
 		<task name="cartesian_task" type="motion_force_task">
 			<linkName>end-effector</linkName>
