@@ -74,13 +74,15 @@ def handle_redis_call():
     '''
     if request.method == 'GET':
         key_list = json.loads(request.args.get('key'))
-        if type(key_list) == str:
-            return jsonify(redis_cache[key_list])
+        if isinstance(key_list, str):
+            response_json = json.dumps(redis_cache[key_list])
+            return Response(response=response_json, status=200, mimetype='application/json')
         else:
-            return jsonify({key: redis_cache[key] for key in key_list})
+            response_json = json.dumps({key: redis_cache[key] for key in key_list})
+            return Response(response=response_json, status=200, mimetype='application/json')
     elif request.method == 'POST':
         data = request.get_json()
-        if type(data['val']) == list:
+        if isinstance(data['val'], list):
             redis_client.set(data['key'], json.dumps(data['val']))
         else:
             redis_client.set(data['key'], data['val'])

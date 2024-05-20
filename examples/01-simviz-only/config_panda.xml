@@ -16,6 +16,30 @@ and is used to define the prefix of the redis keys used by the interface -->
 		<enableGravityCompensation>true</enableGravityCompensation>
 		<coeffFriction>0.5</coeffFriction>
 		<collisionRestitution>0.0</collisionRestitution>
+
+		<!-- optional. We can also specify a set of robot or object specific parameters here.
+		The following are the default values if one or more are not specified. Only the name tag is mandatory.
+		For the values redundant with global values (coefficient of friction, restitution
+		and joint limits enabled), if not defined here they will use the global value, otherwise
+		the value here taked priority -->
+		<robotOrObjectSpecificParameters
+			name="Panda"
+			dynamicsEnabled="true"
+			renderingEnabled="true"
+			jointLimitsEnabled="true"
+			collisionRestitutionCoefficient="0.0"
+			staticFrictionCoefficient="0.5"
+			dynamicFrictionCoefficient="0.5"
+			wireMeshRenderingMode="false"
+			framesRenderingEnabled="false"
+			frameSizeWhenRendering="0.2"
+		/>
+
+		<robotOrObjectSpecificParameters
+			name="Box1"
+			wireMeshRenderingMode="true"
+			framesRenderingEnabled="true"
+		/>
 	</simParameters>
 
 	<!-- optional. the followind are the default values if one or more are not specified -->

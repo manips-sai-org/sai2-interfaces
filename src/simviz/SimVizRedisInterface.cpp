@@ -3,6 +3,7 @@
 #include <signal.h>
 
 #include <filesystem>
+#include <glaze/glaze.hpp>
 
 namespace Sai2Interfaces {
 
@@ -45,6 +46,14 @@ SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
 	}
 }
 
+std::vector<std::string> SimVizRedisInterface::getRobotNames() const {
+	return _simulation->getRobotNames();
+}
+
+std::vector<std::string> SimVizRedisInterface::getObjectNames() const {
+	return _simulation->getObjectNames();
+}
+
 void SimVizRedisInterface::reset(const SimVizConfig& config) {
 	_reset_complete = false;
 	_new_config = config;
@@ -53,8 +62,9 @@ void SimVizRedisInterface::reset(const SimVizConfig& config) {
 
 void SimVizRedisInterface::resetInternal() {
 	_simulation->setTimestep(_config.timestep);
-	_simulation->setCollisionRestitution(_config.collision_restitution);
-	_simulation->setCoeffFrictionStatic(_config.friction_coefficient);
+	_simulation->setCollisionRestitution(_config.global_collision_restitution);
+	_simulation->setCoeffFrictionStatic(_config.global_friction_coefficient);
+	_simulation->setCoeffFrictionDynamic(_config.global_friction_coefficient);
 
 	_redis_client.setBool(
 		_config.redis_prefix + "::simviz::gravity_comp_enabled",
@@ -74,6 +84,8 @@ void SimVizRedisInterface::resetInternal() {
 	_object_pose.clear();
 	_object_vel.clear();
 	_force_sensor_data.clear();
+
+	_model_specific_params_string.clear();
 
 	_loggers.clear();
 	if (!std::filesystem::exists(_config.logger_config.folder_name)) {
@@ -98,14 +110,36 @@ void SimVizRedisInterface::resetInternal() {
 		_loggers.at(robot_name)->addToLog(_robot_q.at(robot_name), "q");
 		_loggers.at(robot_name)->addToLog(_robot_dq.at(robot_name), "dq");
 
+		// model specific parameters
+		// if it does not exists yet, create it with the default and global
+		// values
+		if (_config.model_specific_dynamic_and_rendering_params.find(
+				robot_name) ==
+			_config.model_specific_dynamic_and_rendering_params.end()) {
+			DynamicAndRenderingParams dynamic_and_rendering_params;
+			dynamic_and_rendering_params.joint_limits_enabled =
+				_config.enable_joint_limits;
+			dynamic_and_rendering_params.collision_restitution_coefficient =
+				_config.global_collision_restitution;
+			dynamic_and_rendering_params.static_friction_coefficient =
+				_config.global_friction_coefficient;
+			dynamic_and_rendering_params.dynamic_friction_coefficient =
+				_config.global_friction_coefficient;
+			_config.model_specific_dynamic_and_rendering_params[robot_name] =
+				dynamic_and_rendering_params;
+		}
+		setModelSpecificParametersFromConfig(robot_name);
+
+		// dynamic parameters receive via redis
+		_model_specific_params_string[robot_name] = glz::write_json(
+			_config.model_specific_dynamic_and_rendering_params.at(robot_name));
+		_redis_client.addToReceiveGroup(
+			_config.redis_prefix +
+				"::simviz::model_specific_params::" + robot_name,
+			_model_specific_params_string.at(robot_name), group_name);
+
 		// setup if there is simulation
 		if (_config.mode != SimVizMode::VIZ_ONLY) {
-			if (_config.enable_joint_limits) {
-				_simulation->enableJointLimits(robot_name);
-			} else {
-				_simulation->disableJointLimits(robot_name);
-			}
-
 			_graphics->addUIForceInteraction(robot_name);
 			_robot_ui_torques[robot_name] = VectorXd::Zero(robot_dof);
 			_robot_control_torques[robot_name] = VectorXd::Zero(robot_dof);
@@ -152,13 +186,38 @@ void SimVizRedisInterface::resetInternal() {
 		_loggers.at(object_name)
 			->addToLog(_object_vel.at(object_name), "velocity");
 
+		// model specific dynamic and rendering parameters
+		if (_config.model_specific_dynamic_and_rendering_params.find(
+				object_name) ==
+			_config.model_specific_dynamic_and_rendering_params.end()) {
+			DynamicAndRenderingParams dynamic_and_rendering_params;
+			dynamic_and_rendering_params.collision_restitution_coefficient =
+				_config.global_collision_restitution;
+			dynamic_and_rendering_params.static_friction_coefficient =
+				_config.global_friction_coefficient;
+			dynamic_and_rendering_params.dynamic_friction_coefficient =
+				_config.global_friction_coefficient;
+			_config.model_specific_dynamic_and_rendering_params[object_name] =
+				dynamic_and_rendering_params;
+		}
+		setModelSpecificParametersFromConfig(object_name);
+
+		// dynamic parameters receive via redis
+		_model_specific_params_string[object_name] = glz::write_json(
+			_config.model_specific_dynamic_and_rendering_params.at(
+				object_name));
+		_redis_client.addToReceiveGroup(
+			_config.redis_prefix +
+				"::simviz::model_specific_params::" + object_name,
+			_model_specific_params_string.at(object_name), group_name);
+
 		// setup if there is simulation
 		if (_config.mode != SimVizMode::VIZ_ONLY) {
 			_redis_client.addToSendGroup(
 				_config.redis_prefix + "::simviz::obj_pose::" + object_name,
 				_object_pose.at(object_name), group_name);
 			_redis_client.addToSendGroup(
-				_config.redis_prefix + "::simiz::obj_velocity::" + object_name,
+				_config.redis_prefix + "::simviz::obj_velocity::" + object_name,
 				_object_vel.at(object_name), group_name);
 
 			_graphics->addUIForceInteraction(object_name);
@@ -359,6 +418,36 @@ void SimVizRedisInterface::processSimParametrization(
 		_simulation->enableGravityCompensation(_enable_grav_comp);
 	}
 
+	for (auto& pair : _model_specific_params_string) {
+		try {
+			auto result =
+				glz::read_json<DynamicAndRenderingParams>(pair.second);
+			if (!result) {
+				throw std::runtime_error(
+					"WARNING: Could not parse model "
+					"specific parameters for model: " +
+					pair.first + " from redis string: " + pair.second +
+					". Keeping previous values");
+			}
+			if (_config.model_specific_dynamic_and_rendering_params.at(
+					pair.first) != result.value()) {
+				_config
+					.model_specific_dynamic_and_rendering_params[pair.first] =
+					result.value();
+				setModelSpecificParametersFromConfig(pair.first);
+			}
+		} catch (const std::exception& e) {
+			std::cerr << "Error: " << e.what() << std::endl;
+			pair.second = glz::write_json(
+				_config.model_specific_dynamic_and_rendering_params.at(
+					pair.first));
+			_redis_client.set(
+				_config.redis_prefix +
+					"::simviz::model_specific_params::" + pair.first,
+				pair.second);
+		}
+	}
+
 	switch (_logging_state) {
 		case LoggingState::OFF:
 			if (_logging_on) {
@@ -387,6 +476,39 @@ void SimVizRedisInterface::processSimParametrization(
 
 		default:
 			break;
+	}
+}
+
+void SimVizRedisInterface::setModelSpecificParametersFromConfig(
+	const std::string& model_name) {
+	if (!_simulation->modelExistsInWorld(model_name)) {
+		throw std::runtime_error("Model " + model_name +
+								 " does not exist in the world, cannot set "
+								 "model specific parameters.");
+	}
+
+	const auto model_specific_params =
+		_config.model_specific_dynamic_and_rendering_params.at(model_name);
+	_simulation->setDynamicsEnabled(model_specific_params.dynamics_enabled,
+									model_name);
+	_graphics->setRenderingEnabled(model_specific_params.rendering_enabled,
+								   model_name);
+	_simulation->setCollisionRestitution(
+		model_specific_params.collision_restitution_coefficient, model_name);
+	_simulation->setCoeffFrictionStatic(
+		model_specific_params.static_friction_coefficient, model_name);
+	_simulation->setCoeffFrictionDynamic(
+		model_specific_params.dynamic_friction_coefficient, model_name);
+	_graphics->showWireMesh(model_specific_params.wire_mesh_rendering_mode,
+							model_name);
+	_graphics->showLinkFrame(model_specific_params.frames_rendering_enabled,
+							 model_name, "",
+							 model_specific_params.frames_size_when_rendering);
+
+	if (_simulation->robotExistsInWorld(model_name)) {
+		model_specific_params.joint_limits_enabled
+			? _simulation->enableJointLimits(model_name)
+			: _simulation->disableJointLimits(model_name);
 	}
 }
 
