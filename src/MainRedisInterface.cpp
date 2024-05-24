@@ -188,9 +188,9 @@ void MainRedisInterface::generateUiFile() {
 	templateHtml.close();
 
 	std::string additionalContent;
-	if (_controllers_configs.size() == 0) {
+	if (_controllers_configs.size() == 0 && !_simviz_interface) {
 		// do nothing
-	} else if (_controllers_configs.size() == 1) {
+	} else if (_controllers_configs.size() == 1 && !_simviz_interface) {
 		std::vector<std::string> controller_names_and_tasks =
 			generateControllerNamesAndTasksForUI(_controllers_configs[0]);
 		additionalContent =
@@ -229,12 +229,14 @@ void MainRedisInterface::generateUiFile() {
 		additionalContent +=
 			"\nmaxDesiredMoment='" +
 			_controllers_configs[0].interface_config.max_desired_moment + "'";
-
 		additionalContent += " />\n</div>\n";
 	} else {
 		additionalContent += "<div class='row mx-3'>\n";
-		additionalContent +=
-			"<sai2-interfaces-tabs name='Robot_names' color='#b30000'>\n";
+		// get random number for tabs name
+		std::string random_number = std::to_string(rand());
+
+		additionalContent += "<sai2-interfaces-tabs name='Robot_names" +
+							 random_number + "' color='#b30000'>\n";
 
 		for (const auto& config : _controllers_configs) {
 			additionalContent += "<sai2-interfaces-tab-content name='" +
@@ -286,6 +288,38 @@ void MainRedisInterface::generateUiFile() {
 			additionalContent += "</sai2-interfaces-tab-content>\n";
 		}
 
+		if (_simviz_interface) {
+			additionalContent +=
+				"<sai2-interfaces-tab-content name='Simviz'>\n";
+			additionalContent += "<div class='row my-3'>\n";
+
+			std::string model_names = "\'[";
+			std::string model_types = "\'[";
+
+			for (const auto& name : _simviz_interface->getRobotNames()) {
+				model_names += "\"" + name + "\",";
+				model_types += "\"robot\",";
+			}
+			for (const auto& name : _simviz_interface->getObjectNames()) {
+				model_names += "\"" + name + "\",";
+				model_types += "\"object\",";
+			}
+			// remove the last comma
+			model_names.pop_back();
+			model_types.pop_back();
+
+			model_names += "]\'";
+			model_types += "]\'";
+
+			additionalContent += "<sai2-interfaces-simviz\nredisPrefix='" +
+								 _simviz_config->redis_prefix +
+								 "'\nmodelNames=" + model_names +
+								 "\nmodelTypes=" + model_types + " />\n";
+
+			additionalContent += "</div>\n";
+			additionalContent += "</sai2-interfaces-tab-content>\n";
+		}
+
 		additionalContent += "</sai2-interfaces-tabs>\n";
 		additionalContent += "</div>\n";
 	}
@@ -330,7 +364,6 @@ void MainRedisInterface::runInterfaceLoop() {
 		if (_config_file_name != new_config_file_name ||
 			redis_client.getBool(RESET_KEY)) {
 			bool succes = parseConfig(new_config_file_name);
-			generateUiFile();
 			if (succes) {
 				reset();
 			}
@@ -363,6 +396,9 @@ void MainRedisInterface::reset() {
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		}
 	}
+
+	// generate new ui file
+	generateUiFile();
 
 	// finally start new controllers
 	startNewControllers();

@@ -121,12 +121,12 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 		}
 
 		if (simParams->FirstChildElement("coeffFriction")) {
-			config.friction_coefficient =
+			config.global_friction_coefficient =
 				simParams->FirstChildElement("coeffFriction")->DoubleText();
 		}
 
 		if (simParams->FirstChildElement("collisionRestitution")) {
-			config.collision_restitution =
+			config.global_collision_restitution =
 				simParams->FirstChildElement("collisionRestitution")
 					->DoubleText();
 		}
@@ -135,6 +135,61 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 			config.enable_gravity_compensation =
 				simParams->FirstChildElement("enableGravityCompensation")
 					->BoolText();
+		}
+
+		// Extract model specific dynamic and rendering parameters
+		for (tinyxml2::XMLElement* modelParams = simParams->FirstChildElement(
+				 "robotOrObjectSpecificParameters");
+			 modelParams; modelParams = modelParams->NextSiblingElement(
+							  "robotOrObjectSpecificParameters")) {
+			DynamicAndRenderingParams params;
+
+			if (!modelParams->Attribute("name")) {
+				throw std::runtime_error(
+					"Robot or object specific parameters must have a name "
+					"attribute");
+			}
+			std::string name = modelParams->Attribute("name");
+
+			if (modelParams->Attribute("dynamicsEnabled")) {
+				params.dynamics_enabled =
+					modelParams->BoolAttribute("dynamicsEnabled");
+			}
+			if (modelParams->Attribute("renderingEnabled")) {
+				params.rendering_enabled =
+					modelParams->BoolAttribute("renderingEnabled");
+			}
+			if (modelParams->Attribute("jointLimitsEnabled")) {
+				params.joint_limits_enabled =
+					modelParams->BoolAttribute("jointLimitsEnabled");
+			}
+			if (modelParams->Attribute("collisionRestitutionCoefficient")) {
+				params.collision_restitution_coefficient =
+					modelParams->DoubleAttribute(
+						"collisionRestitutionCoefficient");
+			}
+			if (modelParams->Attribute("staticFrictionCoefficient")) {
+				params.static_friction_coefficient =
+					modelParams->DoubleAttribute("staticFrictionCoefficient");
+			}
+			if (modelParams->Attribute("dynamicFrictionCoefficient")) {
+				params.dynamic_friction_coefficient =
+					modelParams->DoubleAttribute("dynamicFrictionCoefficient");
+			}
+			if (modelParams->Attribute("wireMeshRenderingMode")) {
+				params.wire_mesh_rendering_mode =
+					modelParams->BoolAttribute("wireMeshRenderingMode");
+			}
+			if (modelParams->Attribute("framesRenderingEnabled")) {
+				params.frames_rendering_enabled =
+					modelParams->BoolAttribute("framesRenderingEnabled");
+			}
+			if (modelParams->Attribute("frameSizeWhenRendering")) {
+				params.frames_size_when_rendering =
+					modelParams->DoubleAttribute("frameSizeWhenRendering");
+			}
+
+			config.model_specific_dynamic_and_rendering_params[name] = params;
 		}
 	}
 

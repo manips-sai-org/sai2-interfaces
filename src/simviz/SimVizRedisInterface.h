@@ -25,6 +25,9 @@ public:
 
 	bool isResetComplete() const { return _reset_complete; }
 
+	std::vector<std::string> getRobotNames() const;
+	std::vector<std::string> getObjectNames() const;
+
 private:
 	enum LoggingState {
 		OFF,
@@ -39,6 +42,8 @@ private:
 	void vizLoopRun(const std::atomic<bool>& user_stop_signal);
 	void simLoopRun(const std::atomic<bool>& user_stop_signal);
 	void processSimParametrization(Sai2Common::LoopTimer& timer);
+
+	void setModelSpecificParametersFromConfig(const std::string& model_name);
 
 	SimVizConfig _config;
 	SimVizConfig _new_config;
@@ -60,6 +65,8 @@ private:
 	std::vector<Sai2Model::ForceSensorData> _force_sensor_data;
 
 	std::map<std::string, std::unique_ptr<Sai2Common::Logger>> _loggers;
+
+	std::map<std::string, std::string> _model_specific_params_string;
 
 	std::mutex _mutex_parametrization;
 	std::mutex _mutex_torques;
