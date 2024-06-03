@@ -11,6 +11,7 @@ import './components/sai2-interfaces-slider.js';
 import './components/sai2-interfaces-select-option.js';
 import './components/sai2-interfaces-select.js';
 import './components/sai2-interfaces-setkey.js';
+import './components/sai2-interfaces-simple-data-structure-setter.js';
 import './components/sai2-interfaces-config-selector.js';
 import './components/sai2-interfaces-toggle.js';
 import './components/sai2-interfaces-plot.js';
@@ -28,6 +29,9 @@ import './components/groups/sai2-interfaces-force-control.js';
 import './components/groups/sai2-interfaces-joint-task.js';
 import './components/groups/sai2-interfaces-motion-force-task.js';
 import './components/groups/sai2-interfaces-robot-controller.js';
+import './components/groups/sai2-interfaces-simviz-robot.js';
+import './components/groups/sai2-interfaces-simviz-object.js';
+import './components/groups/sai2-interfaces-simviz.js';
 
 var socket = io();
 socket.on('connect', () => {
