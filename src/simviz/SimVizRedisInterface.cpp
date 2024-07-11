@@ -249,19 +249,19 @@ void SimVizRedisInterface::resetInternal() {
 			_graphics->addForceSensorDisplay(force_sensor_data);
 			_redis_client.addToSendGroup(
 				_config.redis_prefix +
-					"::force_sensor::" + force_sensor_data.robot_name +
+					"::force_sensor::" + force_sensor_data.robot_or_object_name +
 					"::" + force_sensor_data.link_name + "::force",
 				force_sensor_data.force_local_frame, group_name);
 			_redis_client.addToSendGroup(
 				_config.redis_prefix +
-					"::force_sensor::" + force_sensor_data.robot_name +
+					"::force_sensor::" + force_sensor_data.robot_or_object_name +
 					"::" + force_sensor_data.link_name + "::moment",
 				force_sensor_data.moment_local_frame, group_name);
 
-			_loggers.at(force_sensor_data.robot_name)
+			_loggers.at(force_sensor_data.robot_or_object_name)
 				->addToLog(force_sensor_data.force_local_frame,
 						   force_sensor_data.link_name + "_sensed_force");
-			_loggers.at(force_sensor_data.robot_name)
+			_loggers.at(force_sensor_data.robot_or_object_name)
 				->addToLog(force_sensor_data.moment_local_frame,
 						   force_sensor_data.link_name + "_sensed_moment");
 		}

@@ -131,9 +131,8 @@ void RobotControllerRedisInterface::initialize() {
 												_robot_model->dof());
 
 				if (!joint_task_config.controlled_joint_names.empty()) {
-					MatrixXd S = MatrixXd::Zero(
-						joint_task_config.controlled_joint_names.size(),
-						_robot_model->dof());
+					S.setZero(joint_task_config.controlled_joint_names.size(),
+							  _robot_model->dof());
 					for (int i = 0;
 						 i < joint_task_config.controlled_joint_names.size();
 						 i++) {
@@ -959,8 +958,7 @@ void RobotControllerRedisInterface::processInputs() {
 						BOUNDED_INERTIA_ESTIMATES);
 			} else {
 				joint_task->setDynamicDecouplingType(
-					Sai2Primitives::DynamicDecouplingType::
-						IMPEDANCE);
+					Sai2Primitives::DynamicDecouplingType::IMPEDANCE);
 			}
 
 			// velocity saturation
@@ -1067,8 +1065,7 @@ void RobotControllerRedisInterface::processInputs() {
 						BOUNDED_INERTIA_ESTIMATES);
 			} else {
 				motion_force_task->setDynamicDecouplingType(
-					Sai2Primitives::DynamicDecouplingType::
-						IMPEDANCE);
+					Sai2Primitives::DynamicDecouplingType::IMPEDANCE);
 			}
 
 			// force control parametrization
