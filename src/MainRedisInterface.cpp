@@ -29,6 +29,19 @@ std::string vectorXdToString(const Eigen::VectorXd& vec) {
 	return str;
 }
 
+std::string joinVectorOfString(const std::vector<std::string>& elements) {
+	std::ostringstream os;
+	os << "'[";
+	for (auto it = elements.begin(); it != elements.end(); ++it) {
+		if (it != elements.begin()) {
+			os << ", ";
+		}
+		os << "\"" << *it << "\"";
+	}
+	os << "]'";
+	return os.str();
+}
+
 const std::string CONFIG_FILE_NAME_KEY =
 	"sai2::interfaces::main_interface::config_file_name";
 const std::string RESET_KEY = "sai2::interfaces::main_interface::reset";
@@ -115,39 +128,64 @@ std::vector<std::string> getControllerNameAndTasksFromSingleConfig(
 	const std::pair<
 		std::string,
 		std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>>
-		single_controller_config) {
+		single_controller_config,
+	const Sai2Model::Sai2Model& robot_model) {
 	std::string controller_name = single_controller_config.first;
 	std::string controller_tasks_names = "[";
 	std::string controller_tasks_types = "[";
+	std::string controller_tasks_selections = "[";
 	for (int i = 0; i < single_controller_config.second.size(); i++) {
 		const auto& task = single_controller_config.second.at(i);
 		if (std::holds_alternative<JointTaskConfig>(task)) {
 			controller_tasks_types += "\"joint_task\"";
 			controller_tasks_names +=
 				"\"" + get<JointTaskConfig>(task).task_name + "\"";
+			auto controlled_joint_names =
+				get<JointTaskConfig>(task).controlled_joint_names;
+			if (!controlled_joint_names.empty()) {
+				controller_tasks_selections +=
+					"[" + to_string(robot_model.jointIndex(
+							  controlled_joint_names[0]));
+				if (controlled_joint_names.size() > 1) {
+					for (int j = 1; j < controlled_joint_names.size(); j++) {
+						controller_tasks_selections +=
+							", " + to_string(robot_model.jointIndex(
+									   controlled_joint_names[j]));
+					}
+				}
+				controller_tasks_selections += "]";
+			} else {
+				controller_tasks_selections += "[]";
+			}
 		} else if (std::holds_alternative<MotionForceTaskConfig>(task)) {
 			controller_tasks_types += "\"motion_force_task\"";
 			controller_tasks_names +=
 				"\"" + get<MotionForceTaskConfig>(task).task_name + "\"";
+			controller_tasks_selections += "[]";
 		} else {
 			std::cerr << "Error: Unknown task type in generating ui html.\n";
 		}
 		if (i != single_controller_config.second.size() - 1) {
 			controller_tasks_names += ", ";
 			controller_tasks_types += ", ";
+			controller_tasks_selections += ", ";
 		}
 	}
 	controller_tasks_names += "]";
 	controller_tasks_types += "]";
+	controller_tasks_selections += "]";
 	return std::vector<std::string>{controller_name, controller_tasks_names,
-									controller_tasks_types};
+									controller_tasks_types,
+									controller_tasks_selections};
 }
 
 std::vector<std::string> generateControllerNamesAndTasksForUI(
-	const RobotControllerConfig& config) {
+	const RobotControllerConfig& config,
+	const Sai2Model::Sai2Model& robot_model) {
 	std::string controller_names = "[";
 	std::string controller_tasks_names = "[";
 	std::string controller_tasks_types = "[";
+	std::string controller_task_selections = "[";
 
 	for (auto it = config.controllers_configs.begin();
 		 it != config.controllers_configs.end(); ++it) {
@@ -155,22 +193,26 @@ std::vector<std::string> generateControllerNamesAndTasksForUI(
 		const auto& controller_name = pair.first;
 
 		auto controller_ui_specs =
-			getControllerNameAndTasksFromSingleConfig(pair);
+			getControllerNameAndTasksFromSingleConfig(pair, robot_model);
 		if (it != config.controllers_configs.begin()) {
 			controller_names += ", ";
 			controller_tasks_names += ", ";
 			controller_tasks_types += ", ";
+			controller_task_selections += ", ";
 		}
 		controller_names += "\"" + controller_ui_specs[0] + "\"";
 		controller_tasks_names += controller_ui_specs[1];
 		controller_tasks_types += controller_ui_specs[2];
+		controller_task_selections += controller_ui_specs[3];
 	}
 
 	controller_names += "]";
 	controller_tasks_names += "]";
 	controller_tasks_types += "]";
+	controller_task_selections += "]";
 	return std::vector<std::string>{controller_names, controller_tasks_names,
-									controller_tasks_types};
+									controller_tasks_types,
+									controller_task_selections};
 }
 
 void MainRedisInterface::generateUiFile() {
@@ -191,8 +233,12 @@ void MainRedisInterface::generateUiFile() {
 	if (_controllers_configs.size() == 0 && !_simviz_interface) {
 		// do nothing
 	} else if (_controllers_configs.size() == 1 && !_simviz_interface) {
+		Sai2Model::Sai2Model robot_model = Sai2Model::Sai2Model(
+			_controllers_configs[0].robot_model_file, false);
+
 		std::vector<std::string> controller_names_and_tasks =
-			generateControllerNamesAndTasksForUI(_controllers_configs[0]);
+			generateControllerNamesAndTasksForUI(_controllers_configs[0],
+												 robot_model);
 		additionalContent =
 			"<div class='row mx-3'>\n<sai2-interfaces-robot-controller "
 			"robotName='" +
@@ -200,15 +246,18 @@ void MainRedisInterface::generateUiFile() {
 			_controllers_configs[0].redis_prefix + "'\ncontrollerNames='" +
 			controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
 			controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
-			controller_names_and_tasks[2] + "'";
+			controller_names_and_tasks[2] + "'\ncontrollerTaskSelections='" +
+			controller_names_and_tasks[3] + "'";
 
 		// joint limits in interface
-		Sai2Model::Sai2Model model = Sai2Model::Sai2Model(
-			_controllers_configs[0].robot_model_file, false);
 		additionalContent += "\nlowerJointLimits=" +
-							 vectorXdToString(model.jointLimitsPositionLower());
+							 vectorXdToString(robot_model.jointLimitsPositionLower());
 		additionalContent += "\nupperJointLimits=" +
-							 vectorXdToString(model.jointLimitsPositionUpper());
+							 vectorXdToString(robot_model.jointLimitsPositionUpper());
+
+		// joint names in interface
+		additionalContent +=
+			"\njointNames=" + joinVectorOfString(robot_model.jointNames());
 
 		// interface config for positions and force slider limits
 		additionalContent +=
@@ -239,11 +288,14 @@ void MainRedisInterface::generateUiFile() {
 							 random_number + "' color='#b30000'>\n";
 
 		for (const auto& config : _controllers_configs) {
+			Sai2Model::Sai2Model robot_model =
+				Sai2Model::Sai2Model(config.robot_model_file, false);
+
 			additionalContent += "<sai2-interfaces-tab-content name='" +
 								 config.robot_name + "'>\n";
 
 			std::vector<std::string> controller_names_and_tasks =
-				generateControllerNamesAndTasksForUI(config);
+				generateControllerNamesAndTasksForUI(config, robot_model);
 			additionalContent +=
 				"<div class='row my-3'>\n<sai2-interfaces-robot-controller "
 				"robotName='" +
@@ -251,17 +303,20 @@ void MainRedisInterface::generateUiFile() {
 				"'\ncontrollerNames='" + controller_names_and_tasks[0] +
 				"'\ncontrollerTaskNames='" + controller_names_and_tasks[1] +
 				"'\ncontrollerTaskTypes='" + controller_names_and_tasks[2] +
-				"'";
+				"'\ncontrollerTaskSelections='" +
+				controller_names_and_tasks[3] + "'";
 
 			// joint limits in interface
-			Sai2Model::Sai2Model model =
-				Sai2Model::Sai2Model(config.robot_model_file, false);
 			additionalContent +=
 				"\nlowerJointLimits=" +
-				vectorXdToString(model.jointLimitsPositionLower());
+				vectorXdToString(robot_model.jointLimitsPositionLower());
 			additionalContent +=
 				"\nupperJointLimits=" +
-				vectorXdToString(model.jointLimitsPositionUpper());
+				vectorXdToString(robot_model.jointLimitsPositionUpper());
+
+			// joint names in interface
+			additionalContent +=
+				"\njointNames=" + joinVectorOfString(robot_model.jointNames());
 
 			// interface config for positions and force slider limits
 			additionalContent += "\nminGoalPosition='" +

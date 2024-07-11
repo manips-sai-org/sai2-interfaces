@@ -5,6 +5,7 @@ class Sai2InterfacesJointTask extends HTMLElement {
 		this.controllerName = this.getAttribute('controllerName');
 		this.taskName = this.getAttribute('taskName');
 		this.redisPrefix = "sai2::interfaces::controller::";
+		this.display_names = this.getAttribute('displayNames');
 		this.joint_lower_limits = this.getAttribute('lowerJointLimits');
 		this.joint_upper_limits = this.getAttribute('upperJointLimits');
 		if (this.getAttribute('redisPrefix')) {
@@ -17,6 +18,12 @@ class Sai2InterfacesJointTask extends HTMLElement {
 			.then(response => response.text())
 			.then(template => {
 				let replacedHTML = template.replaceAll('{{_prefix_}}', this.redisPrefix);
+
+				if (this.display_names) {
+					replacedHTML = replacedHTML.replaceAll('{{_display_names_}}', this.display_names);
+				} else {
+					replacedHTML = replacedHTML.replaceAll('{{_display_names_}}', "desired_position");
+				}
 
 				if (this.joint_lower_limits) {
 					replacedHTML = replacedHTML.replaceAll('{{_joint_lower_limits_}}', this.joint_lower_limits);

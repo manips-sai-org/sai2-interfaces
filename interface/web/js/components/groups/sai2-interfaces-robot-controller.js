@@ -12,17 +12,10 @@ class Sai2InterfacesRobotController extends HTMLElement {
 		const controller_names = JSON.parse(this.getAttribute('controllerNames'));
 		const controller_task_types = JSON.parse(this.getAttribute('controllerTaskTypes'));
 		const controller_task_names = JSON.parse(this.getAttribute('controllerTaskNames'));
+		const controller_task_selection = JSON.parse(this.getAttribute('controllerTaskSelections'));
 
 		const controller_display_names = controller_names.map(name => name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
 		const task_display_names = controller_task_names.map(task_names => task_names.map(name => name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())));
-
-		let optional_ui_joint_task = "";
-		if (this.hasAttribute('lowerJointLimits')) {
-			optional_ui_joint_task += `lowerJointLimits="${this.getAttribute('lowerJointLimits')}" `;
-		}
-		if (this.hasAttribute('upperJointLimits')) {
-			optional_ui_joint_task += `upperJointLimits="${this.getAttribute('upperJointLimits')}" `;
-		}
 
 		let optional_ui_motion_force_task = "";
 		if (this.hasAttribute('minGoalPosition')) {
@@ -64,7 +57,7 @@ class Sai2InterfacesRobotController extends HTMLElement {
 			if (controller_task_types[i].length == 1) {
 				let task_ui_type = controller_task_types[i][0] == 'motion_force_task' ? 'sai2-interfaces-motion-force-task' : 'sai2-interfaces-joint-task';
 				let task_ui_element = `<${task_ui_type} robotName="${this.robot_name}" controllerName="${controller_names[i]}" taskName="${controller_task_names[i][0]}" redisPrefix="${this.redis_prefix}" `;
-				task_ui_element += controller_task_types[i][0] == 'joint_task' ? optional_ui_joint_task : optional_ui_motion_force_task;
+				task_ui_element += controller_task_types[i][0] == 'joint_task' ? this.getOptionalUiJointTask(controller_task_selection[i][0]) : optional_ui_motion_force_task;
 				task_ui_element += `/>`;
 				controller_tab_content += task_ui_element;
 			} else {
@@ -74,7 +67,7 @@ class Sai2InterfacesRobotController extends HTMLElement {
 					let task_tab_content = `<sai2-interfaces-tab-content name="${task_display_names[i][j]}">`;
 					let task_ui_type = controller_task_types[i][j] == 'motion_force_task' ? 'sai2-interfaces-motion-force-task' : 'sai2-interfaces-joint-task';
 					let task_ui_element = `<${task_ui_type} robotName="${this.robot_name}" controllerName="${controller_names[i]}" taskName="${controller_task_names[i][j]}" redisPrefix="${this.redis_prefix}" `;
-					task_ui_element += controller_task_types[i][j] == 'joint_task' ? optional_ui_joint_task : optional_ui_motion_force_task;
+					task_ui_element += controller_task_types[i][j] == 'joint_task' ? this.getOptionalUiJointTask(controller_task_selection[i][j]) : optional_ui_motion_force_task;
 					task_ui_element += `/>`
 					task_tab_content += task_ui_element;
 					task_tab_content += `</sai2-interfaces-tab-content>`;
@@ -123,6 +116,39 @@ class Sai2InterfacesRobotController extends HTMLElement {
 		}
 
 		return true;
+	}
+
+	getOptionalUiJointTask(controlled_joint_indexes) {
+		let optional_ui_joint_task = "";
+
+		if (this.hasAttribute('lowerJointLimits')) {
+			if (controlled_joint_indexes.length > 0) {
+				let lowerJointLimits = JSON.parse(this.getAttribute('lowerJointLimits'));
+				let controlled_lowerJointLimits = controlled_joint_indexes.map(index => lowerJointLimits[index]).join(', ');
+				optional_ui_joint_task += `lowerJointLimits="${controlled_lowerJointLimits}" `;
+			} else {
+				optional_ui_joint_task += `lowerJointLimits="${this.getAttribute('lowerJointLimits')}" `;
+			}
+		}
+		if (this.hasAttribute('upperJointLimits')) {
+			if (controlled_joint_indexes.length > 0) {
+				let upperJointLimits = JSON.parse(this.getAttribute('upperJointLimits'));
+				let controlled_upperJointLimits = controlled_joint_indexes.map(index => upperJointLimits[index]).join(', ');
+				optional_ui_joint_task += `upperJointLimits="${controlled_upperJointLimits}" `;
+			} else {
+				optional_ui_joint_task += `upperJointLimits="${this.getAttribute('upperJointLimits')}" `;
+			}
+		}
+		if (this.hasAttribute('jointNames')) {
+			if (controlled_joint_indexes.length > 0) {
+				let jointNames = JSON.parse(this.getAttribute('jointNames'));
+				let controlled_jointNames = controlled_joint_indexes.map(index => jointNames[index]).join('", "');
+				optional_ui_joint_task += `displayNames='["${controlled_jointNames}"]' `;
+			} else {
+				optional_ui_joint_task += `displayNames='${this.getAttribute('jointNames')}' `;
+			}
+		}
+		return optional_ui_joint_task;
 	}
 }
 
