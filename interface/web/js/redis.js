@@ -40,6 +40,22 @@ export function get_redis_val(key) {
 		.catch(error => console.error('error posting redis key: ' + key + '. Error: ' + error));
 }
 
+export function wait_for_redis_val(key, val) {
+	return new Promise(resolve => {
+		const checkValue = () => {
+			get_redis_val(key).then(value => {
+				// console.log(value);
+				if (value != val) {
+					setTimeout(checkValue, 50);
+				} else {
+					resolve();
+				}
+			});
+		};
+		checkValue();
+	});
+};
+
 /**
  * Gets all Redis keys.
  * @returns {Promise<string[]>} A promise that on resolution has a string[] 

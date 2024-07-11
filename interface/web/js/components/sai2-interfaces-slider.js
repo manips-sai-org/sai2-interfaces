@@ -60,14 +60,27 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 	constructor() {
 		super(template);
 
-		document.addEventListener(EVENT_RESET_DISPLAYS, async (event) => {
-			console.log('Reset sliders event caught!', event.detail.message);
-			await new Promise(r => setTimeout(r, 100));
+		this.creating_sliders = false;
+
+		document.addEventListener(EVENT_RESET_DISPLAYS, () => {
+			// console.log('Reset sliders event caught!', event.detail.message);
 			this.refresh();
 		});
 	}
 
 	create_sliders(len) {
+		if (this.creating_sliders) {
+			console.log('Already creating sliders, returning');
+			return;
+		}
+		this.creating_sliders = true;
+
+		while (this.firstChild) {
+			this.removeChild(this.firstChild);
+		}
+		this.template_node = this.template.content.cloneNode(true);
+		this.container = this.template_node.querySelector('div');
+
 		// generate appropriate number of sliders
 		for (let i = 0; i < len; i++) {
 			/* 
@@ -105,6 +118,13 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider_value_input.max = (Array.isArray(this.max)) ? this.max[i] : this.max;
 			slider_value_input.step = (Array.isArray(this.step)) ? this.step[i] : this.step;
 			slider_value_input.value = (Array.isArray(this.value)) ? this.value[i] : this.value;
+			slider_value_input.value = Math.min(slider_value_input.max, Math.max(slider_value_input.min, slider_value_input.value));
+
+			// also clamp the this.value in case it was out of bounds
+			if (Array.isArray(this.value))
+				this.value[i] = parseFloat(slider_value_input.value);
+			else
+				this.value = parseFloat(slider_value_input.value);
 
 			// set up typing event
 			let sliding_value_input_callback = () => {
@@ -133,8 +153,17 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 				}
 			}
 
-			// issue redis write when value manually changed, only once per 10 ms
-			slider_value_input.oninput = throttle(sliding_value_input_callback, 10);
+			// Event listener for blur event (when input box loses focus)
+			slider_value_input.addEventListener('blur', function () {
+				sliding_value_input_callback();
+			});
+
+			// Event listener for keypress event (to detect when Enter key is pressed)
+			slider_value_input.addEventListener('keypress', function (event) {
+				if (event.key === "Enter") {
+					sliding_value_input_callback();
+				}
+			});
 
 			//   // set up mousewheel event for manual input
 			//   slider_value_input.addEventListener('wheel', e => {
@@ -152,6 +181,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider.max = (Array.isArray(this.max)) ? this.max[i] : this.max;
 			slider.step = (Array.isArray(this.step)) ? this.step[i] : this.step;
 			slider.value = (Array.isArray(this.value)) ? this.value[i] : this.value;
+			slider.value = Math.min(slider.max, Math.max(slider.min, slider.value));
 
 			let slider_move_callback = () => {
 				let slider_val = parseFloat(slider.value);
@@ -170,7 +200,8 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 					this.onvaluechange(this.value);
 				}
 			}
-			slider.oninput = throttle(slider_move_callback, 10);
+			// slider.oninput = throttle(slider_move_callback, 10);
+			slider.oninput = slider_move_callback;
 
 			//   slider.addEventListener('wheel', e => {
 			//     e.preventDefault();
@@ -189,6 +220,15 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			slider_div.append(slider);
 			this.container.append(slider_div);
 		}
+
+		// post to redis in case the values were clamped
+		if (this.key) {
+			post_redis_key_val(this.key, this.value);
+		}
+
+		this.appendChild(this.template_node);
+
+		this.creating_sliders = false;
 	}
 
 	onMount() {
@@ -215,8 +255,6 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 		this.step = parse_maybe_array_attribute(this.step);
 
 		// create sliders
-		this.container = this.template_node.querySelector('div');
-
 		if (this.key) {
 			get_redis_val(this.key).then(value => {
 				// determine iteration bounds: 1 if scalar key, array size if vector
@@ -245,14 +283,7 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 	}
 
 	refresh() {
-		// clear old nodes
-		while (this.firstChild) {
-			this.removeChild(this.firstChild);
-		}
-
-		this.template_node = this.template.content.cloneNode(true);
 		this.onMount();
-		this.appendChild(this.template_node);
 	}
 
 	onUnmount() {

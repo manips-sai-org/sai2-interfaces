@@ -15,7 +15,7 @@
  */
 
 
-import { post_redis_key_val, get_redis_val } from '../redis.js';
+import { post_redis_key_val, wait_for_redis_val } from '../redis.js';
 import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 
@@ -43,21 +43,6 @@ class Sai2InterfacesConfigSelector extends Sai2InterfacesComponent {
 		let config_file_input = this.template_node.querySelector('.file_selector');
 		let reset_button = this.template_node.querySelector('.btn');
 
-		const waitOnRedisVal = (val) => {
-			return new Promise(resolve => {
-				const checkValue = () => {
-					get_redis_val(this.reset_key).then(value => {
-						console.log(value);
-						if (value != val) {
-							setTimeout(checkValue, 500);
-						} else {
-							resolve();
-						}
-					});
-				};
-				checkValue();
-			});
-		};
 
 		// offline plotting initialization
 		reset_button.onclick = async () => {
@@ -68,8 +53,8 @@ class Sai2InterfacesConfigSelector extends Sai2InterfacesComponent {
 			}
 			post_redis_key_val(this.reset_key, "1");
 			// wait for a full reset cycle and then refresh the page
-			await waitOnRedisVal(1);
-			await waitOnRedisVal(0);
+			await new Promise(r => setTimeout(r, 100));
+			await wait_for_redis_val(this.reset_key, "0");
 			location.reload();
 		};
 	}

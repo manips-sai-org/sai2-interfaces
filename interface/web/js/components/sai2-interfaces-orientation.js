@@ -113,14 +113,17 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 		this.key = this.getAttribute('key');
 		this.refreshRate = this.getAttribute('refreshRate') || 1;
 
-		let left_div = this.template_node.querySelector('.sai2-interfaces-orientation-left');
+		let right_div = this.template_node.querySelector('.sai2-interfaces-orientation-right');
+		right_div.innerHTML = `
+			<sai2-interfaces-display key="${this.key}" display="Matrix Form" decimalPlaces="3" labelPosition="top" refreshRate="${this.refreshRate}"></sai2-interfaces-display>
+			`;
+		this.display = right_div.querySelector('sai2-interfaces-display');
 
-		this.slider = document.createElement('sai2-interfaces-slider');
-		this.slider.setAttribute('size', 3);
-		this.slider.setAttribute('display', '["X (γ)", "Y (β)", "Z (α)"]');
-		this.slider.setAttribute('min', -3.14);
-		this.slider.setAttribute('max', 3.14);
-		this.slider.setAttribute('step', 0.01);
+		let left_div = this.template_node.querySelector('.sai2-interfaces-orientation-left');
+		left_div.innerHTML = `
+			<sai2-interfaces-slider size="3" display='["X (γ)", "Y (β)", "Z (α)"]' min="-3.14" max="3.14" step="0.01"/>
+			`;
+		this.slider = left_div.querySelector('sai2-interfaces-slider');
 
 		let slider_on_value_change_callback = euler_angle_delta => {
 			/*
@@ -173,19 +176,7 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 			this.rot_mat = this.display.value;
 		};
 
-		left_div.append(this.slider);
 		left_div.append(this.reset_button);
-
-		let right_div = this.template_node.querySelector('.sai2-interfaces-orientation-right');
-
-		this.display = document.createElement('sai2-interfaces-display');
-		this.display.setAttribute('key', this.key);
-		this.display.setAttribute('display', 'Matrix Form');
-		this.display.setAttribute('decimalPlaces', 3);
-		this.display.setAttribute('labelPosition', 'top');
-		this.display.setAttribute('refreshRate', this.refreshRate);
-
-		right_div.append(this.display);
 	}
 
 	onUnmount() {
