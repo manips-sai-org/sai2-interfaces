@@ -13,7 +13,7 @@ namespace {
 std::string vectorXdToString(const Eigen::VectorXd& vec) {
 	std::string str = "\'[";
 	for (int i = 0; i < vec.size(); i++) {
-		std::cout << vec(i) << std::endl;
+		// std::cout << vec(i) << std::endl;
 		if (vec(i) == -std::numeric_limits<double>::max()) {
 			str += "-6.28";
 		} else if (vec(i) == std::numeric_limits<double>::max()) {

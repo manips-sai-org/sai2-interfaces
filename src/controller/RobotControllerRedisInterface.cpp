@@ -27,6 +27,7 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 
 	_redis_client.connect();
 
+	_reset_redis_inputs = false;
 	initialize();
 
 	if (setup_signal_handler) {
@@ -36,27 +37,60 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 	}
 }
 
+void RobotControllerRedisInterface::runRedisCommunication() {
+	_stop_redis_communication = false;
+
+	Sai2Common::LoopTimer timer(_config.control_frequency);
+	timer.setTimerName(
+		"RobotControllerRedisInterface Timer for redis communication on "
+		"robot: " +
+		_config.robot_name);
+
+	// as long as we keep all redis calls inside this thread while the main
+	// thread is running the control loop, we should be fine without mutexes
+	while (!_stop_redis_communication) {
+		timer.waitForNextLoop();
+
+		if (_reset_redis_inputs) {
+			_redis_client.sendAllFromGroup(
+				{"default", reset_inputs_redis_group});
+			_reset_redis_inputs = false;
+		} else {
+			_redis_client.sendAllFromGroup();
+		}
+
+		_redis_client.receiveAllFromGroup(
+			std::vector<std::string>{"default", _active_controller_name});
+	}
+	timer.stop();
+	// timer.printInfoPostRun();
+}
+
 void RobotControllerRedisInterface::run(
 	const std::atomic<bool>& user_stop_signal) {
+	// start redis communication thread
+	std::thread redis_communication_thread(
+		&RobotControllerRedisInterface::runRedisCommunication, this);
+
 	// create timer
 	Sai2Common::LoopTimer timer(_config.control_frequency);
-	timer.setTimerName("RobotControllerRedisInterface Timer for robot: " +
-					   _config.robot_name);
+	timer.setTimerName(
+		"RobotControllerRedisInterface Timer for controller on robot: " +
+		_config.robot_name);
 
 	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
 
 		// switch controller if needed
-		switchController(_redis_client.get(
-			_config.redis_prefix + "::controller::" + _config.robot_name +
-			"::active_controller_name"));
-
-		// read from redis
-		_redis_client.receiveAllFromGroup();
-		_redis_client.receiveAllFromGroup(_active_controller_name);
+		switchController(_tentative_next_active_controller_name);
 
 		// process inputs
 		processInputs();
+
+		if (_reset_redis_inputs) {
+			// let the inputs reset and keep the same control for one tick
+			continue;
+		}
 
 		// update task models
 		_robot_model->setQ(_robot_q);
@@ -66,14 +100,15 @@ void RobotControllerRedisInterface::run(
 			->updateControllerTaskModels();
 
 		// compute torques
+		// WARNING: need to use the assignment operator << here to keep the same
+		// memory address for the redis communication that references this by
+		// pointer
 		_robot_command_torques
 			<< _robot_controllers.at(_active_controller_name)
 				   ->computeControlTorques();
-
-		// write to redis
-		_redis_client.sendAllFromGroup();
 	}
 	timer.stop();
+	_stop_redis_communication = true;
 
 	// stop logging
 	_robot_logger->stop();
@@ -82,6 +117,9 @@ void RobotControllerRedisInterface::run(
 			pair.second->stop();
 		}
 	}
+
+	// stop redis communication
+	redis_communication_thread.join();
 
 	_redis_client.setEigen(
 		_config.redis_prefix + "::robot_command_torques::" + _config.robot_name,
@@ -198,12 +236,15 @@ void RobotControllerRedisInterface::initialize() {
 			"the config file");
 	}
 
+	_tentative_next_active_controller_name =
+		_config.initial_active_controller_name;
+	_redis_client.addToReceiveGroup(_config.redis_prefix +
+										"::controller::" + _config.robot_name +
+										"::active_controller_name",
+									_tentative_next_active_controller_name);
 	initializeRedisTasksIO();
 
-	switchController(_config.initial_active_controller_name);
-	_redis_client.set(_config.redis_prefix + "::controller::" +
-						  _config.robot_name + "::active_controller_name",
-					  _active_controller_name);
+	switchController(_tentative_next_active_controller_name);
 }
 
 void RobotControllerRedisInterface::switchController(
@@ -217,7 +258,7 @@ void RobotControllerRedisInterface::switchController(
 			 << endl;
 		return;
 	}
-	if (_active_controller_name != "") {
+	if (_active_controller_name != "") {  // for the initialization case
 		_is_active_controller.at(_active_controller_name) = false;
 	}
 	_active_controller_name = controller_name;
@@ -243,7 +284,7 @@ void RobotControllerRedisInterface::switchController(
 					->getMotionForceTaskByName(task_input.first));
 		}
 	}
-	_redis_client.sendAllFromGroup(reset_inputs_redis_group);
+	_reset_redis_inputs = true;
 }
 
 void RobotControllerRedisInterface::initializeRedisTasksIO() {
@@ -1090,6 +1131,19 @@ void RobotControllerRedisInterface::processInputs() {
 				if (motion_force_task->parametrizeForceMotionSpaces(
 						force_space_param_config.force_space_dimension,
 						force_space_param_config.axis)) {
+					cout << "reset inputs force param for task "
+						 << motion_force_task_config.task_name << endl;
+					cout << "current position : "
+						 << motion_force_task->getCurrentPosition().transpose()
+						 << endl;
+					cout << "goal position : "
+						 << motion_force_task_input.goal_position.transpose()
+						 << endl;
+					cout << "force space dimension : "
+						 << force_space_param_config.force_space_dimension
+						 << endl;
+					cout << "axis : " << force_space_param_config.axis << endl;
+					cout << endl;
 					reset_inputs = true;
 					motion_force_task_input.goal_position =
 						motion_force_task->getCurrentPosition();
@@ -1289,9 +1343,6 @@ void RobotControllerRedisInterface::processInputs() {
 			motion_force_task->updateSensedForceAndMoment(
 				motion_force_task_input.sensed_force_sensor_frame,
 				motion_force_task_input.sensed_moment_sensor_frame);
-			if (reset_inputs) {
-				_redis_client.sendAllFromGroup(reset_inputs_redis_group);
-			}
 
 			// monitoring data
 			auto& motion_force_task_monitoring_data =
@@ -1299,6 +1350,14 @@ void RobotControllerRedisInterface::processInputs() {
 					_controller_task_monitoring_data.at(_active_controller_name)
 						.at(motion_force_task_config.task_name));
 			motion_force_task_monitoring_data.setFromTask(motion_force_task);
+
+			// reset inputs if needed
+			// dont overwrite _reset_redis_inputs to false if reset_inputs is
+			// false because it might have been set to true by a controller
+			// switching
+			if (reset_inputs) {
+				_reset_redis_inputs = reset_inputs;
+			}
 		}
 	}
 
