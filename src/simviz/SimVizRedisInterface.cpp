@@ -16,6 +16,8 @@ const std::string sim_param_group_name = "simviz_redis_sim_param_group_name";
 // redis keys
 const std::string group_name = "simviz_redis_group_name";
 
+const double viz_refresh_rate = 30.0;  // Hz
+
 }  // namespace
 
 SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
@@ -248,13 +250,13 @@ void SimVizRedisInterface::resetInternal() {
 		for (auto& force_sensor_data : _force_sensor_data) {
 			_graphics->addForceSensorDisplay(force_sensor_data);
 			_redis_client.addToSendGroup(
-				_config.redis_prefix +
-					"::force_sensor::" + force_sensor_data.robot_or_object_name +
+				_config.redis_prefix + "::force_sensor::" +
+					force_sensor_data.robot_or_object_name +
 					"::" + force_sensor_data.link_name + "::force",
 				force_sensor_data.force_local_frame, group_name);
 			_redis_client.addToSendGroup(
-				_config.redis_prefix +
-					"::force_sensor::" + force_sensor_data.robot_or_object_name +
+				_config.redis_prefix + "::force_sensor::" +
+					force_sensor_data.robot_or_object_name +
 					"::" + force_sensor_data.link_name + "::moment",
 				force_sensor_data.moment_local_frame, group_name);
 
@@ -284,81 +286,146 @@ void SimVizRedisInterface::initializeRedisDatabase() {
 
 void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
 	std::thread sim_thread;
+	std::thread redis_communication_thread;
+	redis_communication_thread =
+		std::thread(&SimVizRedisInterface::redisCommunicationLoopRun, this,
+					std::ref(user_stop_signal));
 	sim_thread = std::thread(&SimVizRedisInterface::simLoopRun, this,
 							 std::ref(user_stop_signal));
-	if (_config.mode != SimVizMode::SIM_ONLY) {
-		vizLoopRun(user_stop_signal);
-	}
+	vizLoopRun(user_stop_signal);
 	sim_thread.join();
+	redis_communication_thread.join();
 }
 
 void SimVizRedisInterface::vizLoopRun(
 	const std::atomic<bool>& user_stop_signal) {
-	Sai2Common::LoopTimer timer(30.0);
+	Sai2Common::LoopTimer timer(viz_refresh_rate);
 
-	while (!user_stop_signal && !external_stop_signal &&
-		   _graphics->isWindowOpen()) {
-		this_thread::sleep_for(chrono::microseconds(50));
+	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
+		// ensure a minimum amount of sleep time to let the communication thread
+		// acquire the parametrization mutex when needed, even if the graphics
+		// rendering takes up the whole time allowed for the loop
+		this_thread::sleep_for(chrono::microseconds(50));
 
-		std::lock_guard<std::mutex> lock(_mutex_parametrization);
-		for (auto& robot_name : _graphics->getRobotNames()) {
-			_graphics->updateRobotGraphics(robot_name, _robot_q.at(robot_name),
-										   _robot_dq.at(robot_name));
+		if (_config.mode == SimVizMode::SIM_ONLY) {
+			_graphics->renderBlackScreen();
+			continue;
 		}
-		for (auto& object_name : _graphics->getObjectNames()) {
-			_graphics->updateObjectGraphics(
-				object_name, Eigen::Affine3d(_object_pose.at(object_name)),
-				_object_vel.at(object_name));
-		}
-		if (_config.mode != SimVizMode::VIZ_ONLY) {
-			for (auto& force_sensor_data : _force_sensor_data) {
-				_graphics->updateDisplayedForceSensor(force_sensor_data);
-			}
-		}
-		_graphics->renderGraphicsWorld();
-		if (_config.mode != SimVizMode::VIZ_ONLY) {
+
+		if (_graphics->isWindowOpen()) {
+			std::lock_guard<std::mutex> lock(_mutex_parametrization);
 			for (auto& robot_name : _graphics->getRobotNames()) {
-				std::lock_guard<std::mutex> lock(_mutex_torques);
-				_robot_ui_torques.at(robot_name) =
-					_graphics->getUITorques(robot_name);
+				_graphics->updateRobotGraphics(robot_name,
+											   _robot_q.at(robot_name),
+											   _robot_dq.at(robot_name));
 			}
 			for (auto& object_name : _graphics->getObjectNames()) {
-				std::lock_guard<std::mutex> lock(_mutex_torques);
-				_object_ui_torques.at(object_name) =
-					_graphics->getUITorques(object_name);
+				_graphics->updateObjectGraphics(
+					object_name, Eigen::Affine3d(_object_pose.at(object_name)),
+					_object_vel.at(object_name));
 			}
+			if (_config.mode != SimVizMode::VIZ_ONLY) {
+				for (auto& force_sensor_data : _force_sensor_data) {
+					_graphics->updateDisplayedForceSensor(force_sensor_data);
+				}
+			}
+			_graphics->renderGraphicsWorld();
+			if (_config.mode != SimVizMode::VIZ_ONLY) {
+				for (auto& robot_name : _graphics->getRobotNames()) {
+					std::lock_guard<std::mutex> lock(_mutex_torques);
+					_robot_ui_torques.at(robot_name) =
+						_graphics->getUITorques(robot_name);
+				}
+				for (auto& object_name : _graphics->getObjectNames()) {
+					std::lock_guard<std::mutex> lock(_mutex_torques);
+					_object_ui_torques.at(object_name) =
+						_graphics->getUITorques(object_name);
+				}
+			}
+		} else {
+			external_stop_signal = true;
 		}
 	}
+	timer.stop();
 	external_stop_signal = true;
+}
+
+double SimVizRedisInterface::computeCommunicationLoopFrequency() const {
+	double communication_frequency;
+	switch (_config.mode) {
+		case SimVizMode::SIMVIZ:
+			communication_frequency =
+				max(_config.speedup_factor / _simulation->timestep(),
+					viz_refresh_rate);
+			break;
+		case SimVizMode::SIM_ONLY:
+			communication_frequency =
+				_config.speedup_factor / _simulation->timestep();
+			break;
+		case SimVizMode::VIZ_ONLY:
+			communication_frequency = viz_refresh_rate;
+			break;
+		default:
+			throw std::runtime_error("Invalid mode for redis communication.");
+			break;
+	}
+	return communication_frequency;
+}
+
+void SimVizRedisInterface::redisCommunicationLoopRun(
+	const std::atomic<bool>& user_stop_signal) {
+	_communication_timer =
+		make_unique<Sai2Common::LoopTimer>(computeCommunicationLoopFrequency());
+	_communication_timer->setTimerName(
+		"Simviz Redis Interface Communication Loop Timer");
+
+	while (!user_stop_signal && !external_stop_signal) {
+		_communication_timer->waitForNextLoop();
+		_redis_client.receiveAllFromGroup(sim_param_group_name);
+		processSimParametrization();
+
+		_redis_client.receiveAllFromGroup(group_name);
+
+		if (_config.mode != SimVizMode::VIZ_ONLY) {
+			_redis_client.sendAllFromGroup(group_name);
+		}
+	}
+	_communication_timer->stop();
+	external_stop_signal = true;
+
+	// _communication_timer->printInfoPostRun();
+
+	for (auto& logger : _loggers) {
+		logger.second->stop();
+	}
 }
 
 void SimVizRedisInterface::simLoopRun(
 	const std::atomic<bool>& user_stop_signal) {
-	Sai2Common::LoopTimer timer(_config.speedup_factor /
-								_simulation->timestep());
-	timer.setTimerName("Simviz Redis Interface Loop Timer");
+	_sim_timer = std::make_unique<Sai2Common::LoopTimer>(
+		_config.speedup_factor / _simulation->timestep());
+	_sim_timer->setTimerName("Simviz Redis Interface Sim Loop Timer");
 
 	while (!user_stop_signal && !external_stop_signal) {
-		_redis_client.receiveAllFromGroup(sim_param_group_name);
-		processSimParametrization(timer);
+		_sim_timer->waitForNextLoop();
 
 		if (_config.mode == SimVizMode::VIZ_ONLY) {
-			timer.waitForNextLoop();
-			_redis_client.receiveAllFromGroup(group_name);
+			continue;
+		}
+
+		if (_reset) {  // wait for the end of the reset
 			continue;
 		}
 
 		if (_pause) {
-			timer.stop();
+			_sim_timer->stop();
 			_simulation->pause();
 		} else {
 			if (_simulation->isPaused()) {
 				_simulation->unpause();
-				timer.reinitializeTimer();
+				_sim_timer->reinitializeTimer();
 			}
-			timer.waitForNextLoop();
-			_redis_client.receiveAllFromGroup(group_name);
 			for (auto& robot_name : _simulation->getRobotNames()) {
 				std::lock_guard<std::mutex> lock(_mutex_torques);
 				_simulation->setJointTorques(
@@ -386,31 +453,29 @@ void SimVizRedisInterface::simLoopRun(
 					_simulation->getObjectVelocity(object_name);
 			}
 			_force_sensor_data = _simulation->getAllForceSensorData();
-			_redis_client.sendAllFromGroup(group_name);
 		}
 	}
-	timer.stop();
-
-	for (auto& logger : _loggers) {
-		logger.second->stop();
-	}
+	_sim_timer->stop();
+	external_stop_signal = true;
 
 	if (_config.mode != SimVizMode::VIZ_ONLY) {
-		timer.printInfoPostRun();
+		_sim_timer->printInfoPostRun();
 	}
 }
 
-void SimVizRedisInterface::processSimParametrization(
-	Sai2Common::LoopTimer& timer) {
+void SimVizRedisInterface::processSimParametrization() {
 	if (_reset) {
 		std::lock_guard<mutex> lock(_mutex_parametrization);
 		_config = _new_config;
 		_simulation->resetWorld(_config.world_file);
 		_graphics->resetWorld(_config.world_file);
 		resetInternal();
-		timer.resetLoopFrequency(_config.speedup_factor /
-								 _simulation->timestep());
-		timer.reinitializeTimer(1e6);
+		_sim_timer->resetLoopFrequency(_config.speedup_factor /
+									   _simulation->timestep());
+		_sim_timer->reinitializeTimer(5e6);
+		_communication_timer->resetLoopFrequency(
+			computeCommunicationLoopFrequency());
+		_communication_timer->reinitializeTimer(5e6);
 		_reset = false;
 	}
 
