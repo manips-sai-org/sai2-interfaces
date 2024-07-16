@@ -201,8 +201,6 @@ private:
 	std::map<std::string, std::map<std::string, TaskMonitoringDataVariant>>
 		_controller_task_monitoring_data;
 
-	std::thread _redis_communication_thread;
-	bool _stop_redis_communication;
 	bool _reset_redis_inputs;
 
 	std::map<std::string,

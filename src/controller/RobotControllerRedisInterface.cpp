@@ -16,6 +16,8 @@ void stop(int i) { external_stop_signal = true; }
 
 const std::string reset_inputs_redis_group = "reset_input_group";
 
+bool stop_redis_communication = false;
+
 }  // namespace
 
 RobotControllerRedisInterface::RobotControllerRedisInterface(
@@ -38,8 +40,6 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 }
 
 void RobotControllerRedisInterface::runRedisCommunication() {
-	_stop_redis_communication = false;
-
 	Sai2Common::LoopTimer timer(_config.control_frequency);
 	timer.setTimerName(
 		"RobotControllerRedisInterface Timer for redis communication on "
@@ -48,7 +48,7 @@ void RobotControllerRedisInterface::runRedisCommunication() {
 
 	// as long as we keep all redis calls inside this thread while the main
 	// thread is running the control loop, we should be fine without mutexes
-	while (!_stop_redis_communication) {
+	while (!stop_redis_communication) {
 		timer.waitForNextLoop();
 
 		if (_reset_redis_inputs) {
@@ -108,7 +108,7 @@ void RobotControllerRedisInterface::run(
 				   ->computeControlTorques();
 	}
 	timer.stop();
-	_stop_redis_communication = true;
+	stop_redis_communication = true;
 
 	// stop logging
 	_robot_logger->stop();
