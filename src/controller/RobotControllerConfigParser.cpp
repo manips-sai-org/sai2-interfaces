@@ -688,6 +688,12 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 		config.use_dynamic_decoupling = dynamic_decoupling->BoolText();
 	}
 
+	// bie threshold
+	tinyxml2::XMLElement* bie_threshold = xml->FirstChildElement("bieThreshold");
+	if (bie_threshold) {
+		config.bie_threshold = bie_threshold->DoubleText();
+	}
+
 	// velocity saturation
 	tinyxml2::XMLElement* velocity_saturation =
 		xml->FirstChildElement("velocitySaturation");
@@ -756,6 +762,12 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		xml->FirstChildElement("dynamicDecoupling");
 	if (dynamic_decoupling) {
 		config.use_dynamic_decoupling = dynamic_decoupling->BoolText();
+	}
+
+	// bie threshold
+	tinyxml2::XMLElement* bie_threshold = xml->FirstChildElement("bieThreshold");
+	if (bie_threshold) {
+		config.bie_threshold = bie_threshold->DoubleText();
 	}
 
 	// controlled directions position

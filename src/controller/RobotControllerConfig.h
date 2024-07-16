@@ -80,6 +80,7 @@ struct JointTaskConfig {
 	bool use_dynamic_decoupling =
 		JointTaskDefaultParams::dynamic_decoupling_type !=
 		Sai2Primitives::DynamicDecouplingType::IMPEDANCE;
+	double bie_threshold = JointTaskDefaultParams::bie_threshold;
 
 	std::optional<JointVelSatConfig> velocity_saturation_config = {};
 	std::optional<JointOTGConfig> otg_config = {};
@@ -126,6 +127,7 @@ struct MotionForceTaskConfig {
 	bool use_dynamic_decoupling =
 		MotionForceTaskDefaultParams::dynamic_decoupling_type !=
 		Sai2Primitives::DynamicDecouplingType::IMPEDANCE;
+	double bie_threshold = MotionForceTaskDefaultParams::bie_threshold;
 
 	std::optional<std::vector<Eigen::Vector3d>> controlled_directions_position =
 		{};

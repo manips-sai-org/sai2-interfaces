@@ -16,8 +16,6 @@ void stop(int i) { external_stop_signal = true; }
 
 const std::string reset_inputs_redis_group = "reset_input_group";
 
-bool stop_redis_communication = false;
-
 }  // namespace
 
 RobotControllerRedisInterface::RobotControllerRedisInterface(
@@ -39,7 +37,8 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 	}
 }
 
-void RobotControllerRedisInterface::runRedisCommunication() {
+void RobotControllerRedisInterface::runRedisCommunication(
+	const std::atomic<bool>& user_stop_signal) {
 	Sai2Common::LoopTimer timer(_config.control_frequency);
 	timer.setTimerName(
 		"RobotControllerRedisInterface Timer for redis communication on "
@@ -48,7 +47,7 @@ void RobotControllerRedisInterface::runRedisCommunication() {
 
 	// as long as we keep all redis calls inside this thread while the main
 	// thread is running the control loop, we should be fine without mutexes
-	while (!stop_redis_communication) {
+	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
 
 		if (_reset_redis_inputs) {
@@ -70,7 +69,8 @@ void RobotControllerRedisInterface::run(
 	const std::atomic<bool>& user_stop_signal) {
 	// start redis communication thread
 	std::thread redis_communication_thread(
-		&RobotControllerRedisInterface::runRedisCommunication, this);
+		&RobotControllerRedisInterface::runRedisCommunication, this,
+		std::ref(user_stop_signal));
 
 	// create timer
 	Sai2Common::LoopTimer timer(_config.control_frequency);
@@ -108,7 +108,6 @@ void RobotControllerRedisInterface::run(
 				   ->computeControlTorques();
 	}
 	timer.stop();
-	stop_redis_communication = true;
 
 	// stop logging
 	_robot_logger->stop();
@@ -997,6 +996,8 @@ void RobotControllerRedisInterface::processInputs() {
 				joint_task->setDynamicDecouplingType(
 					Sai2Primitives::DynamicDecouplingType::
 						BOUNDED_INERTIA_ESTIMATES);
+				joint_task->setBoundedInertiaEstimateThreshold(
+					joint_task_config.bie_threshold);
 			} else {
 				joint_task->setDynamicDecouplingType(
 					Sai2Primitives::DynamicDecouplingType::IMPEDANCE);
@@ -1104,6 +1105,8 @@ void RobotControllerRedisInterface::processInputs() {
 				motion_force_task->setDynamicDecouplingType(
 					Sai2Primitives::DynamicDecouplingType::
 						BOUNDED_INERTIA_ESTIMATES);
+				motion_force_task->setBoundedInertiaEstimateThreshold(
+					motion_force_task_config.bie_threshold);
 			} else {
 				motion_force_task->setDynamicDecouplingType(
 					Sai2Primitives::DynamicDecouplingType::IMPEDANCE);

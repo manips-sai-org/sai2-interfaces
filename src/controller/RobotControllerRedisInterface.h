@@ -176,7 +176,7 @@ private:
 	void initialize();
 	void initializeRedisTasksIO();
 
-	void runRedisCommunication();
+	void runRedisCommunication(const std::atomic<bool>& user_stop_signal);
 
 	void switchController(const std::string& controller_name);
 	void processInputs();
