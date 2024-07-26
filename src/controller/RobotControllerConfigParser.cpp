@@ -125,32 +125,57 @@ enum GainsType {
 	MOTFORCE_MOMENT
 };
 
-InterfaceConfig parseInterfaceConfig(tinyxml2::XMLElement* interface_xml) {
-	InterfaceConfig interface_config;
+MotionForceTaskInterfaceConfig parseInterfaceConfig(
+	tinyxml2::XMLElement* interface_xml) {
+	MotionForceTaskInterfaceConfig interface_config;
 
 	if (interface_xml->Attribute("minGoalPosition")) {
 		interface_config.min_goal_position =
 			interface_xml->Attribute("minGoalPosition");
+		interface_config.min_goal_position.erase(
+			remove(interface_config.min_goal_position.begin(),
+				   interface_config.min_goal_position.end(), ' '),
+			interface_config.min_goal_position.end());
 	}
 	if (interface_xml->Attribute("maxGoalPosition")) {
 		interface_config.max_goal_position =
 			interface_xml->Attribute("maxGoalPosition");
+		interface_config.max_goal_position.erase(
+			remove(interface_config.max_goal_position.begin(),
+				   interface_config.max_goal_position.end(), ' '),
+			interface_config.max_goal_position.end());
 	}
 	if (interface_xml->Attribute("minDesiredForce")) {
 		interface_config.min_desired_force =
 			interface_xml->Attribute("minDesiredForce");
+		interface_config.min_desired_force.erase(
+			remove(interface_config.min_desired_force.begin(),
+				   interface_config.min_desired_force.end(), ' '),
+			interface_config.min_desired_force.end());
 	}
 	if (interface_xml->Attribute("maxDesiredForce")) {
 		interface_config.max_desired_force =
 			interface_xml->Attribute("maxDesiredForce");
+		interface_config.max_desired_force.erase(
+			remove(interface_config.max_desired_force.begin(),
+				   interface_config.max_desired_force.end(), ' '),
+			interface_config.max_desired_force.end());
 	}
 	if (interface_xml->Attribute("minDesiredMoment")) {
 		interface_config.min_desired_moment =
 			interface_xml->Attribute("minDesiredMoment");
+		interface_config.min_desired_moment.erase(
+			remove(interface_config.min_desired_moment.begin(),
+				   interface_config.min_desired_moment.end(), ' '),
+			interface_config.min_desired_moment.end());
 	}
 	if (interface_xml->Attribute("maxDesiredMoment")) {
 		interface_config.max_desired_moment =
 			interface_xml->Attribute("maxDesiredMoment");
+		interface_config.max_desired_moment.erase(
+			remove(interface_config.max_desired_moment.begin(),
+				   interface_config.max_desired_moment.end(), ' '),
+			interface_config.max_desired_moment.end());
 	}
 
 	return interface_config;
@@ -574,12 +599,6 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 		}
 	}
 
-	// interface config
-	tinyxml2::XMLElement* interface = controlConfiguration->FirstChildElement("interface");
-	if (interface) {
-		config.interface_config = parseInterfaceConfig(interface);
-	}
-
 	// parse all controller configs
 	for (tinyxml2::XMLElement* controller =
 			 controlConfiguration->FirstChildElement("controller");
@@ -689,7 +708,8 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 	}
 
 	// bie threshold
-	tinyxml2::XMLElement* bie_threshold = xml->FirstChildElement("bieThreshold");
+	tinyxml2::XMLElement* bie_threshold =
+		xml->FirstChildElement("bieThreshold");
 	if (bie_threshold) {
 		config.bie_threshold = bie_threshold->DoubleText();
 	}
@@ -765,7 +785,8 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	}
 
 	// bie threshold
-	tinyxml2::XMLElement* bie_threshold = xml->FirstChildElement("bieThreshold");
+	tinyxml2::XMLElement* bie_threshold =
+		xml->FirstChildElement("bieThreshold");
 	if (bie_threshold) {
 		config.bie_threshold = bie_threshold->DoubleText();
 	}
@@ -980,6 +1001,12 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	if (moment_gains) {
 		config.moment_gains_config =
 			parseGainsConfig(moment_gains, _config_file_name, MOTFORCE_MOMENT);
+	}
+
+	// interface config
+	tinyxml2::XMLElement* interface = xml->FirstChildElement("interface");
+	if (interface) {
+		config.interface_config = parseInterfaceConfig(interface);
 	}
 
 	return config;

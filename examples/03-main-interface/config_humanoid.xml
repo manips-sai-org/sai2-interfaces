@@ -44,16 +44,19 @@
 	<baseFrame xyz="0 0 0.7" rpy="0 0 0" />
 	<worldGravity xyz="0 0 -9.81" />
 
-	<interface minGoalPosition='[-2,-2,-2]' maxGoalPosition='[2,2,2]' minDesiredForce='-50' maxDesiredForce='50' minDesiredMoment='-5' maxDesiredMoment='5'
-	/>
-
-
 <controller name="whole_body_controller">
 		<task name="hip_pose" type="motion_force_task">
 			<linkName>BODY</linkName>
 			<bieThreshold>0.0</bieThreshold>
 			<velocitySaturation enabled="true" linear_velocity_limit="0.35" angular_velocity_limit="0.78" />
 			<otg type="disabled" />
+			<interface minGoalPosition='-2' 
+						maxGoalPosition='3' 
+						minDesiredForce='[-50,-50,-200]' 
+						maxDesiredForce='50' 
+						minDesiredMoment='-5' 
+						maxDesiredMoment='5'
+			/>
 		</task>
 
 		<task name="left_hand" type="motion_force_task">
@@ -61,6 +64,9 @@
 			<bieThreshold>0.0</bieThreshold>
 			<velocitySaturation enabled="true"/>
 			<otg type="disabled" />
+			<interface minGoalPosition='[-0.2,-0.5,0.3]' 
+						maxGoalPosition='[1.2,1,1.5]' 
+			/>
 		</task>
 
 		<task name="right_hand" type="motion_force_task">
@@ -68,6 +74,9 @@
 			<bieThreshold>0.0</bieThreshold>
 			<velocitySaturation enabled="true" />
 			<otg type="disabled" />
+			<interface minGoalPosition='[-0.2,-1,0.3]' 
+						maxGoalPosition='[1.2,0.5,1.5]' 
+			/>
 		</task>
 
 		<task name="left_foot" type="motion_force_task">
@@ -94,6 +103,15 @@
 		</task>
 
 		<task name="R_hand_grasp" type="joint_task">
+			<controlledJointNames>
+				R_HAND_J0
+				R_HAND_J1
+			</controlledJointNames>
+			<bieThreshold>0.0</bieThreshold>
+			<otg type="disabled" />
+		</task>
+
+		<task name="R_hand_grasp_bis" type="joint_task">
 			<controlledJointNames>
 				R_HAND_J0
 				R_HAND_J1

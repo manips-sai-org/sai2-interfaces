@@ -42,6 +42,82 @@ std::string joinVectorOfString(const std::vector<std::string>& elements) {
 	return os.str();
 }
 
+void addInterfaceCartesianLimits(
+	string& additionalContent,
+	const Sai2Interfaces::RobotControllerConfig& config) {
+	string minGoalPosition = "[";
+	string maxGoalPosition = "[";
+	string minDesiredForce = "[";
+	string maxDesiredForce = "[";
+	string minDesiredMoment = "[";
+	string maxDesiredMoment = "[";
+	for (auto it = config.controllers_configs.begin();
+		 it != config.controllers_configs.end(); ++it) {
+		const auto& single_controller_config = it->second;
+		minGoalPosition += "[";
+		maxGoalPosition += "[";
+		minDesiredForce += "[";
+		maxDesiredForce += "[";
+		minDesiredMoment += "[";
+		maxDesiredMoment += "[";
+		for (const auto& task_config : single_controller_config) {
+			if (std::holds_alternative<Sai2Interfaces::MotionForceTaskConfig>(
+					task_config)) {
+				auto task = std::get<Sai2Interfaces::MotionForceTaskConfig>(
+					task_config);
+				minGoalPosition += task.interface_config.min_goal_position;
+				maxGoalPosition += task.interface_config.max_goal_position;
+				minDesiredForce += task.interface_config.min_desired_force;
+				maxDesiredForce += task.interface_config.max_desired_force;
+				minDesiredMoment += task.interface_config.min_desired_moment;
+				maxDesiredMoment += task.interface_config.max_desired_moment;
+			} else {
+				minGoalPosition += "[]";
+				maxGoalPosition += "[]";
+				minDesiredForce += "[]";
+				maxDesiredForce += "[]";
+				minDesiredMoment += "[]";
+				maxDesiredMoment += "[]";
+			}
+			if (&task_config != &single_controller_config.back()) {
+				minGoalPosition += ",";
+				maxGoalPosition += ",";
+				minDesiredForce += ",";
+				maxDesiredForce += ",";
+				minDesiredMoment += ",";
+				maxDesiredMoment += ",";
+			}
+		}
+		minGoalPosition += "]";
+		maxGoalPosition += "]";
+		minDesiredForce += "]";
+		maxDesiredForce += "]";
+		minDesiredMoment += "]";
+		maxDesiredMoment += "]";
+		if (next(it) != config.controllers_configs.end()) {
+			minGoalPosition += ",";
+			maxGoalPosition += ",";
+			minDesiredForce += ",";
+			maxDesiredForce += ",";
+			minDesiredMoment += ",";
+			maxDesiredMoment += ",";
+		}
+	}
+	minGoalPosition += "]";
+	maxGoalPosition += "]";
+	minDesiredForce += "]";
+	maxDesiredForce += "]";
+	minDesiredMoment += "]";
+	maxDesiredMoment += "]";
+
+	additionalContent += "\nminGoalPositions=" + minGoalPosition;
+	additionalContent += "\nmaxGoalPositions=" + maxGoalPosition;
+	additionalContent += "\nminDesiredForces=" + minDesiredForce;
+	additionalContent += "\nmaxDesiredForces=" + maxDesiredForce;
+	additionalContent += "\nminDesiredMoments=" + minDesiredMoment;
+	additionalContent += "\nmaxDesiredMoments=" + maxDesiredMoment;
+}
+
 const std::string CONFIG_FILE_NAME_KEY =
 	"sai2::interfaces::main_interface::config_file_name";
 const std::string RESET_KEY = "sai2::interfaces::main_interface::reset";
@@ -230,156 +306,86 @@ void MainRedisInterface::generateUiFile() {
 	templateHtml.close();
 
 	std::string additionalContent;
-	if (_controllers_configs.size() == 0 && !_simviz_interface) {
-		// do nothing
-	} else if (_controllers_configs.size() == 1 && !_simviz_interface) {
-		Sai2Model::Sai2Model robot_model = Sai2Model::Sai2Model(
-			_controllers_configs[0].robot_model_file, false);
+	additionalContent += "<div class='row mx-3'>\n";
+	// get random number for tabs name
+	std::string random_number = std::to_string(rand());
+
+	additionalContent += "<sai2-interfaces-tabs name='Robot_names" +
+						 random_number + "' color='#b30000'>\n";
+
+	for (const auto& config : _controllers_configs) {
+		Sai2Model::Sai2Model robot_model =
+			Sai2Model::Sai2Model(config.robot_model_file, false);
+
+		additionalContent +=
+			"<sai2-interfaces-tab-content name='" + config.robot_name + "'>\n";
 
 		std::vector<std::string> controller_names_and_tasks =
-			generateControllerNamesAndTasksForUI(_controllers_configs[0],
-												 robot_model);
-		additionalContent =
-			"<div class='row mx-3'>\n<sai2-interfaces-robot-controller "
+			generateControllerNamesAndTasksForUI(config, robot_model);
+		additionalContent +=
+			"<div class='row my-3'>\n<sai2-interfaces-robot-controller "
 			"robotName='" +
-			_controllers_configs[0].robot_name + "'\nredisPrefix='" +
-			_controllers_configs[0].redis_prefix + "'\ncontrollerNames='" +
-			controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
-			controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
-			controller_names_and_tasks[2] + "'\ncontrollerTaskSelections='" +
-			controller_names_and_tasks[3] + "'";
+			config.robot_name + "'\nredisPrefix='" + config.redis_prefix +
+			"'\ncontrollerNames='" + controller_names_and_tasks[0] +
+			"'\ncontrollerTaskNames='" + controller_names_and_tasks[1] +
+			"'\ncontrollerTaskTypes='" + controller_names_and_tasks[2] +
+			"'\ncontrollerTaskSelections='" + controller_names_and_tasks[3] +
+			"'";
 
 		// joint limits in interface
-		additionalContent += "\nlowerJointLimits=" +
-							 vectorXdToString(robot_model.jointLimitsPositionLower());
-		additionalContent += "\nupperJointLimits=" +
-							 vectorXdToString(robot_model.jointLimitsPositionUpper());
+		additionalContent +=
+			"\nlowerJointLimits=" +
+			vectorXdToString(robot_model.jointLimitsPositionLower());
+		additionalContent +=
+			"\nupperJointLimits=" +
+			vectorXdToString(robot_model.jointLimitsPositionUpper());
 
 		// joint names in interface
 		additionalContent +=
 			"\njointNames=" + joinVectorOfString(robot_model.jointNames());
 
 		// interface config for positions and force slider limits
-		additionalContent +=
-			"\nminGoalPosition='" +
-			_controllers_configs[0].interface_config.min_goal_position + "'";
-		additionalContent +=
-			"\nmaxGoalPosition='" +
-			_controllers_configs[0].interface_config.max_goal_position + "'";
-		additionalContent +=
-			"\nminDesiredForce='" +
-			_controllers_configs[0].interface_config.min_desired_force + "'";
-		additionalContent +=
-			"\nmaxDesiredForce='" +
-			_controllers_configs[0].interface_config.max_desired_force + "'";
-		additionalContent +=
-			"\nminDesiredMoment='" +
-			_controllers_configs[0].interface_config.min_desired_moment + "'";
-		additionalContent +=
-			"\nmaxDesiredMoment='" +
-			_controllers_configs[0].interface_config.max_desired_moment + "'";
+		addInterfaceCartesianLimits(additionalContent, config);
+
 		additionalContent += " />\n</div>\n";
-	} else {
-		additionalContent += "<div class='row mx-3'>\n";
-		// get random number for tabs name
-		std::string random_number = std::to_string(rand());
-
-		additionalContent += "<sai2-interfaces-tabs name='Robot_names" +
-							 random_number + "' color='#b30000'>\n";
-
-		for (const auto& config : _controllers_configs) {
-			Sai2Model::Sai2Model robot_model =
-				Sai2Model::Sai2Model(config.robot_model_file, false);
-
-			additionalContent += "<sai2-interfaces-tab-content name='" +
-								 config.robot_name + "'>\n";
-
-			std::vector<std::string> controller_names_and_tasks =
-				generateControllerNamesAndTasksForUI(config, robot_model);
-			additionalContent +=
-				"<div class='row my-3'>\n<sai2-interfaces-robot-controller "
-				"robotName='" +
-				config.robot_name + "'\nredisPrefix='" + config.redis_prefix +
-				"'\ncontrollerNames='" + controller_names_and_tasks[0] +
-				"'\ncontrollerTaskNames='" + controller_names_and_tasks[1] +
-				"'\ncontrollerTaskTypes='" + controller_names_and_tasks[2] +
-				"'\ncontrollerTaskSelections='" +
-				controller_names_and_tasks[3] + "'";
-
-			// joint limits in interface
-			additionalContent +=
-				"\nlowerJointLimits=" +
-				vectorXdToString(robot_model.jointLimitsPositionLower());
-			additionalContent +=
-				"\nupperJointLimits=" +
-				vectorXdToString(robot_model.jointLimitsPositionUpper());
-
-			// joint names in interface
-			additionalContent +=
-				"\njointNames=" + joinVectorOfString(robot_model.jointNames());
-
-			// interface config for positions and force slider limits
-			additionalContent += "\nminGoalPosition='" +
-								 config.interface_config.min_goal_position +
-								 "'";
-			additionalContent += "\nmaxGoalPosition='" +
-								 config.interface_config.max_goal_position +
-								 "'";
-			additionalContent += "\nminDesiredForce='" +
-								 config.interface_config.min_desired_force +
-								 "'";
-			additionalContent += "\nmaxDesiredForce='" +
-								 config.interface_config.max_desired_force +
-								 "'";
-			additionalContent += "\nminDesiredMoment='" +
-								 config.interface_config.min_desired_moment +
-								 "'";
-			additionalContent += "\nmaxDesiredMoment='" +
-								 config.interface_config.max_desired_moment +
-								 "'";
-
-			additionalContent += " />\n</div>\n";
-
-			additionalContent += "</sai2-interfaces-tab-content>\n";
-		}
-
-		if (_simviz_interface) {
-			additionalContent +=
-				"<sai2-interfaces-tab-content name='Simviz'>\n";
-			additionalContent += "<div class='row my-3'>\n";
-
-			std::string model_names = "\'[";
-			std::string model_types = "\'[";
-
-			for (const auto& name : _simviz_interface->getRobotNames()) {
-				model_names += "\"" + name + "\",";
-				model_types += "\"robot\",";
-			}
-			for (const auto& name : _simviz_interface->getObjectNames()) {
-				model_names += "\"" + name + "\",";
-				model_types += "\"object\",";
-			}
-			// remove the last comma
-			model_names.pop_back();
-			model_types.pop_back();
-
-			model_names += "]\'";
-			model_types += "]\'";
-
-			additionalContent += "<sai2-interfaces-simviz\nredisPrefix='" +
-								 _simviz_config->redis_prefix +
-								 "'\nmodelNames=" + model_names +
-								 "\nmodelTypes=" + model_types + " />\n";
-
-			additionalContent += "</div>\n";
-			additionalContent += "</sai2-interfaces-tab-content>\n";
-		}
-
-		additionalContent += "</sai2-interfaces-tabs>\n";
-		additionalContent += "</div>\n";
+		additionalContent += "</sai2-interfaces-tab-content>\n";
 	}
 
-	// Add content before the </body> tag
+	if (_simviz_interface) {
+		additionalContent += "<sai2-interfaces-tab-content name='Simviz'>\n";
+		additionalContent += "<div class='row my-3'>\n";
+
+		std::string model_names = "\'[";
+		std::string model_types = "\'[";
+
+		for (const auto& name : _simviz_interface->getRobotNames()) {
+			model_names += "\"" + name + "\",";
+			model_types += "\"robot\",";
+		}
+		for (const auto& name : _simviz_interface->getObjectNames()) {
+			model_names += "\"" + name + "\",";
+			model_types += "\"object\",";
+		}
+		// remove the last comma
+		model_names.pop_back();
+		model_types.pop_back();
+
+		model_names += "]\'";
+		model_types += "]\'";
+
+		additionalContent += "<sai2-interfaces-simviz\nredisPrefix='" +
+							 _simviz_config->redis_prefix +
+							 "'\nmodelNames=" + model_names +
+							 "\nmodelTypes=" + model_types + " />\n";
+
+		additionalContent += "</div>\n";
+		additionalContent += "</sai2-interfaces-tab-content>\n";
+	}
+
+	additionalContent += "</sai2-interfaces-tabs>\n";
+	additionalContent += "</div>\n";
+
+	// Add content before the end of the <body> block by finding its closing tag
 	size_t bodyPosition = htmlContent.find("</body>");
 	if (bodyPosition != std::string::npos) {
 		htmlContent.insert(bodyPosition, additionalContent);

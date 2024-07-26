@@ -40,7 +40,7 @@ struct ControllerLoggerConfig {
 	bool add_timestamp_to_filename = true;
 };
 
-struct InterfaceConfig {
+struct MotionForceTaskInterfaceConfig {
 	std::string min_goal_position = "[-0.5,-0.5,0.0]";
 	std::string max_goal_position = "[0.5,0.5,0.8]";
 	std::string min_desired_force = "-50";
@@ -145,6 +145,8 @@ struct MotionForceTaskConfig {
 	std::optional<GainsConfig> orientation_gains_config = {};
 	std::optional<GainsConfig> force_gains_config = {};
 	std::optional<GainsConfig> moment_gains_config = {};
+
+	MotionForceTaskInterfaceConfig interface_config;
 };
 
 struct RobotControllerConfig {
@@ -156,8 +158,6 @@ struct RobotControllerConfig {
 	double control_frequency = 1000.0;
 
 	ControllerLoggerConfig logger_config;
-
-	InterfaceConfig interface_config;
 
 	std::string initial_active_controller_name = "";
 
