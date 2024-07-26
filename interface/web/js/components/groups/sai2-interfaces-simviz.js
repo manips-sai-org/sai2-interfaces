@@ -34,6 +34,16 @@ class Sai2InterfacesSimviz extends HTMLElement {
 			model_tab_content += `</sai2-interfaces-tab-content>`;
 			htmlString += model_tab_content;
 		}
+
+		htmlString += `
+		<sai2-interfaces-tab-inline-content>
+			<div class="row mt-3 p-2">
+				<sai2-interfaces-toggle key="${this.redis_prefix}::simviz::gravity_comp_enabled" display="Gravity Compensation"/>
+			</div>
+			<div class="row mt-3 p-2">
+				<sai2-interfaces-toggle key="${this.redis_prefix}::simviz::logging_on" display="SimViz Logging"/>
+			</div>
+		</sai2-interfaces-tab-inline-content>`;
 		htmlString += `</sai2-interfaces-tabs>`;
 
 		this.innerHTML = htmlString;

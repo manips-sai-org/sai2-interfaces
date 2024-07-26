@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 project(SAI2-INTERFACES)
 set(PROJECT_VERSION 0.1.0)
 
+option(BUILD_EXAMPLES "Build examples" ON)
+
 set(CMAKE_CXX_FLAGS "-std=c++20 -I/usr/include -I/usr/local/include -fPIC")
 if(${CMAKE_SYSTEM_NAME} MATCHES Darwin)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/opt/homebrew/include")
@@ -86,7 +88,10 @@ set(SAI2-INTERFACES_LIBRARIES
     ${SAI2-URDF_LIBRARIES}
     ${SAI2-COMMON_LIBRARIES})
 
-add_subdirectory(examples)
+# add examples
+if(BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 #
 # export package

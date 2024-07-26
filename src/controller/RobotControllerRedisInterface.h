@@ -176,6 +176,8 @@ private:
 	void initialize();
 	void initializeRedisTasksIO();
 
+	void runRedisCommunication(const std::atomic<bool>& user_stop_signal);
+
 	void switchController(const std::string& controller_name);
 	void processInputs();
 
@@ -185,6 +187,7 @@ private:
 	std::map<std::string, std::unique_ptr<Sai2Primitives::RobotController>>
 		_robot_controllers;
 	std::string _active_controller_name;
+	std::string _tentative_next_active_controller_name;
 
 	Sai2Common::RedisClient _redis_client;
 
@@ -197,6 +200,8 @@ private:
 		_controller_inputs;
 	std::map<std::string, std::map<std::string, TaskMonitoringDataVariant>>
 		_controller_task_monitoring_data;
+
+	bool _reset_redis_inputs;
 
 	std::map<std::string,
 			 std::map<std::string, std::unique_ptr<Sai2Common::Logger>>>

@@ -52,24 +52,28 @@ socket.on('disconnect', () => {
 })
 
 export function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const context = this;
-        const args = arguments;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
+	let inThrottle;
+	return function () {
+		const context = this;
+		const args = arguments;
+		if (!inThrottle) {
+			func.apply(context, args);
+			inThrottle = true;
+			setTimeout(() => inThrottle = false, limit);
+		}
+	};
 }
 
 export function parse_maybe_array_attribute(attr) {
 	let parsed_attr;
 	try {
 		parsed_attr = JSON.parse(attr);
-		for (let i = 0; i < parsed_attr.length; i++) {
-			parsed_attr[i] = parseFloat(parsed_attr[i]);
+		if (parsed_attr.length == 1) {
+			parsed_attr = parsed_attr[0];
+		} else {
+			for (let i = 0; i < parsed_attr.length; i++) {
+				parsed_attr[i] = parseFloat(parsed_attr[i]);
+			}
 		}
 	} catch (e) {
 		parsed_attr = parseFloat(attr);

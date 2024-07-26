@@ -89,6 +89,4 @@
 		<lookat xyz="0.0 0.0 0.5" />
 	</camera>
 
-	<!-- TODO: support stereo specification -->
-
 </world>

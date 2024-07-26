@@ -1,0 +1,150 @@
+<simvizConfiguration>
+	<worldFilePath>${WORLD_FILES_FOLDER}/world_humanoid.urdf</worldFilePath>
+
+	<simParameters>
+		<timestep>0.001</timestep>
+		<speedupFactor>1.0</speedupFactor>
+		<coeffFriction>0.5</coeffFriction>
+		<enableGravityCompensation>true</enableGravityCompensation>
+	</simParameters>
+
+	<forceSensor>
+		<robotName>HRP4</robotName>
+		<linkName>L_WRIST_R_LINK</linkName>
+		<origin xyz="0 0 0" rpy="0 0 0" />
+		<filterCutoff>5.0</filterCutoff>
+	</forceSensor>
+
+	<forceSensor>
+		<robotName>HRP4</robotName>
+		<linkName>R_WRIST_R_LINK</linkName>
+		<origin xyz="0 0 0" rpy="0 0 0" />
+		<filterCutoff>5.0</filterCutoff>
+	</forceSensor>
+
+	<forceSensor>
+		<robotName>HRP4</robotName>
+		<linkName>L_ANKLE_R_LINK</linkName>
+		<origin xyz="0 0 0" rpy="0 0 0" />
+		<filterCutoff>5.0</filterCutoff>
+	</forceSensor>
+
+	<forceSensor>
+		<robotName>HRP4</robotName>
+		<linkName>R_ANKLE_R_LINK</linkName>
+		<origin xyz="0 0 0" rpy="0 0 0" />
+		<filterCutoff>5.0</filterCutoff>
+	</forceSensor>
+
+</simvizConfiguration>
+
+
+<robotControlConfiguration robotName="HRP4">
+	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/HRP4C/HRP4C_custom_v1.urdf</robotModelFile>
+	<baseFrame xyz="0 0 0.7" rpy="0 0 0" />
+	<worldGravity xyz="0 0 -9.81" />
+
+<controller name="whole_body_controller">
+		<task name="hip_pose" type="motion_force_task">
+			<linkName>BODY</linkName>
+			<bieThreshold>0.0</bieThreshold>
+			<velocitySaturation enabled="true" linear_velocity_limit="0.35" angular_velocity_limit="0.78" />
+			<otg type="disabled" />
+			<interface minGoalPosition='-2' 
+						maxGoalPosition='3' 
+						minDesiredForce='[-50,-50,-200]' 
+						maxDesiredForce='50' 
+						minDesiredMoment='-5' 
+						maxDesiredMoment='5'
+			/>
+		</task>
+
+		<task name="left_hand" type="motion_force_task">
+			<linkName>L_WRIST_R_LINK</linkName>
+			<bieThreshold>0.0</bieThreshold>
+			<velocitySaturation enabled="true"/>
+			<otg type="disabled" />
+			<interface minGoalPosition='[-0.2,-0.5,0.3]' 
+						maxGoalPosition='[1.2,1,1.5]' 
+			/>
+		</task>
+
+		<task name="right_hand" type="motion_force_task">
+			<linkName>R_WRIST_R_LINK</linkName>
+			<bieThreshold>0.0</bieThreshold>
+			<velocitySaturation enabled="true" />
+			<otg type="disabled" />
+			<interface minGoalPosition='[-0.2,-1,0.3]' 
+						maxGoalPosition='[1.2,0.5,1.5]' 
+			/>
+		</task>
+
+		<task name="left_foot" type="motion_force_task">
+			<linkName>L_ANKLE_R_LINK</linkName>
+			<bieThreshold>0.0</bieThreshold>
+			<velocitySaturation enabled="true"/>
+			<otg type="disabled" />
+		</task>
+
+		<task name="right_foot" type="motion_force_task">
+			<linkName>R_ANKLE_R_LINK</linkName>
+			<bieThreshold>0.0</bieThreshold>
+			<velocitySaturation enabled="true"/>
+			<otg type="disabled" />
+		</task>
+
+		<task name="L_hand_grasp" type="joint_task">
+			<controlledJointNames>
+				L_HAND_J0
+				L_HAND_J1
+			</controlledJointNames>
+			<bieThreshold>0.0</bieThreshold>
+			<otg type="disabled" />
+		</task>
+
+		<task name="R_hand_grasp" type="joint_task">
+			<controlledJointNames>
+				R_HAND_J0
+				R_HAND_J1
+			</controlledJointNames>
+			<bieThreshold>0.0</bieThreshold>
+			<otg type="disabled" />
+		</task>
+
+		<task name="R_hand_grasp_bis" type="joint_task">
+			<controlledJointNames>
+				R_HAND_J0
+				R_HAND_J1
+			</controlledJointNames>
+			<bieThreshold>0.0</bieThreshold>
+			<otg type="disabled" />
+		</task>
+
+		<task name="Head joints" type="joint_task">
+			<controlledJointNames>
+				NECK_Y
+				NECK_R
+				NECK_P
+			</controlledJointNames>
+			<bieThreshold>0.0</bieThreshold>
+			<otg type="disabled" />
+		</task>
+
+		<task name="joint_task" type="joint_task">
+			<bieThreshold>0.0</bieThreshold>
+			<velocitySaturation enabled="false"/>
+			<otg type="disabled"/>
+		</task>
+	</controller>
+
+
+	<controller name="joint_controller">
+		<task name="joint_task" type="joint_task">
+			<bieThreshold>0.0</bieThreshold>
+			<velocitySaturation enabled="false"/>
+			<otg type="disabled"/>
+			<gains kp="100.0" kv="20.0" ki="0.0" />
+		</task>
+	</controller>
+
+</robotControlConfiguration>

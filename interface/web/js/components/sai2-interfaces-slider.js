@@ -94,6 +94,25 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			 * <div>
 			 */
 
+			let min = Array.isArray(this.min) ? this.min[i] : this.min;
+			let max = Array.isArray(this.max) ? this.max[i] : this.max;
+			let step = Array.isArray(this.step) ? this.step[i] : this.step;
+			let value = Array.isArray(this.value) ? this.value[i] : this.value;
+
+			if (isNaN(min)) {
+				min = -1;
+			}
+			if (isNaN(max)) {
+				max = 1;
+			}
+			if (isNaN(step) || (max-min)/step < 1000.0) {
+				step = (max-min)/1000.0
+			}
+			if (isNaN(value)) {
+				value = (min + max) / 2;
+			}
+			value = Math.min(max, Math.max(min, value));
+
 			let slider_div = document.createElement('div');
 			let slider_value_div = document.createElement('div');
 			let slider_display = document.createElement('label');
@@ -114,11 +133,10 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			// set up manual value input for this slider
 			slider_value_input.type = 'number';
 			slider_value_input.className = 'value';
-			slider_value_input.min = (Array.isArray(this.min)) ? this.min[i] : this.min;
-			slider_value_input.max = (Array.isArray(this.max)) ? this.max[i] : this.max;
-			slider_value_input.step = (Array.isArray(this.step)) ? this.step[i] : this.step;
-			slider_value_input.value = (Array.isArray(this.value)) ? this.value[i] : this.value;
-			slider_value_input.value = Math.min(slider_value_input.max, Math.max(slider_value_input.min, slider_value_input.value));
+			slider_value_input.min = min;
+			slider_value_input.max = max;
+			slider_value_input.step = step;
+			slider_value_input.value = value;
 
 			// also clamp the this.value in case it was out of bounds
 			if (Array.isArray(this.value))
@@ -177,11 +195,10 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 			// set up drag slider
 			slider.type = 'range';
 			slider.className = 'slider';
-			slider.min = (Array.isArray(this.min)) ? this.min[i] : this.min;
-			slider.max = (Array.isArray(this.max)) ? this.max[i] : this.max;
-			slider.step = (Array.isArray(this.step)) ? this.step[i] : this.step;
-			slider.value = (Array.isArray(this.value)) ? this.value[i] : this.value;
-			slider.value = Math.min(slider.max, Math.max(slider.min, slider.value));
+			slider.min = min;
+			slider.max = max;
+			slider.step = step;
+			slider.value = value;
 
 			let slider_move_callback = () => {
 				let slider_val = parseFloat(slider.value);

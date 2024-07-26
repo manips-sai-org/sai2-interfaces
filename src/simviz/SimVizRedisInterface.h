@@ -41,7 +41,9 @@ private:
 
 	void vizLoopRun(const std::atomic<bool>& user_stop_signal);
 	void simLoopRun(const std::atomic<bool>& user_stop_signal);
-	void processSimParametrization(Sai2Common::LoopTimer& timer);
+	void redisCommunicationLoopRun(const std::atomic<bool>& user_stop_signal);
+	double computeCommunicationLoopFrequency() const;
+	void processSimParametrization();
 
 	void setModelSpecificParametersFromConfig(const std::string& model_name);
 
@@ -52,6 +54,7 @@ private:
 
 	std::unique_ptr<Sai2Graphics::Sai2Graphics> _graphics;
 	std::unique_ptr<Sai2Simulation::Sai2Simulation> _simulation;
+	std::unique_ptr<Sai2Common::LoopTimer> _sim_timer, _communication_timer;
 
 	std::map<std::string, Eigen::VectorXd> _robot_ui_torques;
 	std::map<std::string, Eigen::VectorXd> _object_ui_torques;
