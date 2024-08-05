@@ -1,5 +1,6 @@
 import json
 
+
 def get_redis_key(key, redis_client):
     ''' 
     Retrieves a key from redis and attempts JSON parsing.

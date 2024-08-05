@@ -4,11 +4,6 @@ hiredis
 eventlet
 flask==2.2.5
 flask-socketio==5.3.6
-Werkzeug==3.0.3
 multitimer
 matplotlib
 plotly
-
-# if using periodic_timer (linux only)
-# uncomment following dependency
-#linuxfd

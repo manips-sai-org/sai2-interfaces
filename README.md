@@ -1,42 +1,35 @@
-# sai2-interfaces
+# Sai2-interfaces
 
-TODO: update this README as it is obsolete right now
-
-sai2-interfaces is intended to enable SAI2 developers to quickly build a user-friendly interface to debug or interact with a robot. It is split into two parts: the frontend (HTML/CSS/JS) and the backend server.
+sai2-interfaces provides two main tools to enables users to quickly develop controllers and simulations with the sai libraries:
+1. Wrappers for controller setup (around sai2-primitives library), simulation (sai2-simulation library) and graphic visualization (sai2-graphics library). The code for those is in the src/ folder. Those wrappers enable:
+	- Easy setup and configuration of controllers and simulated worlds from xml/urdf files
+	- A lot of interactability with the controllers and simulation/visualization via redis
+	- Built-in data logging functionality
+	- Automatic generation of a html file for web-based ui interaction with the controller and simulation/visualization
+2. A web browser based user interface to interact in real time with the controllers and simulation/visualization split in two parts:
+	- The backend server running locally (no internet connection required at runtime) with python
+	- The frontend composed of a collection of custom html/css elements such as sliders, toggle buttons, tabs to switch between controllers and so on
 
 ## Quickstart
-We currently fully support Chrome/Chromium, and have partial support for Firefox. All features except the trajectory generation module work on Firefox. The backend server requires Python 3.5+.
+The web based ui has been tested on Chrome/Chromium, Firefox and Safari.
+The backend server requires Python 3.5+.
 
-### Installing Dependencies
-The backend server depends on [redis](https://pypi.org/project/redis/), [Flask](https://pypi.org/project/Flask/), and [click](https://pypi.org/project/click/). You can install them as below:
+### Installing UI Dependencies
+The UI backend server depends on [redis](https://pypi.org/project/redis/), [Flask](https://pypi.org/project/Flask/), and [click](https://pypi.org/project/click/). You can install them as below:
 ```
 pip3 install -r interface/requirements.txt
 ```
 
-### Running a template
-sai2-interfaces provides a set of simple, universal templates. In our case, we're going to bring up an interface with a plot and a logger. From the top level of our repo:
-```
-python3 interface/server.py templates/plot_logger.html
-```
-
-Let's open up `localhost:8000`, and if you see this:
-
-![A window with a plot and logger](img/plot-logger-initial.png)
-
-Great! It works! From there, you can examine available redis keys or log some redis keys to a file. Here's what it could look like:
-
-![A window with a plot with data and a blank logger](img/plot-logger-data.png)
-
-
-### Exporting sai2-interfaces
-We use cmake to make sai2-interfaces available to other projects, such as [sai2-examples](https://github.com/manips-sai-org/sai2-examples). You can run the following commands to export definitions to other projects:
-
+### Build instructions
+Build the project with the following commands
 ```
 mkdir build && cd build
-cmake ..
+cmake .. && make -j4
 ```
 
-This project exports `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute path of the interface/ folder in this repository. You can then use cmake's `FILE(COPY)` macro to copy it with your binaries.
+This will build the wrappers for the controllers and simviz, the MainInterface program, and will export `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute path of the interface/ folder in this repository. You can then use cmake's `FILE(CREATE_LINK)` macro to make a symlink to this directory from another application for easy access (recommended, see the CMakeLists.txt file of [OpenSai](https://github.com/manips-sai-org/OpenSai)), or the `FILE(COPY)` macro to copy it.
+
+### Running examples
 
 ### Documentation
 For additional resources on how to use sai2-interfaces, see the documentation [here](docs/README.md).
@@ -45,6 +38,9 @@ For additional resources on how to use sai2-interfaces, see the documentation [h
 Currently pending licensing. PLEASE DO NOT DISTRIBUTE.
 
 ## Project contributors
-* Keven Wang
 * Mikael Jorda
+* Keven Wang
 * William Jen
+
+## For questions, contact:
+mjorda@stanford.edu or mjorda@jorda-tech.com

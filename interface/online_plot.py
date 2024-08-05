@@ -1,15 +1,13 @@
-import redis
 import time
-import json
 import uuid
 import queue
 from threading import Thread
-
 
 TIME_KEY = "Time"
 
 
 class OnlinePlot(object):
+
     def __init__(self, redis_cache):
         self.id = str(uuid.uuid4())
         self.redis_cache = redis_cache
@@ -25,15 +23,17 @@ class OnlinePlot(object):
             if TIME_KEY in keys:
                 keys.remove(TIME_KEY)
             values = [self.redis_cache[key] for key in keys]
-            queue_item = {TIME_KEY: current_time} if TIME_KEY in self.keys else {}
+            queue_item = {
+                TIME_KEY: current_time
+            } if TIME_KEY in self.keys else {}
             for key, val in zip(keys, values):
                 queue_item[key] = val
 
             self.queue.put_nowait(queue_item)
-            
+
             if self.queue.qsize() > window_size:
                 self.queue.get_nowait()
-            
+
             time.sleep(self.rate)
 
     def get_available(self):
@@ -57,9 +57,8 @@ class OnlinePlot(object):
 
         # start worker thread
         self.running = True
-        self.thread = Thread(
-            target=self._gather_plot_data, daemon=True
-        )  # XXX: may not clean up correctly
+        self.thread = Thread(target=self._gather_plot_data,
+                             daemon=True)  # XXX: may not clean up correctly
         self.thread.start()
         return True
 
@@ -71,6 +70,7 @@ class OnlinePlot(object):
 
 
 class OnlinePlotManager(object):
+
     def __init__(self, redis_client):
         self._plots = {}
         self.redis_client = redis_client
