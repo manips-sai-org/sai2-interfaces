@@ -7,7 +7,7 @@
  * @module ./module/sai2-interface-plot
  */
 
-import { get_redis_val, get_redis_all_keys } from '../redis.js';
+import { get_redis_all_keys } from '../redis.js';
 
 const template = document.createElement('template');
 template.innerHTML = `

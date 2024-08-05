@@ -10,16 +10,15 @@ in detail and provide an example on how to use it.
 * [Fundamentals](./00-fundamentals/README.md)
 
 ## Core Components
-* [Toggle](./01-toggle/README.md)
-* [Enum](./02-enum/README.md)
-* [Display](./03-display/README.md)
-* [Slider](./04-slider/README.md)
+* [Toggle](./toggle/README.md)
+* [Enum](./enum/README.md)
+* [Display](./display/README.md)
+* [Slider](./slider/README.md)
 
 ## Containers 
-* [Accordion](./05-accordion/README.md) 
-* [Toggle Group](./06-toggle-group/README.md)
-* [Select](./07-select/README.md)
+* [Accordion](./accordion/README.md) 
+* [Toggle Group](./togggroup/README.md)
 
 ## Specialized Components
-* [Plot](./08-plot/README.md)
-* [Orientation](./09-orientation/README.md)
+* [Plot](./plot/README.md)
+* [Orientation](./orientation/README.md)

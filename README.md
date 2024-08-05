@@ -1,12 +1,12 @@
 # Sai2-interfaces
 
 sai2-interfaces provides two main tools to enables users to quickly develop controllers and simulations with the sai libraries:
-1. Wrappers for controller setup (around sai2-primitives library), simulation (sai2-simulation library) and graphic visualization (sai2-graphics library). The code for those is in the src/ folder. Those wrappers enable:
+1. Wrappers for controller setup (around sai2-primitives library), simulation (sai2-simulation library) and graphic visualization (sai2-graphics library). The code for those is in the `src/` folder. Those wrappers enable:
 	- Easy setup and configuration of controllers and simulated worlds from xml/urdf files
 	- A lot of interactability with the controllers and simulation/visualization via redis
 	- Built-in data logging functionality
 	- Automatic generation of a html file for web-based ui interaction with the controller and simulation/visualization
-2. A web browser based user interface to interact in real time with the controllers and simulation/visualization split in two parts:
+2. A web browser based user interface to interact in real time with the controllers and simulation/visualization. The code for this is in the `ui/` folder. It is split in two parts:
 	- The backend server running locally (no internet connection required at runtime) with python
 	- The frontend composed of a collection of custom html/css elements such as sliders, toggle buttons, tabs to switch between controllers and so on
 
@@ -17,7 +17,7 @@ The backend server requires Python 3.5+.
 ### Installing UI Dependencies
 The UI backend server depends on [redis](https://pypi.org/project/redis/), [Flask](https://pypi.org/project/Flask/), and [click](https://pypi.org/project/click/). You can install them as below:
 ```
-pip3 install -r interface/requirements.txt
+pip3 install -r ui/requirements.txt
 ```
 
 ### Build instructions
@@ -27,12 +27,12 @@ mkdir build && cd build
 cmake .. && make -j4
 ```
 
-This will build the wrappers for the controllers and simviz, the MainInterface program, and will export `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute path of the interface/ folder in this repository. You can then use cmake's `FILE(CREATE_LINK)` macro to make a symlink to this directory from another application for easy access (recommended, see the CMakeLists.txt file of [OpenSai](https://github.com/manips-sai-org/OpenSai)), or the `FILE(COPY)` macro to copy it.
+This will build the wrappers for the controllers and simviz, the MainInterface program, and will export `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute path of the `ui/` folder in this repository. You can then use cmake's `FILE(CREATE_LINK)` macro to make a symlink to this directory from another application for easy access (recommended, see the CMakeLists.txt file of [OpenSai](https://github.com/manips-sai-org/OpenSai)), or the `FILE(COPY)` macro to copy it.
 
 ### Running examples
 
 ### Documentation
-For additional resources on how to use sai2-interfaces, see the documentation [here](docs/README.md).
+For details on all the UI custom html elements, see the documentation [here](docs/ui_elements_details/ui_docs_menu.md).
 
 ## License
 Currently pending licensing. PLEASE DO NOT DISTRIBUTE.
