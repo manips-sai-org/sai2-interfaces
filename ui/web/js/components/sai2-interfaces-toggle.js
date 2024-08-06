@@ -46,6 +46,10 @@ customElements.define('sai2-interfaces-toggle', class extends HTMLElement {
 			button.className = this.current_value ? "button-enable" : "button-disable";
 		});
 
+		if(this.key) {
+			post_redis_key_val(this.key, this.current_value);
+		}
+
 		// set up listeners
 		// register listeners for input textbox
 		button.onclick = () => {

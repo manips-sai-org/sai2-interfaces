@@ -23,7 +23,7 @@ class Sai2InterfacesSimviz extends HTMLElement {
 			return
 		}
 
-		let htmlString = `<sai2-interfaces-tabs tabsPosition="left" color="#cc7a00" name="simviz_interface">`;
+		let htmlString = `<sai2-interfaces-tabs tabsOnTheLeft color="#cc7a00" name="simviz_interface">`;
 
 		for (let i = 0; i < model_names.length; i++) {
 			let model_tab_content = `<sai2-interfaces-tab-content name="${model_display_names[i]}" value="${model_names[i]}">`;

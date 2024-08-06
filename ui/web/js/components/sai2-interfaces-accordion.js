@@ -41,7 +41,7 @@ customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
 		let template_node = this.template.content.cloneNode(true);
 
 		let toggleKey = this.getAttribute('key');
-		let displayName = this.getAttribute('displayName');
+		let displayName = this.getAttribute('displayName') || toggleKey;
 
 		let button = template_node.querySelector('.sai2-interfaces-accordion-btn');
 
@@ -79,6 +79,10 @@ customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
 				$(direct_children).hide();
 			}
 		});
+
+		if (toggleKey) {
+			post_redis_key_val(toggleKey, this.active ? 1 : 0);
+		}
 
 		// append to document
 		this.prepend(template_node);

@@ -16,10 +16,9 @@ the values are numbers, the array can be defined with only qutation marks, simpl
 around the array brackets (e.g. `"[1,2,3,4]"`). 
 
 ## Attributes
-* `key`: Required. Specifies which Redis key to get/set to the user-specified 
-options. If the Redis key does not exist, then an error will be thrown.
+* `key`: Required. Specifies which Redis key to get/set to the user-specified options.
 * `values`: Required. The values that the enum can take.
-* `display`: Optional. Specifies what text to put in the dropdown menu.
+* `display`: Optional. Specifies what text to put in the dropdown menu. If not provided, the key will be used
 
 ## Example
 Open up `redis-cli`, and let's set the key 

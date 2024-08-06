@@ -115,7 +115,7 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 
 		let right_div = this.template_node.querySelector('.sai2-interfaces-orientation-right');
 		right_div.innerHTML = `
-			<sai2-interfaces-display key="${this.key}" display="Matrix Form" decimalPlaces="3" labelPosition="top" refreshRate="${this.refreshRate}"></sai2-interfaces-display>
+			<sai2-interfaces-display key="${this.key}" display="Matrix Form" decimalPlaces="3" labelOnTop refreshRate="${this.refreshRate}"></sai2-interfaces-display>
 			`;
 		this.display = right_div.querySelector('sai2-interfaces-display');
 

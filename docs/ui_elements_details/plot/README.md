@@ -18,7 +18,7 @@ plot resolution if you put a refresh rate faster than that.
 Finally, there is the Window size in seconds, which corresponds to the maximum
 time plotted in the window (30 seconds by default). For example, when the value is 30
 then the plot will start and plot the data, and when 30 seconds have passed, only the 
-latest 30 seconds will eb plotted. If you want to keep everything, you can set a value of 
+latest 30 seconds will be plotted. If you want to keep everything, you can set a value of 
 0 there.
 
 Hit "Start" to start plotting, and hit "Stop" to stop plotting. Within the plot 

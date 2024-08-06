@@ -24,7 +24,7 @@ class Sai2InterfacesTabs extends HTMLElement {
 		const tabsContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-CONTENT');
 		const otherContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-INLINE-CONTENT');
 
-		const position = this.getAttribute('tabsPosition') || 'top';
+		const tabsOnTheLeft = this.hasAttribute('tabsOnTheLeft');
 		const color = this.getAttribute('color') || 'rgb(0, 110, 255)';
 		const key = this.getAttribute('key');
 
@@ -81,13 +81,13 @@ class Sai2InterfacesTabs extends HTMLElement {
 		}).join('');
 
 		// Construct the tabs structure
-		const navType1 = position === 'left' ? 'nav-pills' : 'nav-tabs';
-		const navType2 = position === 'left' ? 'flex-column' : 'flex-row';
-		const tabsClass = position === 'left' ? 'col-md-2' : 'row';
-		const contentClass = position === 'left' ? 'col-md-10' : 'row';
+		const navType1 = tabsOnTheLeft ? 'nav-pills' : 'nav-tabs';
+		const navType2 = tabsOnTheLeft ? 'flex-column' : 'flex-row';
+		const tabsClass = tabsOnTheLeft ? 'col-md-2' : 'row';
+		const contentClass = tabsOnTheLeft ? 'col-md-10' : 'row';
 
-		const borderClass = position === 'left' ? 'border-right' : 'border-bottom';
-		const paddingClass = position === 'left' ? 'padding-right' : 'padding-top';
+		const borderClass = tabsOnTheLeft ? 'border-right' : 'border-bottom';
+		const paddingClass = tabsOnTheLeft ? 'padding-right' : 'padding-top';
 
 		this.innerHTML = `
 		<style>

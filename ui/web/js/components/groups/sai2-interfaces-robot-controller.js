@@ -35,7 +35,7 @@ class Sai2InterfacesRobotController extends HTMLElement {
 
 		const redis_key_prefix_controller_robot = this.redis_prefix + '::controller::' + this.robot_name + '::';
 
-		let htmlString = `<sai2-interfaces-tabs tabsPosition="left" color="#cc7a00" name="${this.robot_name}_controller_selection" key="${redis_key_prefix_controller_robot}active_controller_name">`;
+		let htmlString = `<sai2-interfaces-tabs tabsOnTheLeft color="#cc7a00" name="${this.robot_name}_controller_selection" key="${redis_key_prefix_controller_robot}active_controller_name">`;
 
 		for (let i = 0; i < controller_names.length; i++) {
 			let controller_tab_content = `<sai2-interfaces-tab-content name="${controller_display_names[i]}" value="${controller_names[i]}">`;

@@ -29,7 +29,7 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 
 		this.key = this.getAttribute("key");
 		this.display = this.getAttribute("name");
-		this.enabled = this.getAttribute("enabled") === "true";
+		this.enabled = this.hasAttribute("enabled");
 
 		this.container = template_node.querySelector(".sai2-interfaces-toggle-group-container");
 		this.checkbox = template_node.querySelector("input");
@@ -43,6 +43,7 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 				this.checkbox.checked = value;
 				this.updateGroups();
 			});
+			post_redis_key_val(this.key, this.enabled ? 1 : 0);
 		}
 
 		this.checkbox.onchange = async e => {

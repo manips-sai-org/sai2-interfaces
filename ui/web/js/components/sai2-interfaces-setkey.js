@@ -18,9 +18,10 @@ customElements.define('sai2-interfaces-setkey', class extends HTMLElement {
 	connectedCallback() {
 		const key = this.getAttribute('key');
 		const valueToSet = this.getAttribute('value');
-		const label = this.getAttribute('label') || 'Button';
+		const label = this.getAttribute('display') || "set " + key + " to " + valueToSet;
 
 		const button = document.createElement('button');
+		button.classList.add('btn', 'btn-primary');
 		button.textContent = label;
 
 		button.addEventListener('click', () => {

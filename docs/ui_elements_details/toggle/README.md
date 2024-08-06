@@ -11,7 +11,7 @@ The `sai2-interfaces-toggle` element allows you to toggle a Redis key between 0
 
 ## Attributes
 * `key`: Required. Specifies which Redis key to get/set for toggling. If the 
-Redis key does not exist, an error will be thrown.
+Redis key does not exist, it will be set to 0 initially.
 * `display`: Optional. Specifies what text to put next to the toggle button. 
 Default is the key name.
 

@@ -137,13 +137,13 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
 		this.decimalPlaces = this.getAttribute('decimalPlaces') || 3;
 		this.display_text = this.getAttribute('display') || this.key;
 		this.display_row_vector = this.hasAttribute('displayAsRowVector');
-		this.labelPosition = this.getAttribute('labelPosition') || 'left';
+		this.labelOnTop = this.hasAttribute('labelOnTop');
 
 		this.label = this.template_node.querySelector('label');
 		this.table = this.template_node.querySelector('table');
 
-		// Position the label and table based on labelPosition attribute
-		if (this.labelPosition === 'top') {
+		// Position the label and table based on the presence or not of the labelOnTop attribute
+		if (this.labelOnTop) {
 			this.container = this.template_node.querySelector('.sai2-interface-display-top');
 			this.container.style.flexDirection = 'column';
 			this.label.style.textAlign = 'center';

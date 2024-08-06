@@ -15,8 +15,8 @@ control of a robot.
 ## Attributes
 
 * `key`: Required. The Redis key that has a rotation matrix. If the Redis key
-does not exist, an error will be thrown.
-* `refreshRate`: Required. Refresh rate of the current rotation matrix.
+does not exist, the display part will not appear and the matrix will not be set to redis.
+* `refreshRate`: Optional. Refresh rate of the current rotation matrix display (1 second by default).
 
 ## Example
 

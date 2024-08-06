@@ -65,7 +65,7 @@ set(SAI2-INTERFACES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/src/third_party/glaze/include)
 include_directories(${SAI2-INTERFACES_INCLUDE_DIRS})
 
-set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/interface)
+set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/ui)
 add_definitions(-DUI_FOLDER="${SAI2-INTERFACES_UI_DIR}")
 
 # Create the library

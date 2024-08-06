@@ -36,10 +36,12 @@ them to show when the checkbox is *not* checked.
 is thus used to identify the toggle group on the interface.
 * `key`: Optional. The checkbox can be hooked up to a Redis key that holds a 
 boolean value. Otherwise, the checkbox value is held in memory and is 
-initialized to unchecked.
-* `enabled`: Optional. Set to "true" or "false". If the toggle group is not
-attached to a redis key, or if the redis key does not exist, this will decide if the
-checkbox is initially checked or not. If ommited, the behavior is enabled="false" by default
+initialized to unchecked. If the key is present but does not exists in the redis
+database, then it will be initialized to 0.
+* `enabled`: Optional. If the toggle group is not
+attached to a redis key, or if the redis key does not exist,
+this will initialize the checkbox to enabled. 
+If ommited, the checkbox will be unchecked by default
 
 ## Example
 For this example, we're going show a slider for 

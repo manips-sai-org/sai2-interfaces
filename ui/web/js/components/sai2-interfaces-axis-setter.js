@@ -61,11 +61,15 @@ class Sai2InterfacesAxisSetter extends HTMLElement {
 		super();
 
 		this.key = this.getAttribute('key');
+
+		// throw error if key is not provided
+		if (!this.key) {
+			throw new Error('key attribute must be provided');
+		}
+
 		const title = this.getAttribute('display') || this.key;
 		this.appendChild(template.content.cloneNode(true));
 		this.querySelector('h5').textContent = title;
-
-		let valtest = get_redis_val(this.key);
 
 		get_redis_val(this.key).then(keyval => {
 			let len = (Array.isArray(keyval)) ? keyval.length : 1;
@@ -81,10 +85,20 @@ class Sai2InterfacesAxisSetter extends HTMLElement {
 		// Attach click event listener to the update button
 		const updateButton = this.querySelector('#update_btn');
 		updateButton.id = 'update_btn_' + this.key;
-		updateButton.addEventListener('click', this.handleUpdateButtinClick.bind(this));
+		updateButton.addEventListener('click', this.handleUpdateButtonClick.bind(this));
+
+		// attach event listener to the enter key press for the inputs
+		const inputElements = this.querySelectorAll('input');
+		inputElements.forEach(inputElement => {
+			inputElement.addEventListener('keyup', (event) => {
+				if (event.key === 'Enter') {
+					this.handleUpdateButtonClick();
+				}
+			});
+		});
 	}
 
-	handleUpdateButtinClick() {
+	handleUpdateButtonClick() {
 		// Get the input elements for X, Y, and Z
 		const xInput = this.querySelector('input[aria-label="x"]');
 		const yInput = this.querySelector('input[aria-label="y"]');

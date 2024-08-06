@@ -6,16 +6,16 @@ import {
 // Import all ES6 modules here, so the HTML template only needs to load index.js.
 import './redis.js';
 import './components/sai2-interfaces-accordion.js';
-import './components/sai2-interfaces-axis-setter.js';   // specialized
+import './components/sai2-interfaces-axis-setter.js';
 import './components/sai2-interfaces-component.js';
-import './components/sai2-interfaces-config-selector.js';  // specialized
+import './components/sai2-interfaces-config-selector.js';
 import './components/sai2-interfaces-display.js';
 import './components/sai2-interfaces-enum.js';
 import './components/sai2-interfaces-orientation.js';
-import './components/sai2-interfaces-plot-button.js';     // specialized
+import './components/sai2-interfaces-plot-button.js';
 import './components/sai2-interfaces-plot.js';
-import './components/sai2-interfaces-setkey.js';   // simple component
-import './components/sai2-interfaces-simple-data-structure-setter.js';   // specialized
+import './components/sai2-interfaces-setkey.js';
+import './components/sai2-interfaces-simple-data-structure-setter.js';
 import './components/sai2-interfaces-slider.js';
 import './components/sai2-interfaces-tabs.js';   // container
 import './components/sai2-interfaces-toggle-group.js';
