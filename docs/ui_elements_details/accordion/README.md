@@ -44,18 +44,17 @@ toggle key is set to true. The corresponding HTML is below:
 ```
 
 If you are not familar with the `sai2-interfaces-slider` syntax, please read 
-through [its documentation here](../04-slider/04-slider.md).
+through [its documentation here](../slider/slider.md).
 
 First, let's make sure our keys are in redis. There's a helper script in this 
 folder that you can run to do this:
 ```
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ python3 docs/05-accordion/writekeys.py 
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ 
+python3 docs/ui_elements_details/ui_elements_details/accordion/writekeys.py
 ```
 
 Next, we run the server as follows:
 ```
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ python3 interface/server.py docs/05-accordion/05-accordion.html 
+~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/accordion/accordion.html 
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 142-257-956
@@ -74,7 +73,7 @@ multiple sliders show up:
 We can verify the `sai2::interfaces::tutorial::toggle_key`has been updated 
 correctly:
 ```
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ redis-cli
+~/sai2/core/sai2-interfaces$ redis-cli
 127.0.0.1:6379> get sai2::interfaces::tutorial::toggle_me
 "1"
 127.0.0.1:6379> 

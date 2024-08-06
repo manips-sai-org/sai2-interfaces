@@ -14,8 +14,7 @@ scalar-valued, vector-valued, or matrix-valued Redis key at the specified refres
 within Redis, then an error will be thrown.
 * `refreshRate`: Required. How often to refresh the display in seconds. 
 Don't make this too fast - if you want to observe key values at a 
-faster rate, use the [plot](../09-plot/README.md) or 
-[logger](../08-logger) elements.
+faster rate, use the [plot](../plot/README.md) element, or log data for leter plotting.
 * `decimalPlaces`: Required. How many decimal places to display.
 * `displayAsRowVector`: Optional. If the key is a vector, it will be shown as a
 row vector.
@@ -28,7 +27,7 @@ with 4 elements, and the `matrix_key` will hold a 4x4 matrix.
 
 Let's run the script first:
 ```
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ python3 docs/03-display/writekeys.py 
+~/sai2/core/sai2-interfaces$ python3 docs/ui_elements_details/display/writekeys.py 
 Writing keys...
 ```
 

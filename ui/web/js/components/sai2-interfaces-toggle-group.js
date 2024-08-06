@@ -1,6 +1,5 @@
 
 import { get_redis_val, post_redis_key_val } from '../redis.js';
-import Sai2InterfacesComponent from './sai2-interfaces-component.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
@@ -34,6 +33,7 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 
 		this.container = template_node.querySelector(".sai2-interfaces-toggle-group-container");
 		this.checkbox = template_node.querySelector("input");
+		this.checkbox.checked = this.enabled;
 		this.label = template_node.querySelector("span");
 		this.label.innerHTML = this.display;
 

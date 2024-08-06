@@ -19,7 +19,7 @@ Default is the key name.
 Open up `redis-cli`, and let's set the key 
 `sai2::interfaces::tutorial::toggle_me` to the value 1:
 ```
-wjen@wjen-desktop:~$ redis-cli
+~$ redis-cli
 127.0.0.1:6379> set sai2::interfaces::tutorial::toggle_me 1
 OK
 127.0.0.1:6379> get sai2::interfaces::tutorial::toggle_me
@@ -28,7 +28,7 @@ OK
 ```
 
 Now let's see the toggle element in action. If we put the following in the 
-`<body></body>` tags of [01-toggle.html](./01-toggle.html):
+`<body></body>` tags of [toggle.html](./toggle.html):
 ```
 <sai2-interfaces-toggle key="sai2::interfaces::tutorial::toggle_me">
 </sai2-interfaces-toggle>
@@ -37,8 +37,7 @@ Now let's see the toggle element in action. If we put the following in the
 and then we run the following in a separate terminal at the `sai2-interfaces` 
 repository root:
 ```
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ python3 interface/server.py 
-docs/01-toggle/01-toggle.html 
+~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/toggle/toggle.html 
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 142-257-956
@@ -47,12 +46,12 @@ docs/01-toggle/01-toggle.html
 Open your browser to `localhost:8000` and we should be able to see our toggle 
 button set to "ON".
 
-![sai2::interfaces::tutorial::toggle_me set to on](./toggle-on.png)
+![sai2::interfaces::tutorial::toggle_me set to on](./toggle1.png)
 
 Now click the "ON" button. You should see that the toggle button has 
 switched to "OFF".
 
-![sai2::interfaces::tutorial::toggle_me set to off](./toggle-off.png)
+![sai2::interfaces::tutorial::toggle_me set to off](./toggle2.png)
 
 We can verify that the value of "0" has been written to Redis.
 ```
@@ -63,7 +62,7 @@ We can verify that the value of "0" has been written to Redis.
 
 Now let's customize the display name by specifying the `display` attribute. 
 Let's edit the `<sai2-interfaces-toggle>` element 
-[01-toggle.html](./01-toggle.html) to the following:
+[toggle.html](./toggle.html) to the following:
 ```
 <sai2-interfaces-toggle display="toggle_me" key="sai2::interfaces::tutorial::toggle_me">
 </sai2-interfaces-toggle>
@@ -71,4 +70,4 @@ Let's edit the `<sai2-interfaces-toggle>` element
 
 Refresh your browser, and you should see the customized text.
 
-![toggle_me custom display](./toggle-display.png)
+![toggle_me custom display](./toggle3.png)

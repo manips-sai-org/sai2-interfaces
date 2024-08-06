@@ -1,36 +1,37 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>05-accordion</title>
 
-    <!-- Global and utility stylesheets -->
-    <link rel="stylesheet" href="./css/picnic.min.css" type="text/css">
-    <link rel="stylesheet" href="./css/range_input.css" type="text/css">
-    <link rel="stylesheet" href="./css/global_styles.css" type="text/css">
-    <link rel="stylesheet" href="./css/chosen.min.css" type="text/css">
+<head>
+	<meta charset="UTF-8">
+	<title>toggle-group tutorial</title>
 
-    <!-- External library includes -->
-    <script src="./js/library/jquery-3.3.1.min.js" type="text/javascript"></script>
-    <script src="./js/library/chosen.jquery.min.js" type="text/javascript"></script>
-    <script src="./js/library/plotly.min.js" type="text/javascript"></script>
-    <script src="./js/library/socket.io.js" type="text/javascript"></script>
+	<!-- Global and utility stylesheets -->
+	<link rel="stylesheet" href="./css/picnic.min.css" type="text/css">
+	<link rel="stylesheet" href="./css/range_input.css" type="text/css">
+	<link rel="stylesheet" href="./css/global_styles.css" type="text/css">
+	<link rel="stylesheet" href="./css/chosen.min.css" type="text/css">
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css">
 
-    <!-- global execution scripts -->
-    <script type="module" src="./js/index.js"></script>
-  </head>
-  <body>
-    <sai2-interfaces-toggle-group name="Check me!">
-      <sai2-interfaces-toggle-group-enabled>
-        <sai2-interfaces-slider key="sai2::interfaces::tutorial::scalar_key" 
-          display="scalar" min="0" max="5" step="0.1">
-        </sai2-interfaces-slider>
-      </sai2-interfaces-toggle-group-enabled>
-      <sai2-interfaces-toggle-group-disabled>
-        <sai2-interfaces-slider key="sai2::interfaces::tutorial::vector_key" 
-          display="vector" min="0" max="5" step="[0.1,0.1]">
-        </sai2-interfaces-slider>
-      </sai2-interfaces-toggle-group-disabled>
-    </sai2-interfaces-toggle-group>
-  </body>
+	<!-- External library includes -->
+	<script src="./js/library/jquery-3.3.1.min.js" type="text/javascript"></script>
+	<script src="./js/library/chosen.jquery.min.js" type="text/javascript"></script>
+	<script src="./js/library/plotly.min.js" type="text/javascript"></script>
+	<script src="./js/library/socket.io.js" type="text/javascript"></script>
+	<script src="./bootstrap/js/bootstrap.bundle.min.js"></script>
+
+	<!-- global execution scripts -->
+	<script type="module" src="./js/index.js"></script>
+</head>
+
+<body>
+	<sai2-interfaces-toggle-group name="Check me!">
+		<sai2-interfaces-toggle-group-enabled>
+			<sai2-interfaces-slider key="sai2::interfaces::tutorial::scalar_key" display="scalar" min="0" max="10"/>
+		</sai2-interfaces-toggle-group-enabled>
+		<sai2-interfaces-toggle-group-disabled>
+			<sai2-interfaces-slider key="sai2::interfaces::tutorial::vector_key" display="vector" min="0" max="10"/>
+		</sai2-interfaces-toggle-group-disabled>
+	</sai2-interfaces-toggle-group>
+</body>
+
 </html>

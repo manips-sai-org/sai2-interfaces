@@ -36,8 +36,10 @@ them to show when the checkbox is *not* checked.
 is thus used to identify the toggle group on the interface.
 * `key`: Optional. The checkbox can be hooked up to a Redis key that holds a 
 boolean value. Otherwise, the checkbox value is held in memory and is 
-initialized to unchecked. If you do set this as a Redis key, it must exist or 
-else an error will be thrown.
+initialized to unchecked.
+* `enabled`: Optional. Set to "true" or "false". If the toggle group is not
+attached to a redis key, or if the redis key does not exist, this will decide if the
+checkbox is initially checked or not. If ommited, the behavior is enabled="false" by default
 
 ## Example
 For this example, we're going show a slider for 
@@ -46,29 +48,24 @@ slider for `sai2::interfaces::tutorial::vector_key` when the checkbox is not
 checked. The corresponding HTML is below:
 ```
 <sai2-interfaces-toggle-group name="Check me!">
-  <sai2-interfaces-toggle-group-enabled>
-    <sai2-interfaces-slider key="sai2::interfaces::tutorial::scalar_key" 
-      display="scalar" min="0" max="5" step="0.1">
-    </sai2-interfaces-slider>
-  </sai2-interfaces-toggle-group-enabled>
-  <sai2-interfaces-toggle-group-disabled>
-    <sai2-interfaces-slider key="sai2::interfaces::tutorial::vector_key" 
-      display="vector" min="0" max="5" step="[0.1,0.1]">
-    </sai2-interfaces-slider>
-  </sai2-interfaces-toggle-group-disabled>
+	<sai2-interfaces-toggle-group-enabled>
+		<sai2-interfaces-slider key="sai2::interfaces::tutorial::scalar_key" display="scalar" min="0" max="10"/>
+	</sai2-interfaces-toggle-group-enabled>
+	<sai2-interfaces-toggle-group-disabled>
+		<sai2-interfaces-slider key="sai2::interfaces::tutorial::vector_key" display="vector" min="0" max="10"/>
+	</sai2-interfaces-toggle-group-disabled>
 </sai2-interfaces-toggle-group>
 ```
 
 First, let's make sure our keys are in redis. There's a helper script in this 
 folder that you can run to do this:
 ```
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ python3 docs/06-toggle-group/writekeys.py 
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ 
+~/sai2/core/sai2-interfaces$ python3 docs/ui_elements_details/toggle-group/writekeys.py 
 ```
 
 Now let's boot up the server:
 ```
-wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ python3 interface/server.py docs/06-toggle-group/06-toggle-group.html 
+~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/toggle-group/toggle-group.html 
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 142-257-956
@@ -78,7 +75,7 @@ wjen@wjen-desktop:~/sai2/core/sai2-interfaces$ python3 interface/server.py docs/
 Open up your browser to `localhost:8000`, and you should see something like 
 this:
 
-![toggle group initial](./toggle-group-initial.png)
+![toggle group initial](./toggle-group1.png)
 
 As expected, when the checkbox is not checked, we show the sliders for the 
 `sai2::interfaces::tutorial::vector_key` Redis key. 
@@ -86,9 +83,9 @@ As expected, when the checkbox is not checked, we show the sliders for the
 Now let's click the checkbox. You should see the slider switch to the 
 `sai2::interfaces::tutorial::scalar_key`:
 
-![toggle group checked](./toggle-group-toggled.png)
+![toggle group checked](./toggle-group2.png)
 
 Finally, you can add the `key="sai2::interfaces::tutorial::toggle_me"` attribute
 to the `sai2-interfaces-toggle-group` element in 
-[06-toggle-group.html](./06-toggle-group.html). You should see the checkbox 
-value persist across webpage refreshes.
+[toggle-group.html](./toggle-group.html). You should see the checkbox 
+value in the redis database, and it will persist across webpage refreshes.

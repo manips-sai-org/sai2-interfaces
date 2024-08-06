@@ -27,7 +27,7 @@ mkdir build && cd build
 cmake .. && make -j4
 ```
 
-This will build the wrappers for the controllers and simviz, the MainInterface program, and will export `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute path of the `ui/` folder in this repository. You can then use cmake's `FILE(CREATE_LINK)` macro to make a symlink to this directory from another application for easy access (recommended, see the CMakeLists.txt file of [OpenSai](https://github.com/manips-sai-org/OpenSai)), or the `FILE(COPY)` macro to copy it.
+This will build the wrappers for the controllers and simviz, the MainInterface program, and will export `${SAI2-INTERFACES_UI_DIR}`, which points to the absolute path of the `ui/` folder in this repository. You can then use cmake's `FILE(CREATE_LINK)` macro to make a symlink to this directory from another application for easy access (recommended, for an example see the CMakeLists.txt file of [OpenSai](https://github.com/manips-sai-org/OpenSai)), or the `FILE(COPY)` macro to copy it.
 
 ### Running examples
 
