@@ -8,10 +8,10 @@ int main(int argc, char** argv) {
 	// define the config folder. Only config files in that folder can be used by
 	// this application
 	std::string config_folder_path =
-		std::string(EXAMPLE_FOLDER_PATH) + "/03-main-interface";
+		std::string(EXAMPLE_FOLDER_PATH) + "/config_files";
 
 	// initial config file (optionnal)
-	std::string config_file = "config_panda.xml";
+	std::string config_file = "panda_simviz_control_1.xml";
 
 	Sai2Interfaces::MainRedisInterface main_interface(config_folder_path,
 													  config_file);
