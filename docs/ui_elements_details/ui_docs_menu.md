@@ -7,11 +7,11 @@ Here is the menu of the sai2-interfaces ui documentation. This documentation aim
 ## Fundamentals
 * [Fundamentals](./00-fundamentals/README.md)
 
-## Core Components
+## Basic Components
+* [Display](./display/README.md)
 * [Setkey](./setkey/README.md)
 * [Toggle](./toggle/README.md)
 * [Enum](./enum/README.md)
-* [Display](./display/README.md)
 * [Slider](./slider/README.md)
 
 ## Containers 
