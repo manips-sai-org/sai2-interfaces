@@ -1,51 +1,47 @@
-<simvizConfiguration>
-	<worldFilePath>${WORLD_FILES_FOLDER}/world_kukas.urdf</worldFilePath>
+<simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_kukas.urdf">
 
-	<logger>
-		<logFolderName>logs_simviz_kukas</logFolderName>
-	</logger>
+	<logger logFolderName="logs_simviz_kukas"/>
 
-	<forceSensor>
-		<robotName>Kuka1</robotName>
-		<linkName>end-effector</linkName>
-		<origin xyz="0 0 0" rpy="0 0 0" />
-		<filterCutoff>15.0</filterCutoff>
-	</forceSensor>
+	<forceSensor robotOrObjectName="Kuka1"
+		linkName="end-effector"
+		filterCutoff="15.0"/>
+	<forceSensor robotOrObjectName="Kuka2"
+		linkName="end-effector"
+		filterCutoff="15.0"/>
 
-	<forceSensor>
-		<robotName>Kuka2</robotName>
-		<linkName>end-effector</linkName>
-		<origin xyz="0 0 0" rpy="0 0 0" />
-		<filterCutoff>15.0</filterCutoff>
-	</forceSensor>
 </simvizConfiguration>
 
 <robotControlConfiguration robotName="Kuka1">
 	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/iiwa7/kuka_iiwa.urdf</robotModelFile>
-	<baseFrame xyz="0.0 -0.3 0.0" rpy="0 0 0" />
+	<baseFrame xyz="0.0 -0.3 0.0"
+		rpy="0 0 0" />
 
 	<logger>
 		<logFolderName>logs_controllers_kukas</logFolderName>
 	</logger>
 
-	<interface  minGoalPosition='[-0.7,-1.0,0.0]'
-				maxGoalPosition='[0.7,0.4,1.0]' 
-	/>
+	<interface minGoalPosition='[-0.7,-1.0,0.0]'
+		maxGoalPosition='[0.7,0.4,1.0]'/>
 
 	<controller name="cartesian_controller">
-		<task name="cartesian_task" type="motion_force_task">
+		<task name="cartesian_task"
+			type="motion_force_task">
 			<linkName>end-effector</linkName>
-			<velocitySaturation enabled="true" linear_velocity_limit="0.25" angular_velocity_limit="0.78" />
+			<velocitySaturation enabled="true"
+				linear_velocity_limit="0.25"
+				angular_velocity_limit="0.78" />
 			<otg type="disabled"/>
 		</task>
 
-		<task name="joint_task" type="joint_task">
+		<task name="joint_task"
+			type="joint_task">
 			<otg type="disabled" />
 		</task>
 	</controller>
 
 	<controller name="joint_controller">
-		<task name="joint_task" type="joint_task">
+		<task name="joint_task"
+			type="joint_task">
 			<velocitySaturation enabled="true"/>
 			<otg type="disabled"/>
 		</task>
@@ -55,26 +51,31 @@
 
 <robotControlConfiguration robotName="Kuka2">
 	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/iiwa7/kuka_iiwa.urdf</robotModelFile>
-	<baseFrame xyz="0.0 0.3 0.0" rpy="0 0 0" />
+	<baseFrame xyz="0.0 0.3 0.0"
+		rpy="0 0 0" />
 
-	<interface  minGoalPosition='[-0.7,-0.4,0.0]'
-				maxGoalPosition='[0.7,1.0,1.0]' 
-	/>
+	<interface minGoalPosition='[-0.7,-0.4,0.0]'
+		maxGoalPosition='[0.7,1.0,1.0]'/>
 
 	<controller name="cartesian_controller">
-		<task name="cartesian_task" type="motion_force_task">
+		<task name="cartesian_task"
+			type="motion_force_task">
 			<linkName>end-effector</linkName>
-			<velocitySaturation enabled="true" linear_velocity_limit="0.25" angular_velocity_limit="0.78" />
+			<velocitySaturation enabled="true"
+				linear_velocity_limit="0.25"
+				angular_velocity_limit="0.78" />
 			<otg type="disabled"/>
 		</task>
 
-		<task name="joint_task" type="joint_task">
+		<task name="joint_task"
+			type="joint_task">
 			<otg type="disabled" />
 		</task>
 	</controller>
 
 	<controller name="joint_controller">
-		<task name="joint_task" type="joint_task">
+		<task name="joint_task"
+			type="joint_task">
 			<velocitySaturation enabled="true"/>
 			<otg type="disabled"/>
 		</task>

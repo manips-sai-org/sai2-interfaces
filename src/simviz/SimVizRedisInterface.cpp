@@ -123,9 +123,7 @@ void SimVizRedisInterface::resetInternal() {
 				_config.enable_joint_limits;
 			dynamic_and_rendering_params.collision_restitution_coefficient =
 				_config.global_collision_restitution;
-			dynamic_and_rendering_params.static_friction_coefficient =
-				_config.global_friction_coefficient;
-			dynamic_and_rendering_params.dynamic_friction_coefficient =
+			dynamic_and_rendering_params.friction_coefficient =
 				_config.global_friction_coefficient;
 			_config.model_specific_dynamic_and_rendering_params[robot_name] =
 				dynamic_and_rendering_params;
@@ -195,9 +193,7 @@ void SimVizRedisInterface::resetInternal() {
 			DynamicAndRenderingParams dynamic_and_rendering_params;
 			dynamic_and_rendering_params.collision_restitution_coefficient =
 				_config.global_collision_restitution;
-			dynamic_and_rendering_params.static_friction_coefficient =
-				_config.global_friction_coefficient;
-			dynamic_and_rendering_params.dynamic_friction_coefficient =
+			dynamic_and_rendering_params.friction_coefficient =
 				_config.global_friction_coefficient;
 			_config.model_specific_dynamic_and_rendering_params[object_name] =
 				dynamic_and_rendering_params;
@@ -240,10 +236,18 @@ void SimVizRedisInterface::resetInternal() {
 	// force sensors only if there is simulation
 	if (_config.mode != SimVizMode::VIZ_ONLY) {
 		for (const auto& force_sensor_config : _config.force_sensors) {
-			_simulation->addSimulatedForceSensor(
-				force_sensor_config.robot_name, force_sensor_config.link_name,
-				force_sensor_config.transform_in_link,
-				force_sensor_config.cutoff_frequency);
+			if (force_sensor_config.link_name == "") {
+				_simulation->addSimulatedForceSensor(
+					force_sensor_config.robot_or_object_name,
+					force_sensor_config.transform_in_link,
+					force_sensor_config.cutoff_frequency);
+			} else {
+				_simulation->addSimulatedForceSensor(
+					force_sensor_config.robot_or_object_name,
+					force_sensor_config.link_name,
+					force_sensor_config.transform_in_link,
+					force_sensor_config.cutoff_frequency);
+			}
 		}
 
 		_force_sensor_data = _simulation->getAllForceSensorData();
@@ -561,9 +565,7 @@ void SimVizRedisInterface::setModelSpecificParametersFromConfig(
 	_simulation->setCollisionRestitution(
 		model_specific_params.collision_restitution_coefficient, model_name);
 	_simulation->setCoeffFrictionStatic(
-		model_specific_params.static_friction_coefficient, model_name);
-	_simulation->setCoeffFrictionDynamic(
-		model_specific_params.dynamic_friction_coefficient, model_name);
+		model_specific_params.friction_coefficient, model_name);
 	_graphics->showWireMesh(model_specific_params.wire_mesh_rendering_mode,
 							model_name);
 	_graphics->showLinkFrame(model_specific_params.frames_rendering_enabled,

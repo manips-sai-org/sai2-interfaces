@@ -62,6 +62,7 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 								 config_file);
 	}
 
+	// Extract the simvizConfiguration element
 	tinyxml2::XMLElement* simviz_config_xml =
 		doc.FirstChildElement("simvizConfiguration");
 	if (!simviz_config_xml) {
@@ -70,14 +71,24 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 			config_file);
 	}
 
-	// Extract the worldFilePath
-	tinyxml2::XMLElement* worldFilePath =
-		simviz_config_xml->FirstChildElement("worldFilePath");
-	if (!worldFilePath) {
+	// error out if there are multiple simvizConfiguration elements
+	if (simviz_config_xml->NextSiblingElement("simvizConfiguration")) {
 		throw std::runtime_error(
-			"No 'worldFilePath' element found in config file: " + config_file);
+			"Only one 'simvizConfiguration' element is allowed in config "
+			"file: " +
+			config_file);
 	}
-	config.world_file = worldFilePath->GetText();
+
+	// Extract the worldFilePath
+	// tinyxml2::XMLElement* worldFilePath =
+	// simviz_config_xml->FirstChildElement("worldFilePath");
+	if (!simviz_config_xml->Attribute("worldFilePath")) {
+		throw std::runtime_error(
+			"No 'worldFilePath' Attribute found in simVizConfiguration element "
+			"in config file: " +
+			config_file);
+	}
+	config.world_file = simviz_config_xml->Attribute("worldFilePath");
 
 	// get the redis prefix
 	if (simviz_config_xml->Attribute("redisPrefix")) {
@@ -85,9 +96,8 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	}
 
 	// Extract the simviz mode
-	tinyxml2::XMLElement* mode = simviz_config_xml->FirstChildElement("mode");
-	if (mode) {
-		std::string mode_str = mode->GetText();
+	if (simviz_config_xml->Attribute("mode")) {
+		std::string mode_str = simviz_config_xml->Attribute("mode");
 		if (mode_str == "simviz") {
 			config.mode = SimVizMode::SIMVIZ;
 		} else if (mode_str == "simOnly") {
@@ -105,92 +115,84 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	tinyxml2::XMLElement* simParams =
 		simviz_config_xml->FirstChildElement("simParameters");
 	if (simParams) {
-		if (simParams->FirstChildElement("timestep")) {
-			config.timestep =
-				simParams->FirstChildElement("timestep")->DoubleText();
+		if (simParams->NextSiblingElement("simParameters")) {
+			throw std::runtime_error(
+				"Only one 'simParameters' element is allowed per "
+				"'simvizConfiguration'element in config file: " +
+				config_file);
 		}
-
-		if (simParams->FirstChildElement("speedupFactor")) {
-			config.speedup_factor =
-				simParams->FirstChildElement("speedupFactor")->DoubleText();
+		if (simParams->Attribute("timestep")) {
+			config.timestep = simParams->DoubleAttribute("timestep");
 		}
-
-		if (simParams->FirstChildElement("enableJointLimits")) {
+		if (simParams->Attribute("speedupFactor")) {
+			config.speedup_factor = simParams->DoubleAttribute("speedupFactor");
+		}
+		if (simParams->Attribute("enableJointLimits")) {
 			config.enable_joint_limits =
-				simParams->FirstChildElement("enableJointLimits")->BoolText();
+				simParams->BoolAttribute("enableJointLimits");
 		}
-
-		if (simParams->FirstChildElement("coeffFriction")) {
+		if (simParams->Attribute("frictionCoefficient")) {
 			config.global_friction_coefficient =
-				simParams->FirstChildElement("coeffFriction")->DoubleText();
+				simParams->DoubleAttribute("frictionCoefficient");
 		}
-
-		if (simParams->FirstChildElement("collisionRestitution")) {
+		if (simParams->Attribute("collisionRestitutionCoefficient")) {
 			config.global_collision_restitution =
-				simParams->FirstChildElement("collisionRestitution")
-					->DoubleText();
+				simParams->DoubleAttribute("collisionRestitutionCoefficient");
 		}
-
-		if (simParams->FirstChildElement("enableGravityCompensation")) {
+		if (simParams->Attribute("enableGravityCompensation")) {
 			config.enable_gravity_compensation =
-				simParams->FirstChildElement("enableGravityCompensation")
-					->BoolText();
+				simParams->BoolAttribute("enableGravityCompensation");
 		}
+	}
 
-		// Extract model specific dynamic and rendering parameters
-		for (tinyxml2::XMLElement* modelParams = simParams->FirstChildElement(
+	// Extract model specific dynamic and rendering parameters
+	for (tinyxml2::XMLElement* modelParams =
+			 simviz_config_xml->FirstChildElement(
 				 "robotOrObjectSpecificParameters");
-			 modelParams; modelParams = modelParams->NextSiblingElement(
-							  "robotOrObjectSpecificParameters")) {
-			DynamicAndRenderingParams params;
+		 modelParams; modelParams = modelParams->NextSiblingElement(
+						  "robotOrObjectSpecificParameters")) {
+		DynamicAndRenderingParams params;
 
-			if (!modelParams->Attribute("name")) {
-				throw std::runtime_error(
-					"Robot or object specific parameters must have a name "
-					"attribute");
-			}
-			std::string name = modelParams->Attribute("name");
-
-			if (modelParams->Attribute("dynamicsEnabled")) {
-				params.dynamics_enabled =
-					modelParams->BoolAttribute("dynamicsEnabled");
-			}
-			if (modelParams->Attribute("renderingEnabled")) {
-				params.rendering_enabled =
-					modelParams->BoolAttribute("renderingEnabled");
-			}
-			if (modelParams->Attribute("jointLimitsEnabled")) {
-				params.joint_limits_enabled =
-					modelParams->BoolAttribute("jointLimitsEnabled");
-			}
-			if (modelParams->Attribute("collisionRestitutionCoefficient")) {
-				params.collision_restitution_coefficient =
-					modelParams->DoubleAttribute(
-						"collisionRestitutionCoefficient");
-			}
-			if (modelParams->Attribute("staticFrictionCoefficient")) {
-				params.static_friction_coefficient =
-					modelParams->DoubleAttribute("staticFrictionCoefficient");
-			}
-			if (modelParams->Attribute("dynamicFrictionCoefficient")) {
-				params.dynamic_friction_coefficient =
-					modelParams->DoubleAttribute("dynamicFrictionCoefficient");
-			}
-			if (modelParams->Attribute("wireMeshRenderingMode")) {
-				params.wire_mesh_rendering_mode =
-					modelParams->BoolAttribute("wireMeshRenderingMode");
-			}
-			if (modelParams->Attribute("framesRenderingEnabled")) {
-				params.frames_rendering_enabled =
-					modelParams->BoolAttribute("framesRenderingEnabled");
-			}
-			if (modelParams->Attribute("frameSizeWhenRendering")) {
-				params.frames_size_when_rendering =
-					modelParams->DoubleAttribute("frameSizeWhenRendering");
-			}
-
-			config.model_specific_dynamic_and_rendering_params[name] = params;
+		if (!modelParams->Attribute("name")) {
+			throw std::runtime_error(
+				"Robot or object specific parameters must have a name "
+				"attribute");
 		}
+		std::string name = modelParams->Attribute("name");
+
+		if (modelParams->Attribute("dynamicsEnabled")) {
+			params.dynamics_enabled =
+				modelParams->BoolAttribute("dynamicsEnabled");
+		}
+		if (modelParams->Attribute("renderingEnabled")) {
+			params.rendering_enabled =
+				modelParams->BoolAttribute("renderingEnabled");
+		}
+		if (modelParams->Attribute("jointLimitsEnabled")) {
+			params.joint_limits_enabled =
+				modelParams->BoolAttribute("jointLimitsEnabled");
+		}
+		if (modelParams->Attribute("collisionRestitutionCoefficient")) {
+			params.collision_restitution_coefficient =
+				modelParams->DoubleAttribute("collisionRestitutionCoefficient");
+		}
+		if (modelParams->Attribute("frictionCoefficient")) {
+			params.friction_coefficient =
+				modelParams->DoubleAttribute("frictionCoefficient");
+		}
+		if (modelParams->Attribute("wireMeshRenderingMode")) {
+			params.wire_mesh_rendering_mode =
+				modelParams->BoolAttribute("wireMeshRenderingMode");
+		}
+		if (modelParams->Attribute("framesRenderingEnabled")) {
+			params.frames_rendering_enabled =
+				modelParams->BoolAttribute("framesRenderingEnabled");
+		}
+		if (modelParams->Attribute("frameSizeWhenRendering")) {
+			params.frames_size_when_rendering =
+				modelParams->DoubleAttribute("frameSizeWhenRendering");
+		}
+		config.model_specific_dynamic_and_rendering_params[name] = params;
 	}
 
 	// Extract forceSensor elements
@@ -200,26 +202,23 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 		 forceSensor = forceSensor->NextSiblingElement("forceSensor")) {
 		SimForceSensorConfig force_sensor_config;
 
-		if (forceSensor->FirstChildElement("robotName")) {
-			force_sensor_config.robot_name =
-				forceSensor->FirstChildElement("robotName")->GetText();
+		if (!forceSensor->Attribute("robotOrObjectName")) {
+			throw std::runtime_error(
+				"Force sensor must have a 'robotOrObjectName' attribute");
 		}
-
-		if (forceSensor->FirstChildElement("linkName")) {
-			force_sensor_config.link_name =
-				forceSensor->FirstChildElement("linkName")->GetText();
+		force_sensor_config.robot_or_object_name =
+			forceSensor->Attribute("robotOrObjectName");
+		if (forceSensor->Attribute("linkName")) {
+			force_sensor_config.link_name = forceSensor->Attribute("linkName");
 		}
-
+		if (forceSensor->Attribute("filterCutoff")) {
+			force_sensor_config.cutoff_frequency =
+				forceSensor->DoubleAttribute("filterCutoff");
+		}
 		tinyxml2::XMLElement* origin = forceSensor->FirstChildElement("origin");
 		if (origin) {
 			force_sensor_config.transform_in_link = parsePoseLocal(origin);
 		}
-
-		if (forceSensor->FirstChildElement("filterCutoff")) {
-			force_sensor_config.cutoff_frequency =
-				forceSensor->FirstChildElement("filterCutoff")->DoubleText();
-		}
-
 		config.force_sensors.push_back(force_sensor_config);
 	}
 
@@ -227,24 +226,32 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	tinyxml2::XMLElement* logger =
 		simviz_config_xml->FirstChildElement("logger");
 	if (logger) {
-		if (logger->FirstChildElement("logFolderName")) {
+		if (logger->NextSiblingElement("logger")) {
+			throw std::runtime_error(
+				"Only one 'logger' element is allowed per "
+				"'simvizConfiguration' "
+				"element in config file: " +
+				config_file);
+		}
+
+		if (logger->Attribute("logFolderName")) {
 			config.logger_config.folder_name =
-				logger->FirstChildElement("logFolderName")->GetText();
+				logger->Attribute("logFolderName");
 		}
 
-		if (logger->FirstChildElement("logFrequency")) {
+		if (logger->Attribute("logFrequency")) {
 			config.logger_config.frequency =
-				logger->FirstChildElement("logFrequency")->DoubleText();
+				logger->DoubleAttribute("logFrequency");
 		}
 
-		if (logger->FirstChildElement("startWithSimulation")) {
+		if (logger->Attribute("startWithSimulation")) {
 			config.logger_config.start_with_logger_on =
-				logger->FirstChildElement("startWithSimulation")->BoolText();
+				logger->BoolAttribute("startWithSimulation");
 		}
 
-		if (logger->FirstChildElement("timestampInFilename")) {
+		if (logger->Attribute("timestampInFilename")) {
 			config.logger_config.add_timestamp_to_filename =
-				logger->FirstChildElement("timestampInFilename")->BoolText();
+				logger->BoolAttribute("timestampInFilename");
 		}
 	}
 

@@ -1,28 +1,15 @@
-<simvizConfiguration>
-	<worldFilePath>${WORLD_FILES_FOLDER}/world_panda.urdf</worldFilePath>
-
-	<simParameters>
-		<coeffFriction>0.5</coeffFriction>
-	</simParameters>
-
-	<logger>
-		<logFolderName>panda_simviz_log_files</logFolderName>
-		<logFrequency>100</logFrequency>
-		<startWithSimulation>true</startWithSimulation>
-		<timestampInFilename>false</timestampInFilename>
-	</logger>
-
-	<forceSensor>
-		<robotName>Panda</robotName>
-		<linkName>end-effector</linkName>
-		<filterCutoff>5.0</filterCutoff>
-	</forceSensor>
+<simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf">
+	<simParameters coeffFriction="0.5"/>
+	<logger logFolderName="panda_simviz_log_files"/>
+	<forceSensor robotOrObjectName="Panda"
+		linkName="end-effector"/>
 </simvizConfiguration>
 
 
 <robotControlConfiguration robotName="Panda">
 	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf</robotModelFile>
-	<baseFrame xyz="0 0 0" rpy="0 0 0" />
+	<baseFrame xyz="0 0 0"
+		rpy="0 0 0" />
 	<worldGravity xyz="0 0 -9.81" />
 
 	<logger>
@@ -33,24 +20,26 @@
 	</logger>
 
 	<controller name="cartesian_controller">
-		<task name="cartesian_task" type="motion_force_task">
+		<task name="cartesian_task"
+			type="motion_force_task">
 			<linkName>end-effector</linkName>
 			<velocitySaturation enabled="true"/>
 			<otg type="disabled"/>
 
-	<interface  minGoalPosition='[-0.4,-0.4,-0.1]'
-				maxGoalPosition='[0.4,0.4,0.7]' 
-	/>
+			<interface minGoalPosition='[-0.4,-0.4,-0.1]'
+				maxGoalPosition='[0.4,0.4,0.7]'/>
 
 		</task>
 
-		<task name="joint_task" type="joint_task">
+		<task name="joint_task"
+			type="joint_task">
 			<otg type="disabled" />
 		</task>
 	</controller>
 
 	<controller name="joint_controller">
-		<task name="joint_task" type="joint_task">
+		<task name="joint_task"
+			type="joint_task">
 			<velocitySaturation enabled="true"/>
 			<otg type="disabled"/>
 		</task>
