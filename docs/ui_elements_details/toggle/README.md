@@ -10,8 +10,9 @@ The `sai2-interfaces-toggle` element allows you to toggle a Redis key between 0
 ```
 
 ## Attributes
-* `key`: Required. Specifies which Redis key to get/set for toggling. If the 
-Redis key does not exist, it will be set to 0 initially.
+* `key`: Required. Specifies which Redis key to set for toggling. If the 
+Redis key does not exist, the toggle will start in OFF mode and the key 
+will be set the first time the toggle is clicked
 * `display`: Optional. Specifies what text to put next to the toggle button. 
 Default is the key name.
 
@@ -38,9 +39,6 @@ and then we run the following in a separate terminal at the `sai2-interfaces`
 repository root:
 ```
 ~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/toggle/toggle.html 
- * Restarting with stat
- * Debugger is active!
- * Debugger PIN: 142-257-956
 ```
 
 Open your browser to `localhost:8000` and we should be able to see our toggle 

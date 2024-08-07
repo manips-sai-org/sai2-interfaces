@@ -43,12 +43,11 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 				this.checkbox.checked = value;
 				this.updateGroups();
 			});
-			post_redis_key_val(this.key, this.enabled ? 1 : 0);
 		}
 
 		this.checkbox.onchange = async e => {
 			this.enabled = e.target.checked;
-			
+
 			this.updateGroups();
 
 			// sleep for 100ms to allow the interface to update

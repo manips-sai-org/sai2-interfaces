@@ -26,7 +26,7 @@ only when interpolation is enabled.
 
 * `key`: Optional. When the accordion is toggled (contents shown and green fill), the key will be set to 1.
 When it is not toggled (contents not shown and red fill), the key is set to zero.
-If the key already exists, it will be used for the initial state of the accordion. Otherwise, the accordion is not toggled by default.
+If the key already exists, it will be used for the initial state of the accordion. Otherwise, the accordion is not toggled by default, and the key will be set the first time the accordion is clicked.
 * `displayName`: Optional. This text is what is shown as the accordion header. If not present, the key is used
 
 ## Example
@@ -61,10 +61,6 @@ Next, we run the server as follows:
 
 ```
 ~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/accordion/accordion.html 
- * Restarting with stat
- * Debugger is active!
- * Debugger PIN: 142-257-956
-(24518) wsgi starting up on http://127.0.0.1:8000
 ```
 
 Open your browser to `localhost:8000` and you should see something like this:

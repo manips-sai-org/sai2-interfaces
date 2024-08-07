@@ -40,6 +40,12 @@ export function get_redis_val(key) {
 		.catch(error => console.error('error posting redis key: ' + key + '. Error: ' + error));
 }
 
+/**
+ * Waits for a Redis key to have a specific value.
+ * @param {string} key The Redis key to check
+ * @param {*} val The value to wait for
+ * @returns {Promise} A promise that resolves when the Redis key has the specified value
+ */
 export function wait_for_redis_val(key, val) {
 	return new Promise(resolve => {
 		const checkValue = () => {

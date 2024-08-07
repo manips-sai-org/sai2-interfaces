@@ -37,7 +37,8 @@ is thus used to identify the toggle group on the interface.
 * `key`: Optional. The checkbox can be hooked up to a Redis key that holds a 
 boolean value. Otherwise, the checkbox value is held in memory and is 
 initialized to unchecked. If the key is present but does not exists in the redis
-database, then it will be initialized to 0.
+database, then the checkbox starts unckecked and the key will be set the first 
+time the checkbox is clicked
 * `enabled`: Optional. If the toggle group is not
 attached to a redis key, or if the redis key does not exist,
 this will initialize the checkbox to enabled. 
@@ -68,10 +69,6 @@ folder that you can run to do this:
 Now let's boot up the server:
 ```
 ~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/toggle-group/toggle-group.html 
- * Restarting with stat
- * Debugger is active!
- * Debugger PIN: 142-257-956
-(25568) wsgi starting up on http://127.0.0.1:8000
 ```
 
 Open up your browser to `localhost:8000`, and you should see something like 

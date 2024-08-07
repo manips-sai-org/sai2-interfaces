@@ -80,10 +80,6 @@ customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
 			}
 		});
 
-		if (toggleKey) {
-			post_redis_key_val(toggleKey, this.active ? 1 : 0);
-		}
-
 		// append to document
 		this.prepend(template_node);
 	}
