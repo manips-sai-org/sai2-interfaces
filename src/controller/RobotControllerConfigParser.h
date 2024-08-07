@@ -12,10 +12,21 @@ public:
 	RobotControllerConfigParser() = default;
 	~RobotControllerConfigParser() = default;
 
-	std::vector<RobotControllerConfig> parseConfig(const std::string& config_file);
+	/**
+	 * @brief Parses the config file and returns a vector of
+	 * RobotControllerConfig objects. It will throw an error if the config
+	 * cannot be parsed properly.
+	 *
+	 * @param config_file full path to the config file
+	 * @return a vector of RobotControllerConfig objects, one per robot in the
+	 * config file
+	 */
+	std::vector<RobotControllerConfig> parseConfig(
+		const std::string& config_file);
 
 private:
-	RobotControllerConfig parseControllersConfig(tinyxml2::XMLElement* controlConfiguration);
+	RobotControllerConfig parseControllersConfig(
+		tinyxml2::XMLElement* controlConfiguration);
 	std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>
 	parseSingleControllerConfig(tinyxml2::XMLElement* xml);
 

@@ -14,18 +14,57 @@ using MotionForceTaskDefaultParams =
 
 namespace Sai2Interfaces {
 
+/**
+ * @brief A config object for the gains of a controller. It contains the P, D,
+ * and I gains, as well as a flag to enable gains safety checks (such as making
+ * sure that the gains are positive).
+ *
+ * In the xml config file, several elements will be parsed to this struct:
+ * - In JointTaskConfig:
+ * 		- \b gains_config from: <gains kp="..." kv="..." ki="..." />
+ * - In MotionForceTaskConfig:
+ * 		- \b position_gains_config from: <positionGains kp="..." kv="..."
+ * ki="..." />
+ * 		- \b orientation_gains_config from: <orientationGains kp="..." kv="..."
+ * ki="..." />
+ * 		- \b force_gains_config from: <forceGains kp="..." kv="..." ki="..." />
+ * 		- \b moment_gains_config from: <momentGains kp="..." kv="..." ki="..."
+ * />
+ *
+ * The gains are stored in Eigen::VectorXd objects, which allows for the gains
+ * to be either isotropic (same gain in every direction) when the size of the
+ * vector is 1, or anisotropic (different gains in different directions) when
+ * the size of the vector is greater than 1. If the gains are inosotropic, the
+ * size of the vector should correspond to the number of degrees of freedom of
+ * the controlled task (i.e. 3 for a position task, n for a joint task on a
+ * robot with n degrees of freedom, ...).
+ *
+ */
 struct GainsConfig {
-	bool safety_checks_enabled = true;
-	Eigen::VectorXd kp;
-	Eigen::VectorXd kv;
-	Eigen::VectorXd ki;
+	bool safety_checks_enabled = true;	///< Flag to enable gains safety checks
+	Eigen::VectorXd kp;					///< Proportional gains
+	Eigen::VectorXd kv;					///< Derivative gains
+	Eigen::VectorXd ki;					///< Integral gains
 
+	/**
+	 * @brief Construct a new GainsConfig object with default gains of 0, and
+	 * gains vector of size 1.
+	 *
+	 */
 	GainsConfig() {
 		kp.setZero(1);
 		kv.setZero(1);
 		ki.setZero(1);
 	}
 
+	/**
+	 * @brief Construct a new Gains Config object with vectors of size 1 and
+	 * gains values provided as arguments.
+	 *
+	 * @param kp
+	 * @param kv
+	 * @param ki
+	 */
 	GainsConfig(const double kp, const double kv, const double ki) {
 		this->kp = Eigen::VectorXd::Constant(1, kp);
 		this->kv = Eigen::VectorXd::Constant(1, kv);
@@ -33,6 +72,13 @@ struct GainsConfig {
 	}
 };
 
+/**
+ * @brief Config for the logger attached to the RobotControllerRedisInterface.
+ * 
+ * This is parsed from the xml config file, from the following element:
+ * 
+ * 
+ */
 struct ControllerLoggerConfig {
 	std::string folder_name = "log_files/controllers";
 	double frequency = 100.0;
