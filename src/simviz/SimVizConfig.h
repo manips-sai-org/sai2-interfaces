@@ -14,8 +14,7 @@ struct DynamicAndRenderingParams {
 	bool rendering_enabled = true;
 	bool joint_limits_enabled = true;
 	double collision_restitution_coefficient = 0.0;
-	double static_friction_coefficient = 0.5;
-	double dynamic_friction_coefficient = 0.5;
+	double friction_coefficient = 0.5;
 	bool wire_mesh_rendering_mode = false;
 	bool frames_rendering_enabled = false;
 	double frames_size_when_rendering = 0.2;
@@ -26,10 +25,8 @@ struct DynamicAndRenderingParams {
 			   (joint_limits_enabled == other.joint_limits_enabled) &&
 			   (collision_restitution_coefficient ==
 				other.collision_restitution_coefficient) &&
-			   (static_friction_coefficient ==
-				other.static_friction_coefficient) &&
-			   (dynamic_friction_coefficient ==
-				other.dynamic_friction_coefficient) &&
+			   (friction_coefficient ==
+				other.friction_coefficient) &&
 			   (wire_mesh_rendering_mode == other.wire_mesh_rendering_mode) &&
 			   (frames_rendering_enabled == other.frames_rendering_enabled) && 
 			   (frames_size_when_rendering == other.frames_size_when_rendering);
@@ -37,13 +34,13 @@ struct DynamicAndRenderingParams {
 };
 
 struct SimForceSensorConfig {
-	std::string robot_name = "";
+	std::string robot_or_object_name = "";
 	std::string link_name = "";
 	Eigen::Affine3d transform_in_link = Eigen::Affine3d::Identity();
 	double cutoff_frequency = 0.0;
 
 	bool operator==(const SimForceSensorConfig& other) const {
-		return (robot_name == other.robot_name) &&
+		return (robot_or_object_name == other.robot_or_object_name) &&
 			   (link_name == other.link_name) &&
 			   (transform_in_link.matrix() ==
 				other.transform_in_link.matrix()) &&
