@@ -68,7 +68,8 @@ None of the corresponding config parameters can be changed at runtime.
 	The optional <logger> element contains the parameters for the simviz logger.
 	Only one is allowed per simvizConfiguration element.
 	Its attributes are:
-		- logFolderName: Optional. The relative path of the folder where the log files will be saved. Defaults to "log_files/simviz"
+		- logFolderName: Optional. The relative path of the folder where the log files will be saved.
+			If it does not exist, it will be created. Defaults to "log_files/simviz"
 		- logFrequency: Optional. The frequency in Hz at which the log files are saved. Defaults to 100 Hz
 		- startWithSimulation: Optional. Whether to start logging data as soon as the simulation starts. Defaults to false
 		- addTimestampToFilename: Optional. Whether to add the timestamp of the logging start to the log file name. Defaults to true
@@ -84,7 +85,8 @@ None of the corresponding config parameters can be changed at runtime.
 	Its attributes are:
 		- robotOrObjectName: Required. The name of the robot to which the sensor is attached
 		- linkName: Required if robot, Optional if object. The name of the link to which the sensor is attached
-		- filterCutoff: Optional. The cutoff frequency in Hz of the low-pass filter applied to the force/torque measurements. Defaults to 5.0 Hz
+		- filterCutoff: Optional. The cutoff frequency in Hz of the low-pass filter applied to the force/torque measurements. 
+			Set to 0 for no filtering. Defaults to 5.0 Hz
 	None of the corresponding config parameters can be changed at runtime.
 	-->
 	<forceSensor robotOrObjectName="Panda"

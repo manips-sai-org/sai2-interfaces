@@ -34,9 +34,9 @@ enum GainsType {
 	MOTFORCE_MOMENT
 };
 
-MotionForceTaskInterfaceConfig parseInterfaceConfig(
+MotionForceTaskConfig::InterfaceConfig parseInterfaceConfig(
 	tinyxml2::XMLElement* interface_xml) {
-	MotionForceTaskInterfaceConfig interface_config;
+	MotionForceTaskConfig::InterfaceConfig interface_config;
 
 	if (interface_xml->Attribute("minGoalPosition")) {
 		interface_config.min_goal_position = parseInterfaceAttribute(

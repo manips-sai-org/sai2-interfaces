@@ -10,12 +10,32 @@
 
 namespace Sai2Interfaces {
 
+/**
+ * @brief Class to run a robot controller from a custom xml config file and
+ * provide an easy method of interaction via redis
+ *
+ */
 class RobotControllerRedisInterface {
 public:
+	/**
+	 * @brief Construct a new Robot Controller Redis Interface object
+	 *
+	 * @param config The configuration object for the robot controller
+	 * @param setup_signal_handler Whether to setup the signal handler for the
+	 * controller (set to false if a signal handler is already setup elsewhere
+	 * in the application)
+	 */
 	RobotControllerRedisInterface(const RobotControllerConfig& config,
 								  const bool setup_signal_handler = true);
 	~RobotControllerRedisInterface() = default;
 
+	/**
+	 * @brief Run the controller. This function will run until the
+	 * user_stop_signal is set to true externally, or the signal handler is triggered bu
+	 * ctrl+c is it was setup.
+	 *
+	 * @param user_stop_signal
+	 */
 	void run(const std::atomic<bool>& user_stop_signal = false);
 
 private:

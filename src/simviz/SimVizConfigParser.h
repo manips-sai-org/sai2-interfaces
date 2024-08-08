@@ -6,6 +6,10 @@
 namespace Sai2Interfaces
 {
 
+/**
+ * @brief Class to parse a simviz config file and return a SimVizConfig object
+ *
+ */
 class SimVizConfigParser
 {
 public:

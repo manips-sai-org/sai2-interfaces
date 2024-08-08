@@ -36,7 +36,8 @@ None of the corresponding config parameters can be changed at runtime.
 	The optional <logger> element contains the parameters for the robot controller logger.
 	Only one is allowed per robotControlConfiguration element.
 	Its attributes are:
-		- logFolderName: Optional. The relative path of the folder where the log files will be saved. Defaults to "log_files/controllers"
+		- logFolderName: Optional. The relative path of the folder where the log files will be saved.
+			If it does not exist, it will be created. Defaults to "log_files/controllers"
 		- logFrequency: Optional. The frequency in Hz at which the log files are saved. Defaults to 100 Hz
 		- startWithController: Optional. Whether to start logging data as soon as the controller starts. Defaults to false
 		- addTimestampToFilename: Optional. Whether to add the timestamp of the logging start to the log file name. Defaults to true
@@ -276,7 +277,7 @@ None of the corresponding config parameters can be changed at runtime.
 				- minDesiredMoment: Optional. The minimum value for the desired moment slider.
 				- maxDesiredMoment: Optional. The maximum value for the desired moment slider.
 			Those values cannot be changed at runtime.
-			The default values can be found in the RobotControllerConfog.h file under the MotionForceTaskInterfaceConfig struct.
+			The default values can be found in the RobotControllerConfig.h file under the MotionForceTaskConfig::InterfaceConfig struct.
 			-->
 			<interface minGoalPosition='-0.5 -0.5 0.0'
 				maxGoalPosition='0.5 0.5 0.8'

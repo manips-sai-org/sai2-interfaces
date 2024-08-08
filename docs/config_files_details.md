@@ -505,7 +505,7 @@ Its attributes are:
 	- minDesiredMoment: Optional. The minimum value for the desired moment slider.
 	- maxDesiredMoment: Optional. The maximum value for the desired moment slider.
 Those values cannot be changed at runtime.
-The default values can be found in the RobotControllerConfog.h file under the MotionForceTaskInterfaceConfig struct.
+The default values can be found in the RobotControllerConfig.h file under the MotionForceTaskConfig::InterfaceConfig struct.
 -->
 <interface minGoalPosition='-0.5 -0.5 0.0'
 	maxGoalPosition='0.5 0.5 0.8'

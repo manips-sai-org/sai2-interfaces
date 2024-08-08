@@ -14,18 +14,69 @@
 
 namespace Sai2Interfaces {
 
+/**
+ * @brief Class to run a simulation and visualization from a custom xml config
+ * file and provide an easy method of interaction via redis
+ *
+ */
 class SimVizRedisInterface {
 public:
+	/**
+	 * @brief Construct a new SimViz Redis Interface object
+	 *
+	 * @param config The configuration object for the simulation and
+	 * visualization
+	 * @param setup_signal_handler Whether to setup the signal handler for the
+	 * controller (set to false if a signal handler is already setup elsewhere
+	 * in the application)
+	 */
 	SimVizRedisInterface(const SimVizConfig& config,
 						 const bool setup_signal_handler = true);
 	~SimVizRedisInterface() = default;
 
+	/**
+	 * @brief Reset the simulation and visualization with a new configuration.
+	 * Should be called from a different thread than the run function since the
+	 * latter is blocking. When called, the run function will handle the reset
+	 * and restart the loop with the new config automatically.
+	 *
+	 * @param config The new configuration object for the simulation and
+	 * visualization
+	 */
 	void reset(const SimVizConfig& config);
+
+	/**
+	 * @brief Run the simulation and visualization. This function will run until
+	 * the user_stop_signal is set to true externally, or the signal handler is
+	 * triggered by ctrl+c if it was setup. It is a blocking finction, and needs
+	 * to be called in the main thread of the application.
+	 *
+	 * @param user_stop_signal
+	 */
 	void run(const std::atomic<bool>& user_stop_signal = false);
 
+	/**
+	 * @brief Function to know if a reset is completed or not. Useful in a
+	 * second thread to know if the run function has finished handling the
+	 * reset.
+	 *
+	 * @return true if the reset is complete, false if the reset is still in
+	 * progress.
+	 */
 	bool isResetComplete() const { return _reset_complete; }
 
+	/**
+	 * @brief Get the names of all robots in the simulation
+	 * 
+	 * @return a vector of robot names
+	 */
 	std::vector<std::string> getRobotNames() const;
+
+	/**
+	 * @brief Get the names of all objects in the simulation
+	 * 
+	 * @return a vector of object names
+	 */
 	std::vector<std::string> getObjectNames() const;
 
 private:

@@ -7,6 +7,11 @@
 
 namespace Sai2Interfaces {
 
+/**
+ * @brief Class to parse a robot controller config file and return a
+ * RobotControllerConfig object
+ *
+ */
 class RobotControllerConfigParser {
 public:
 	RobotControllerConfigParser() = default;
