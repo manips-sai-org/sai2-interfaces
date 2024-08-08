@@ -107,16 +107,16 @@ struct ControllerLoggerConfig {
 struct JointTaskConfig {
 	/**
 	 * @brief Config for the velocity saturation of the joint task.
-	 * If the velocity limits vector is of size 1, the limits are isotropic. If
+	 * If the velocity_limit vector is of size 1, the limits are isotropic. If
 	 * the vector is of size n, the limits are different for every joint.
 	 *
 	 * This is parsed from the xml config file, from the following element:
-	 * 	<velocitySaturation enabled="..." velocityLimits="..." />
+	 * 	<velocitySaturation enabled="..." velocityLimit="..." />
 	 *
 	 */
 	struct JointVelSatConfig {
 		bool enabled = JointTaskDefaultParams::use_velocity_saturation;
-		Eigen::VectorXd velocity_limits =
+		Eigen::VectorXd velocity_limit =
 			JointTaskDefaultParams::saturation_velocity *
 			Eigen::VectorXd::Ones(1);
 	};
@@ -126,7 +126,7 @@ struct JointTaskConfig {
 	 * task.
 	 *
 	 * This is parsed from the xml config file, from the following element:
-	 * 	<otg type="..." max_velocity="..." max_acceleration="..." max_jerk="..."
+	 * 	<otg type="..." maxVelocity="..." maxAcceleration="..." maxJerk="..."
 	 * />
 	 *
 	 */
@@ -139,13 +139,13 @@ struct JointTaskConfig {
 		 *
 		 */
 		struct JointOTGLimit {
-			Eigen::VectorXd velocity_limit =
+			Eigen::VectorXd max_velocity =
 				JointTaskDefaultParams::otg_max_velocity *
 				Eigen::VectorXd::Ones(1);
-			Eigen::VectorXd acceleration_limit =
+			Eigen::VectorXd max_acceleration =
 				JointTaskDefaultParams::otg_max_acceleration *
 				Eigen::VectorXd::Ones(1);
-			Eigen::VectorXd jerk_limit =
+			Eigen::VectorXd max_jerk =
 				JointTaskDefaultParams::otg_max_jerk * Eigen::VectorXd::Ones(1);
 		};
 
@@ -256,15 +256,15 @@ struct MotionForceTaskConfig {
 	 * @brief Config for the velocity saturation of the motion force task.
 	 *
 	 * This is parsed from the xml config file, from the following element:
-	 * 	<velocitySaturation enabled="..." linear_velocity_limit="..."
-	 * angular_velocity_limit="..." />
+	 * 	<velocitySaturation enabled="..." linearVelocityLimit="..."
+	 * angularVelocityLimit="..." />
 	 *
 	 */
 	struct VelSatConfig {
 		bool enabled = MotionForceTaskDefaultParams::use_velocity_saturation;
-		double linear_velocity_limits =
+		double linear_velocity_limit =
 			MotionForceTaskDefaultParams::linear_saturation_velocity;
-		double angular_velocity_limits =
+		double angular_velocity_limit =
 			MotionForceTaskDefaultParams::angular_saturation_velocity;
 	};
 
@@ -273,26 +273,26 @@ struct MotionForceTaskConfig {
 	 * force task.
 	 *
 	 * This is parsed from the xml config file, from the following element:
-	 * 	<otg type="..." linear_velocity_limit="..." angular_velocity_limit="..."
-	 * linear_acceleration_limit="..." angular_acceleration_limit="..."
-	 * linear_jerk_limit="..." angular_jerk_limit="..." />
+	 * 	<otg type="..." maxLinearVelocity="..." maxAngularVelocity="..."
+	 * maxLinearAcceleration="..." maxAngularAcceleration="..."
+	 * maxLinearJerk="..." maxAngularJerk="..." />
 	 *
 	 */
 	struct OTGConfig {
 		bool enabled = MotionForceTaskDefaultParams::use_internal_otg;
 		bool jerk_limited =
 			MotionForceTaskDefaultParams::internal_otg_jerk_limited;
-		double linear_velocity_limit =
+		double max_linear_velocity =
 			MotionForceTaskDefaultParams::otg_max_linear_velocity;
-		double angular_velocity_limit =
+		double max_angular_velocity =
 			MotionForceTaskDefaultParams::otg_max_angular_velocity;
-		double linear_acceleration_limit =
+		double max_linear_acceleration =
 			MotionForceTaskDefaultParams::otg_max_linear_acceleration;
-		double angular_acceleration_limit =
+		double max_angular_acceleration =
 			MotionForceTaskDefaultParams::otg_max_angular_acceleration;
-		double linear_jerk_limit =
+		double max_linear_jerk =
 			MotionForceTaskDefaultParams::otg_max_linear_jerk;
-		double angular_jerk_limit =
+		double max_angular_jerk =
 			MotionForceTaskDefaultParams::otg_max_angular_jerk;
 	};
 

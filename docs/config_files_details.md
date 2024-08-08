@@ -418,14 +418,14 @@ The optional <velocitySaturation> element contains the velocity saturation param
 Velocity saturation limits the velocity of the controlled frame by limiting the control force applied in a particular way.
 Its attributes are:
 	- enabled: Required if element present. Whether to use velocity saturation.
-	- linear_velocity_limit: Optional. The limit for the linear velocity in m/s.
-	- angular_velocity_limit: Optional. The limit for the angular velocity in Rad/s.
+	- linearVelocityLimit: Optional. The limit for the linear velocity in m/s.
+	- angularVelocityLimit: Optional. The limit for the angular velocity in Rad/s.
 Those values can be changed at runtime.
 Default values can be found in the MotionForceTask class in the sai2-primitives library.
 -->
 <velocitySaturation enabled="true"
-	linear_velocity_limit="0.35"
-	angular_velocity_limit="0.78" />
+	linearVelocityLimit="0.35"
+	angularVelocityLimit="0.78" />
 ```
 
 * __The parametrization for the online trajectory generation__
@@ -438,22 +438,22 @@ Its attributes are:
 		- "disabled": no otg
 		- "acceleration": acceleration limited trajectories
 		- "jerk": jerk limited trajectories
-	- max_linear_velocity: Optional. The maximum linear velocity in m/s.
-	- max_linear_acceleration: Optional. The maximum linear acceleration in m/s^2.
-	- max_linear_jerk: Optional. The maximum linear jerk in m/s^3.
-	- max_angular_velocity: Optional. The maximum angular velocity in Rad/s.
-	- max_angular_acceleration: Optional. The maximum angular acceleration in Rad/s^2.
-	- max_angular_jerk: Optional. The maximum angular jerk in Rad/s^3.
+	- maxLinearVelocity: Optional. The maximum linear velocity in m/s.
+	- maxLinearAcceleration: Optional. The maximum linear acceleration in m/s^2.
+	- maxLinearJerk: Optional. The maximum linear jerk in m/s^3.
+	- maxAngularVelocity: Optional. The maximum angular velocity in Rad/s.
+	- maxAngularAcceleration: Optional. The maximum angular acceleration in Rad/s^2.
+	- maxAngularJerk: Optional. The maximum angular jerk in Rad/s^3.
 Those values can be changed at runtime.
 Default values can be found in the MotionForceTask class in the sai2-primitives library.
 -->
 <otg type="disabled"
-	max_linear_velocity="0.35"
-	max_linear_acceleration="1.5"
-	max_linear_jerk="5.0"
-	max_angular_velocity="1.0"
-	max_angular_acceleration="3.0"
-	max_angular_jerk="100" />
+	maxLinearVelocity="0.35"
+	maxLinearAcceleration="1.5"
+	maxLinearJerk="5.0"
+	maxAngularVelocity="1.0"
+	maxAngularAcceleration="3.0"
+	maxAngularJerk="100" />
 ```
 
 * __The position and orientation gains__:
@@ -571,13 +571,13 @@ The optional <velocitySaturation> element contains the velocity saturation param
 Velocity saturation limits the velocity of the controlled joints by limiting the control force applied in a particular way.
 Its attributes are:
 	- enabled: Required if element present. Whether to use velocity saturation.
-	- velocity_limit: Optional. The limit for the velocity in Rad/s. Can be defined as a single number 
+	- velocityLimit: Optional. The limit for the velocity in Rad/s. Can be defined as a single number 
 		or a list of the correct size for a different limit per joint.
 Those values can be changed at runtime.
 Default values can be found in the JointTask class in the sai2-primitives library.
 -->
 <velocitySaturation enabled="false"
-	velocity_limit="1.1 1.2 1.3 1.4 1.5 1.6 1.7" />
+	velocityLimit="1.1 1.2 1.3 1.4 1.5 1.6 1.7" />
 ```
 
 * __The initial online trajectory generation parametrization__:
@@ -590,19 +590,19 @@ Its attributes are:
 		- "disabled": no otg
 		- "acceleration": acceleration limited trajectories
 		- "jerk": jerk limited trajectories
-	- max_velocity: Optional. The maximum velocity in Rad/s. Can be defined as a single number 
+	- maxVelocity: Optional. The maximum velocity in Rad/s. Can be defined as a single number 
 		or a list of the correct size for a different limit per joint.
-	- max_acceleration: Optional. The maximum acceleration in Rad/s^2. Can be defined as a single number 
+	- maxAcceleration: Optional. The maximum acceleration in Rad/s^2. Can be defined as a single number 
 		or a list of the correct size for a different limit per joint.
-	- max_jerk: Optional. The maximum jerk in Rad/s^3. Can be defined as a single number 
+	- maxJerk: Optional. The maximum jerk in Rad/s^3. Can be defined as a single number 
 		or a list of the correct size for a different limit per joint.
 Those values can be changed at runtime.
 Default values can be found in the JointTask class in the sai2-primitives library.
 -->
 <otg type="acceleration"
-	max_velocity="1.05"
-	max_acceleration="6.28"
-	max_jerk="31.4" />
+	maxVelocity="1.05"
+	maxAcceleration="6.28"
+	maxJerk="31.4" />
 ```
 
 * __The initial gains__: 

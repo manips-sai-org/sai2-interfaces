@@ -358,16 +358,16 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					"velocity_saturation_enabled");
 				task_logger->addToLog(
 					joint_task_config.velocity_saturation_config
-						.velocity_limits,
-					"velocity_saturation_limits");
+						.velocity_limit,
+					"velocity_saturation_limit");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
 					joint_task_config.velocity_saturation_config.enabled,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "velocity_saturation_limits",
+					key_prefix + "velocity_saturation_limit",
 					joint_task_config.velocity_saturation_config
-						.velocity_limits,
+						.velocity_limit,
 					controller_name);
 
 				// otg
@@ -376,14 +376,14 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(joint_task_config.otg_config.jerk_limited,
 									  "otg_jerk_limited");
 				task_logger->addToLog(
-					joint_task_config.otg_config.limits.velocity_limit,
-					"otg_velocity_limit");
+					joint_task_config.otg_config.limits.max_velocity,
+					"otg_max_velocity");
 				task_logger->addToLog(
-					joint_task_config.otg_config.limits.acceleration_limit,
-					"otg_acceleration_limit");
+					joint_task_config.otg_config.limits.max_acceleration,
+					"otg_max_acceleration");
 				task_logger->addToLog(
-					joint_task_config.otg_config.limits.jerk_limit,
-					"otg_jerk_limit");
+					joint_task_config.otg_config.limits.max_jerk,
+					"otg_max_jerk");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_enabled",
 					joint_task_config.otg_config.enabled, controller_name);
@@ -391,16 +391,16 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					key_prefix + "otg_jerk_limited",
 					joint_task_config.otg_config.jerk_limited, controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_velocity_limit",
-					joint_task_config.otg_config.limits.velocity_limit,
+					key_prefix + "otg_max_velocity",
+					joint_task_config.otg_config.limits.max_velocity,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_acceleration_limit",
-					joint_task_config.otg_config.limits.acceleration_limit,
+					key_prefix + "otg_max_acceleration",
+					joint_task_config.otg_config.limits.max_acceleration,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_jerk_limit",
-					joint_task_config.otg_config.limits.jerk_limit,
+					key_prefix + "otg_max_jerk",
+					joint_task_config.otg_config.limits.max_jerk,
 					controller_name);
 
 				// inputs
@@ -547,25 +547,25 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					"velocity_saturation_enabled");
 				task_logger->addToLog(
 					motion_force_task_config.velocity_saturation_config
-						.linear_velocity_limits,
-					"linear_velocity_saturation_limits");
+						.linear_velocity_limit,
+					"linear_velocity_saturation_limit");
 				task_logger->addToLog(
 					motion_force_task_config.velocity_saturation_config
-						.angular_velocity_limits,
-					"angular_velocity_saturation_limits");
+						.angular_velocity_limit,
+					"angular_velocity_saturation_limit");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
 					motion_force_task_config.velocity_saturation_config.enabled,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "linear_velocity_saturation_limits",
+					key_prefix + "linear_velocity_saturation_limit",
 					motion_force_task_config.velocity_saturation_config
-						.linear_velocity_limits,
+						.linear_velocity_limit,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "angular_velocity_saturation_limits",
+					key_prefix + "angular_velocity_saturation_limit",
 					motion_force_task_config.velocity_saturation_config
-						.angular_velocity_limits,
+						.angular_velocity_limit,
 					controller_name);
 
 				// otg
@@ -575,23 +575,23 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.otg_config.jerk_limited,
 					"otg_jerk_limited");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config.linear_velocity_limit,
-					"otg_linear_velocity_limit");
+					motion_force_task_config.otg_config.max_linear_velocity,
+					"otg_max_linear_velocity");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config.angular_velocity_limit,
-					"otg_angular_velocity_limit");
+					motion_force_task_config.otg_config.max_angular_velocity,
+					"otg_max_angular_velocity");
 				task_logger->addToLog(motion_force_task_config.otg_config
-										  .linear_acceleration_limit,
-									  "otg_linear_acceleration_limit");
+										  .max_linear_acceleration,
+									  "otg_max_linear_acceleration");
 				task_logger->addToLog(motion_force_task_config.otg_config
-										  .angular_acceleration_limit,
-									  "otg_angular_acceleration_limit");
+										  .max_angular_acceleration,
+									  "otg_max_angular_acceleration");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config.linear_jerk_limit,
-					"otg_linear_jerk_limit");
+					motion_force_task_config.otg_config.max_linear_jerk,
+					"otg_max_linear_jerk");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config.angular_jerk_limit,
-					"otg_angular_jerk_limit");
+					motion_force_task_config.otg_config.max_angular_jerk,
+					"otg_max_angular_jerk");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_enabled",
 					motion_force_task_config.otg_config.enabled,
@@ -601,30 +601,30 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.otg_config.jerk_limited,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_linear_velocity_limit",
-					motion_force_task_config.otg_config.linear_velocity_limit,
+					key_prefix + "otg_max_linear_velocity",
+					motion_force_task_config.otg_config.max_linear_velocity,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_angular_velocity_limit",
-					motion_force_task_config.otg_config.angular_velocity_limit,
+					key_prefix + "otg_max_angular_velocity",
+					motion_force_task_config.otg_config.max_angular_velocity,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_linear_acceleration_limit",
+					key_prefix + "otg_max_linear_acceleration",
 					motion_force_task_config.otg_config
-						.linear_acceleration_limit,
+						.max_linear_acceleration,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_angular_acceleration_limit",
+					key_prefix + "otg_max_angular_acceleration",
 					motion_force_task_config.otg_config
-						.angular_acceleration_limit,
+						.max_angular_acceleration,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_linear_jerk_limit",
-					motion_force_task_config.otg_config.linear_jerk_limit,
+					key_prefix + "otg_max_linear_jerk",
+					motion_force_task_config.otg_config.max_linear_jerk,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "otg_angular_jerk_limit",
-					motion_force_task_config.otg_config.angular_jerk_limit,
+					key_prefix + "otg_max_angular_jerk",
+					motion_force_task_config.otg_config.max_angular_jerk,
 					controller_name);
 
 				// gains
@@ -946,7 +946,7 @@ void RobotControllerRedisInterface::processInputs() {
 				joint_task_config.velocity_saturation_config;
 			if (velocity_saturation_config.enabled) {
 				joint_task->enableVelocitySaturation(
-					velocity_saturation_config.velocity_limits);
+					velocity_saturation_config.velocity_limit);
 			} else {
 				joint_task->disableVelocitySaturation();
 			}
@@ -957,13 +957,13 @@ void RobotControllerRedisInterface::processInputs() {
 				joint_task->disableInternalOtg();
 			} else if (otg_config.enabled && !otg_config.jerk_limited) {
 				joint_task->enableInternalOtgAccelerationLimited(
-					otg_config.limits.velocity_limit,
-					otg_config.limits.acceleration_limit);
+					otg_config.limits.max_velocity,
+					otg_config.limits.max_acceleration);
 			} else {
 				joint_task->enableInternalOtgJerkLimited(
-					otg_config.limits.velocity_limit,
-					otg_config.limits.acceleration_limit,
-					otg_config.limits.jerk_limit);
+					otg_config.limits.max_velocity,
+					otg_config.limits.max_acceleration,
+					otg_config.limits.max_jerk);
 			}
 
 			// gains
@@ -1055,8 +1055,8 @@ void RobotControllerRedisInterface::processInputs() {
 				motion_force_task_config.velocity_saturation_config;
 			if (velocity_saturation_config.enabled) {
 				motion_force_task->enableVelocitySaturation(
-					velocity_saturation_config.linear_velocity_limits,
-					velocity_saturation_config.angular_velocity_limits);
+					velocity_saturation_config.linear_velocity_limit,
+					velocity_saturation_config.angular_velocity_limit);
 			} else {
 				motion_force_task->disableVelocitySaturation();
 			}
@@ -1067,18 +1067,18 @@ void RobotControllerRedisInterface::processInputs() {
 				motion_force_task->disableInternalOtg();
 			} else if (otg_config.enabled && !otg_config.jerk_limited) {
 				motion_force_task->enableInternalOtgAccelerationLimited(
-					otg_config.linear_velocity_limit,
-					otg_config.linear_acceleration_limit,
-					otg_config.angular_velocity_limit,
-					otg_config.angular_acceleration_limit);
+					otg_config.max_linear_velocity,
+					otg_config.max_linear_acceleration,
+					otg_config.max_angular_velocity,
+					otg_config.max_angular_acceleration);
 			} else {
 				motion_force_task->enableInternalOtgJerkLimited(
-					otg_config.linear_velocity_limit,
-					otg_config.linear_acceleration_limit,
-					otg_config.linear_jerk_limit,
-					otg_config.angular_velocity_limit,
-					otg_config.angular_acceleration_limit,
-					otg_config.angular_jerk_limit);
+					otg_config.max_linear_velocity,
+					otg_config.max_linear_acceleration,
+					otg_config.max_linear_jerk,
+					otg_config.max_angular_velocity,
+					otg_config.max_angular_acceleration,
+					otg_config.max_angular_jerk);
 			}
 
 			// gains

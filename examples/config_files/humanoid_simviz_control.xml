@@ -23,8 +23,8 @@
 			linkName="BODY"
 			bieThreshold="0">
 			<velocitySaturation enabled="true"
-				linear_velocity_limit="0.35"
-				angular_velocity_limit="0.78" />
+				linearVelocityLimit="0.35"
+				angularVelocityLimit="0.78" />
 			<otg type="disabled" />
 			<interface minGoalPosition='-2'
 				maxGoalPosition='3'

@@ -22,8 +22,8 @@
 		<motionForceTask name="cartesian_task"
 			linkName="end-effector">
 			<velocitySaturation enabled="true"
-				linear_velocity_limit="0.25"
-				angular_velocity_limit="0.78" />
+				linearVelocityLimit="0.25"
+				angularVelocityLimit="0.78" />
 			<otg type="disabled" />
 
 			<interface minGoalPosition='-0.7 -1.0 0.0'
@@ -52,9 +52,7 @@
 	<controller name="cartesian_controller">
 		<motionForceTask name="cartesian_task"
 			linkName="end-effector">
-			<velocitySaturation enabled="true"
-				linear_velocity_limit="0.25"
-				angular_velocity_limit="0.78" />
+			<velocitySaturation enabled="true" angularVelocityLimit="0.78" />
 			<otg type="disabled" />
 
 			<interface minGoalPosition='-0.7 -0.4 0.0'
