@@ -1,48 +1,40 @@
 <simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf">
-	<simParameters coeffFriction="0.5"/>
-	<logger logFolderName="panda_simviz_log_files"/>
+	<simParameters coeffFriction="0.5" />
+	<logger logFolderName="panda_simviz_log_files" />
 	<forceSensor robotOrObjectName="Panda"
-		linkName="end-effector"/>
+		linkName="end-effector" />
 </simvizConfiguration>
 
 
-<robotControlConfiguration robotName="Panda">
-	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf</robotModelFile>
+<robotControlConfiguration robotName="Panda"
+	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf">
 	<baseFrame xyz="0 0 0"
 		rpy="0 0 0" />
 	<worldGravity xyz="0 0 -9.81" />
 
-	<logger>
-		<logFolderName>panda_control_log_files</logFolderName>
-		<logFrequency>100</logFrequency>
-		<startWithController>true</startWithController>
-		<timestampInFilename>false</timestampInFilename>
-	</logger>
+	<logger logFolderName="log_files/controllers/panda"
+		startWithController="true"
+		timestampInFilename="false" />
 
 	<controller name="cartesian_controller">
-		<task name="cartesian_task"
-			type="motion_force_task">
-			<linkName>end-effector</linkName>
-			<velocitySaturation enabled="true"/>
-			<otg type="disabled"/>
-
-			<interface minGoalPosition='[-0.4,-0.4,-0.1]'
-				maxGoalPosition='[0.4,0.4,0.7]'/>
-
-		</task>
-
-		<task name="joint_task"
-			type="joint_task">
+		<motionForceTask name="cartesian_task"
+			linkName="end-effector">
+			<velocitySaturation enabled="true" />
 			<otg type="disabled" />
-		</task>
+			<interface minGoalPosition="-0.7 -0.5 -0.1"
+				maxGoalPosition="0.7 0.4 0.7" />
+		</motionForceTask>
+
+		<jointTask name="joint_task">
+			<otg type="disabled" />
+		</jointTask>
 	</controller>
 
 	<controller name="joint_controller">
-		<task name="joint_task"
-			type="joint_task">
-			<velocitySaturation enabled="true"/>
-			<otg type="disabled"/>
-		</task>
+		<jointTask name="joint_task">
+			<velocitySaturation enabled="true" />
+			<otg type="disabled" />
+		</jointTask>
 	</controller>
 
 </robotControlConfiguration>

@@ -190,30 +190,13 @@ void RobotControllerRedisInterface::initialize() {
 				const auto& motion_force_task_config =
 					get<MotionForceTaskConfig>(tasks);
 
-				// controlled directions
-				vector<Vector3d> controlled_directions_position = {
-					Vector3d::UnitX(), Vector3d::UnitY(), Vector3d::UnitZ()};
-				vector<Vector3d> controlled_directions_orientation = {
-					Vector3d::UnitX(), Vector3d::UnitY(), Vector3d::UnitZ()};
-				if (motion_force_task_config.controlled_directions_position
-						.has_value()) {
-					controlled_directions_position =
-						motion_force_task_config.controlled_directions_position
-							.value();
-				}
-				if (motion_force_task_config.controlled_directions_orientation
-						.has_value()) {
-					controlled_directions_orientation =
-						motion_force_task_config
-							.controlled_directions_orientation.value();
-				}
-
 				// create task
 				auto motion_force_task =
 					make_shared<Sai2Primitives::MotionForceTask>(
 						_robot_model, motion_force_task_config.link_name,
-						controlled_directions_position,
-						controlled_directions_orientation,
+						motion_force_task_config.controlled_directions_position,
+						motion_force_task_config
+							.controlled_directions_orientation,
 						motion_force_task_config.compliant_frame,
 						motion_force_task_config.task_name,
 						motion_force_task_config
@@ -352,87 +335,72 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					joint_task_config.use_dynamic_decoupling, controller_name);
 
 				// gains
-				if (!joint_task_config.gains_config.has_value()) {
-					joint_task_config.gains_config = GainsConfig(
-						JointTaskDefaultParams::kp, JointTaskDefaultParams::kv,
-						JointTaskDefaultParams::ki);
-				}
-				task_logger->addToLog(joint_task_config.gains_config->kp, "kp");
-				task_logger->addToLog(joint_task_config.gains_config->kv, "kv");
-				task_logger->addToLog(joint_task_config.gains_config->ki, "ki");
+				task_logger->addToLog(joint_task_config.gains_config.kp, "kp");
+				task_logger->addToLog(joint_task_config.gains_config.kv, "kv");
+				task_logger->addToLog(joint_task_config.gains_config.ki, "ki");
 				_redis_client.addToReceiveGroup(
-					key_prefix + "kp", joint_task_config.gains_config->kp,
+					key_prefix + "kp", joint_task_config.gains_config.kp,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "kv", joint_task_config.gains_config->kv,
+					key_prefix + "kv", joint_task_config.gains_config.kv,
 					controller_name);
 				_redis_client.addToReceiveGroup(
-					key_prefix + "ki", joint_task_config.gains_config->ki,
+					key_prefix + "ki", joint_task_config.gains_config.ki,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "gains_safety_checks_enabled",
-					joint_task_config.gains_config->safety_checks_enabled,
+					joint_task_config.gains_config.safety_checks_enabled,
 					controller_name);
 
 				// velocity saturation
-				if (!joint_task_config.velocity_saturation_config.has_value()) {
-					joint_task_config.velocity_saturation_config =
-						JointTaskConfig::JointVelSatConfig();
-				}
 				task_logger->addToLog(
-					joint_task_config.velocity_saturation_config->enabled,
+					joint_task_config.velocity_saturation_config.enabled,
 					"velocity_saturation_enabled");
 				task_logger->addToLog(
 					joint_task_config.velocity_saturation_config
-						->velocity_limits,
+						.velocity_limits,
 					"velocity_saturation_limits");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
-					joint_task_config.velocity_saturation_config->enabled,
+					joint_task_config.velocity_saturation_config.enabled,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_limits",
 					joint_task_config.velocity_saturation_config
-						->velocity_limits,
+						.velocity_limits,
 					controller_name);
 
 				// otg
-				if (!joint_task_config.otg_config.has_value()) {
-					joint_task_config.otg_config =
-						JointTaskConfig::JointOTGConfig();
-				}
-				task_logger->addToLog(joint_task_config.otg_config->enabled,
+				task_logger->addToLog(joint_task_config.otg_config.enabled,
 									  "otg_enabled");
+				task_logger->addToLog(joint_task_config.otg_config.jerk_limited,
+									  "otg_jerk_limited");
 				task_logger->addToLog(
-					joint_task_config.otg_config->jerk_limited,
-					"otg_jerk_limited");
-				task_logger->addToLog(
-					joint_task_config.otg_config->limits.velocity_limit,
+					joint_task_config.otg_config.limits.velocity_limit,
 					"otg_velocity_limit");
 				task_logger->addToLog(
-					joint_task_config.otg_config->limits.acceleration_limit,
+					joint_task_config.otg_config.limits.acceleration_limit,
 					"otg_acceleration_limit");
 				task_logger->addToLog(
-					joint_task_config.otg_config->limits.jerk_limit,
+					joint_task_config.otg_config.limits.jerk_limit,
 					"otg_jerk_limit");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_enabled",
-					joint_task_config.otg_config->enabled, controller_name);
+					joint_task_config.otg_config.enabled, controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_jerk_limited",
-					joint_task_config.otg_config->jerk_limited,
-					controller_name);
+					joint_task_config.otg_config.jerk_limited, controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_velocity_limit",
-					joint_task_config.otg_config->limits.velocity_limit,
+					joint_task_config.otg_config.limits.velocity_limit,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_acceleration_limit",
-					joint_task_config.otg_config->limits.acceleration_limit,
+					joint_task_config.otg_config.limits.acceleration_limit,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_jerk_limit",
-					joint_task_config.otg_config->limits.jerk_limit,
+					joint_task_config.otg_config.limits.jerk_limit,
 					controller_name);
 
 				// inputs
@@ -531,270 +499,240 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					controller_name);
 
 				// force control parametrization
-				if (!motion_force_task_config.force_space_param_config
-						 .has_value()) {
-					motion_force_task_config.force_space_param_config =
-						MotionForceTaskConfig::ForceMotionSpaceParamConfig();
-				}
-				if (!motion_force_task_config.moment_space_param_config
-						 .has_value()) {
-					motion_force_task_config.moment_space_param_config =
-						MotionForceTaskConfig::ForceMotionSpaceParamConfig();
-				}
 				task_logger->addToLog(
-					motion_force_task_config.force_space_param_config
-						->force_space_dimension,
+					motion_force_task_config.force_control_config
+						.force_space_param_config.force_space_dimension,
 					"force_space_dimension");
 				task_logger->addToLog(
-					motion_force_task_config.force_space_param_config->axis,
+					motion_force_task_config.force_control_config
+						.force_space_param_config.axis,
 					"force_or_motion_axis");
 				task_logger->addToLog(
-					motion_force_task_config.moment_space_param_config
-						->force_space_dimension,
+					motion_force_task_config.force_control_config
+						.moment_space_param_config.force_space_dimension,
 					"moment_space_dimension");
 				task_logger->addToLog(
-					motion_force_task_config.moment_space_param_config->axis,
+					motion_force_task_config.force_control_config
+						.moment_space_param_config.axis,
 					"moment_or_rotmotion_axis");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "closed_loop_force_control",
-					motion_force_task_config.closed_loop_force_control,
+					motion_force_task_config.force_control_config
+						.closed_loop_force_control,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "force_space_dimension",
-					motion_force_task_config.force_space_param_config
-						->force_space_dimension,
+					motion_force_task_config.force_control_config
+						.force_space_param_config.force_space_dimension,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "force_space_axis",
-					motion_force_task_config.force_space_param_config->axis,
+					motion_force_task_config.force_control_config
+						.force_space_param_config.axis,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "moment_space_dimension",
-					motion_force_task_config.moment_space_param_config
-						->force_space_dimension,
+					motion_force_task_config.force_control_config
+						.moment_space_param_config.force_space_dimension,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "moment_space_axis",
-					motion_force_task_config.moment_space_param_config->axis,
+					motion_force_task_config.force_control_config
+						.moment_space_param_config.axis,
 					controller_name);
 
 				// velocity saturation
-				if (!motion_force_task_config.velocity_saturation_config
-						 .has_value()) {
-					motion_force_task_config.velocity_saturation_config =
-						MotionForceTaskConfig::VelSatConfig();
-				}
-				task_logger->addToLog(motion_force_task_config
-										  .velocity_saturation_config->enabled,
-									  "velocity_saturation_enabled");
+				task_logger->addToLog(
+					motion_force_task_config.velocity_saturation_config.enabled,
+					"velocity_saturation_enabled");
 				task_logger->addToLog(
 					motion_force_task_config.velocity_saturation_config
-						->linear_velocity_limits,
+						.linear_velocity_limits,
 					"linear_velocity_saturation_limits");
 				task_logger->addToLog(
 					motion_force_task_config.velocity_saturation_config
-						->angular_velocity_limits,
+						.angular_velocity_limits,
 					"angular_velocity_saturation_limits");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
-					motion_force_task_config.velocity_saturation_config
-						->enabled,
+					motion_force_task_config.velocity_saturation_config.enabled,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "linear_velocity_saturation_limits",
 					motion_force_task_config.velocity_saturation_config
-						->linear_velocity_limits,
+						.linear_velocity_limits,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "angular_velocity_saturation_limits",
 					motion_force_task_config.velocity_saturation_config
-						->angular_velocity_limits,
+						.angular_velocity_limits,
 					controller_name);
 
 				// otg
-				if (!motion_force_task_config.otg_config.has_value()) {
-					motion_force_task_config.otg_config =
-						MotionForceTaskConfig::OTGConfig();
-				}
 				task_logger->addToLog(
-					motion_force_task_config.otg_config->enabled,
-					"otg_enabled");
+					motion_force_task_config.otg_config.enabled, "otg_enabled");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config->jerk_limited,
+					motion_force_task_config.otg_config.jerk_limited,
 					"otg_jerk_limited");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config->linear_velocity_limit,
+					motion_force_task_config.otg_config.linear_velocity_limit,
 					"otg_linear_velocity_limit");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config->angular_velocity_limit,
+					motion_force_task_config.otg_config.angular_velocity_limit,
 					"otg_angular_velocity_limit");
 				task_logger->addToLog(motion_force_task_config.otg_config
-										  ->linear_acceleration_limit,
+										  .linear_acceleration_limit,
 									  "otg_linear_acceleration_limit");
 				task_logger->addToLog(motion_force_task_config.otg_config
-										  ->angular_acceleration_limit,
+										  .angular_acceleration_limit,
 									  "otg_angular_acceleration_limit");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config->linear_jerk_limit,
+					motion_force_task_config.otg_config.linear_jerk_limit,
 					"otg_linear_jerk_limit");
 				task_logger->addToLog(
-					motion_force_task_config.otg_config->angular_jerk_limit,
+					motion_force_task_config.otg_config.angular_jerk_limit,
 					"otg_angular_jerk_limit");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_enabled",
-					motion_force_task_config.otg_config->enabled,
+					motion_force_task_config.otg_config.enabled,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_jerk_limited",
-					motion_force_task_config.otg_config->jerk_limited,
+					motion_force_task_config.otg_config.jerk_limited,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_linear_velocity_limit",
-					motion_force_task_config.otg_config->linear_velocity_limit,
+					motion_force_task_config.otg_config.linear_velocity_limit,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_angular_velocity_limit",
-					motion_force_task_config.otg_config->angular_velocity_limit,
+					motion_force_task_config.otg_config.angular_velocity_limit,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_linear_acceleration_limit",
 					motion_force_task_config.otg_config
-						->linear_acceleration_limit,
+						.linear_acceleration_limit,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_angular_acceleration_limit",
 					motion_force_task_config.otg_config
-						->angular_acceleration_limit,
+						.angular_acceleration_limit,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_linear_jerk_limit",
-					motion_force_task_config.otg_config->linear_jerk_limit,
+					motion_force_task_config.otg_config.linear_jerk_limit,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_angular_jerk_limit",
-					motion_force_task_config.otg_config->angular_jerk_limit,
+					motion_force_task_config.otg_config.angular_jerk_limit,
 					controller_name);
 
 				// gains
-				if (!motion_force_task_config.position_gains_config
-						 .has_value()) {
-					motion_force_task_config.position_gains_config =
-						GainsConfig(MotionForceTaskDefaultParams::kp_pos,
-									MotionForceTaskDefaultParams::kv_pos,
-									MotionForceTaskDefaultParams::ki_pos);
-				}
-				if (!motion_force_task_config.orientation_gains_config
-						 .has_value()) {
-					motion_force_task_config.orientation_gains_config =
-						GainsConfig(MotionForceTaskDefaultParams::kp_ori,
-									MotionForceTaskDefaultParams::kv_ori,
-									MotionForceTaskDefaultParams::ki_ori);
-				}
-				if (!motion_force_task_config.force_gains_config.has_value()) {
-					motion_force_task_config.force_gains_config =
-						GainsConfig(MotionForceTaskDefaultParams::kp_force,
-									MotionForceTaskDefaultParams::kv_force,
-									MotionForceTaskDefaultParams::ki_force);
-				}
-				if (!motion_force_task_config.moment_gains_config.has_value()) {
-					motion_force_task_config.moment_gains_config =
-						GainsConfig(MotionForceTaskDefaultParams::kp_moment,
-									MotionForceTaskDefaultParams::kv_moment,
-									MotionForceTaskDefaultParams::ki_moment);
-				}
 				task_logger->addToLog(
-					motion_force_task_config.position_gains_config->kp,
+					motion_force_task_config.position_gains_config.kp,
 					"position_kp");
 				task_logger->addToLog(
-					motion_force_task_config.position_gains_config->kv,
+					motion_force_task_config.position_gains_config.kv,
 					"position_kv");
 				task_logger->addToLog(
-					motion_force_task_config.position_gains_config->ki,
+					motion_force_task_config.position_gains_config.ki,
 					"position_ki");
 				task_logger->addToLog(
-					motion_force_task_config.orientation_gains_config->kp,
+					motion_force_task_config.orientation_gains_config.kp,
 					"orientation_kp");
 				task_logger->addToLog(
-					motion_force_task_config.orientation_gains_config->kv,
+					motion_force_task_config.orientation_gains_config.kv,
 					"orientation_kv");
 				task_logger->addToLog(
-					motion_force_task_config.orientation_gains_config->ki,
+					motion_force_task_config.orientation_gains_config.ki,
 					"orientation_ki");
 				task_logger->addToLog(
-					motion_force_task_config.force_gains_config->kp,
+					motion_force_task_config.force_control_config
+						.force_gains_config.kp,
 					"force_kp");
 				task_logger->addToLog(
-					motion_force_task_config.force_gains_config->kv,
+					motion_force_task_config.force_control_config
+						.force_gains_config.kv,
 					"force_kv");
 				task_logger->addToLog(
-					motion_force_task_config.force_gains_config->ki,
+					motion_force_task_config.force_control_config
+						.force_gains_config.ki,
 					"force_ki");
 				task_logger->addToLog(
-					motion_force_task_config.moment_gains_config->kp,
+					motion_force_task_config.force_control_config
+						.moment_gains_config.kp,
 					"moment_kp");
 				task_logger->addToLog(
-					motion_force_task_config.moment_gains_config->kv,
+					motion_force_task_config.force_control_config
+						.moment_gains_config.kv,
 					"moment_kv");
 				task_logger->addToLog(
-					motion_force_task_config.moment_gains_config->ki,
+					motion_force_task_config.force_control_config
+						.moment_gains_config.ki,
 					"moment_ki");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "position_kp",
-					motion_force_task_config.position_gains_config->kp,
+					motion_force_task_config.position_gains_config.kp,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "position_kv",
-					motion_force_task_config.position_gains_config->kv,
+					motion_force_task_config.position_gains_config.kv,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "position_ki",
-					motion_force_task_config.position_gains_config->ki,
+					motion_force_task_config.position_gains_config.ki,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "position_gains_safety_checks_enabled",
 					motion_force_task_config.position_gains_config
-						->safety_checks_enabled,
+						.safety_checks_enabled,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "orientation_kp",
-					motion_force_task_config.orientation_gains_config->kp,
+					motion_force_task_config.orientation_gains_config.kp,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "orientation_kv",
-					motion_force_task_config.orientation_gains_config->kv,
+					motion_force_task_config.orientation_gains_config.kv,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "orientation_ki",
-					motion_force_task_config.orientation_gains_config->ki,
+					motion_force_task_config.orientation_gains_config.ki,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "orientation_gains_safety_checks_enabled",
 					motion_force_task_config.orientation_gains_config
-						->safety_checks_enabled,
+						.safety_checks_enabled,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "force_kp",
-					motion_force_task_config.force_gains_config->kp,
+					motion_force_task_config.force_control_config
+						.force_gains_config.kp,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "force_kv",
-					motion_force_task_config.force_gains_config->kv,
+					motion_force_task_config.force_control_config
+						.force_gains_config.kv,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "force_ki",
-					motion_force_task_config.force_gains_config->ki,
+					motion_force_task_config.force_control_config
+						.force_gains_config.ki,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "moment_kp",
-					motion_force_task_config.moment_gains_config->kp,
+					motion_force_task_config.force_control_config
+						.moment_gains_config.kp,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "moment_kv",
-					motion_force_task_config.moment_gains_config->kv,
+					motion_force_task_config.force_control_config
+						.moment_gains_config.kv,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "moment_ki",
-					motion_force_task_config.moment_gains_config->ki,
+					motion_force_task_config.force_control_config
+						.moment_gains_config.ki,
 					controller_name);
 
 				// input
@@ -1004,75 +942,38 @@ void RobotControllerRedisInterface::processInputs() {
 			}
 
 			// velocity saturation
-			if (!joint_task_config.velocity_saturation_config.has_value()) {
-				auto velocity_saturation_config =
-					JointTaskConfig::JointVelSatConfig();
-				velocity_saturation_config.enabled =
-					joint_task->getVelocitySaturationEnabled();
-				velocity_saturation_config.velocity_limits =
-					joint_task->getVelocitySaturationMaxVelocity();
-				joint_task_config.velocity_saturation_config =
-					velocity_saturation_config;
+			const auto& velocity_saturation_config =
+				joint_task_config.velocity_saturation_config;
+			if (velocity_saturation_config.enabled) {
+				joint_task->enableVelocitySaturation(
+					velocity_saturation_config.velocity_limits);
 			} else {
-				const auto& velocity_saturation_config =
-					joint_task_config.velocity_saturation_config.value();
-				if (velocity_saturation_config.enabled) {
-					joint_task->enableVelocitySaturation(
-						velocity_saturation_config.velocity_limits);
-				} else {
-					joint_task->disableVelocitySaturation();
-				}
+				joint_task->disableVelocitySaturation();
 			}
 
 			// otg
-			if (!joint_task_config.otg_config.has_value()) {
-				auto otg_config = JointTaskConfig::JointOTGConfig();
-				otg_config.enabled = joint_task->getInternalOtgEnabled();
-				otg_config.jerk_limited =
-					joint_task->getInternalOtg().getJerkLimitEnabled();
-				otg_config.limits.velocity_limit =
-					joint_task->getInternalOtg().getMaxVelocity();
-				otg_config.limits.acceleration_limit =
-					joint_task->getInternalOtg().getMaxAcceleration();
-				otg_config.limits.jerk_limit =
-					joint_task->getInternalOtg().getMaxJerk();
-				joint_task_config.otg_config = otg_config;
+			const auto& otg_config = joint_task_config.otg_config;
+			if (!otg_config.enabled) {
+				joint_task->disableInternalOtg();
+			} else if (otg_config.enabled && !otg_config.jerk_limited) {
+				joint_task->enableInternalOtgAccelerationLimited(
+					otg_config.limits.velocity_limit,
+					otg_config.limits.acceleration_limit);
 			} else {
-				const auto& otg_config = joint_task_config.otg_config.value();
-				if (!otg_config.enabled) {
-					joint_task->disableInternalOtg();
-				} else if (otg_config.enabled && !otg_config.jerk_limited) {
-					joint_task->enableInternalOtgAccelerationLimited(
-						otg_config.limits.velocity_limit,
-						otg_config.limits.acceleration_limit);
-				} else {
-					joint_task->enableInternalOtgJerkLimited(
-						otg_config.limits.velocity_limit,
-						otg_config.limits.acceleration_limit,
-						otg_config.limits.jerk_limit);
-				}
+				joint_task->enableInternalOtgJerkLimited(
+					otg_config.limits.velocity_limit,
+					otg_config.limits.acceleration_limit,
+					otg_config.limits.jerk_limit);
 			}
 
 			// gains
-			if (!joint_task_config.gains_config.has_value()) {
-				auto gains_config = GainsConfig();
-				gains_config.kp = Sai2Primitives::extractKpFromGainVector(
-					joint_task->getGains());
-				gains_config.kv = Sai2Primitives::extractKvFromGainVector(
-					joint_task->getGains());
-				gains_config.ki = Sai2Primitives::extractKiFromGainVector(
-					joint_task->getGains());
-				joint_task_config.gains_config = gains_config;
+			const auto& gains_config = joint_task_config.gains_config;
+			if (gains_config.safety_checks_enabled) {
+				joint_task->setGains(gains_config.kp, gains_config.kv,
+									 gains_config.ki);
 			} else {
-				const auto& gains_config =
-					joint_task_config.gains_config.value();
-				if (gains_config.safety_checks_enabled) {
-					joint_task->setGains(gains_config.kp, gains_config.kv,
-										 gains_config.ki);
-				} else {
-					joint_task->setGainsUnsafe(gains_config.kp, gains_config.kv,
-											   gains_config.ki);
-				}
+				joint_task->setGainsUnsafe(gains_config.kp, gains_config.kv,
+										   gains_config.ki);
 			}
 
 			// inputs
@@ -1089,7 +990,6 @@ void RobotControllerRedisInterface::processInputs() {
 					_controller_task_monitoring_data.at(_active_controller_name)
 						.at(joint_task_config.task_name));
 			joint_task_monitoring_data.setFromTask(joint_task);
-
 		} else if (holds_alternative<MotionForceTaskConfig>(task_config)) {
 			auto& motion_force_task_config =
 				get<MotionForceTaskConfig>(task_config);
@@ -1113,217 +1013,113 @@ void RobotControllerRedisInterface::processInputs() {
 			}
 
 			// force control parametrization
+			motion_force_task->setForceSensorFrame(
+				motion_force_task_config.link_name,
+				motion_force_task_config.force_control_config
+					.force_sensor_frame);
 			motion_force_task->setClosedLoopForceControl(
-				motion_force_task_config.closed_loop_force_control);
+				motion_force_task_config.force_control_config
+					.closed_loop_force_control);
 			motion_force_task->setClosedLoopMomentControl(
-				motion_force_task_config.closed_loop_force_control);
+				motion_force_task_config.force_control_config
+					.closed_loop_force_control);
 
-			if (!motion_force_task_config.force_space_param_config
-					 .has_value()) {
-				auto force_space_param_config =
-					MotionForceTaskConfig::ForceMotionSpaceParamConfig();
-				force_space_param_config.force_space_dimension =
-					motion_force_task->getForceSpaceDimension();
-				force_space_param_config.axis =
-					motion_force_task->getForceMotionSingleAxis();
-				motion_force_task_config.force_space_param_config =
-					force_space_param_config;
-			} else {
-				const auto& force_space_param_config =
-					motion_force_task_config.force_space_param_config.value();
-				if (motion_force_task->parametrizeForceMotionSpaces(
-						force_space_param_config.force_space_dimension,
-						force_space_param_config.axis)) {
-					cout << "reset inputs force param for task "
-						 << motion_force_task_config.task_name << endl;
-					cout << "current position : "
-						 << motion_force_task->getCurrentPosition().transpose()
-						 << endl;
-					cout << "goal position : "
-						 << motion_force_task_input.goal_position.transpose()
-						 << endl;
-					cout << "force space dimension : "
-						 << force_space_param_config.force_space_dimension
-						 << endl;
-					cout << "axis : " << force_space_param_config.axis << endl;
-					cout << endl;
-					reset_inputs = true;
-					motion_force_task_input.goal_position =
-						motion_force_task->getCurrentPosition();
-					motion_force_task_input.goal_linear_velocity.setZero();
-					motion_force_task_input.goal_linear_acceleration.setZero();
-				}
+			const auto& force_space_param_config =
+				motion_force_task_config.force_control_config
+					.force_space_param_config;
+			if (motion_force_task->parametrizeForceMotionSpaces(
+					force_space_param_config.force_space_dimension,
+					force_space_param_config.axis)) {
+				reset_inputs = true;
+				motion_force_task_input.goal_position =
+					motion_force_task->getCurrentPosition();
+				motion_force_task_input.goal_linear_velocity.setZero();
+				motion_force_task_input.goal_linear_acceleration.setZero();
 			}
 
-			if (!motion_force_task_config.moment_space_param_config
-					 .has_value()) {
-				auto moment_space_param_config =
-					MotionForceTaskConfig::ForceMotionSpaceParamConfig();
-				moment_space_param_config.force_space_dimension =
-					motion_force_task->getMomentSpaceDimension();
-				moment_space_param_config.axis =
-					motion_force_task->getMomentRotMotionSingleAxis();
-				motion_force_task_config.moment_space_param_config =
-					moment_space_param_config;
-			} else {
-				const auto& moment_space_param_config =
-					motion_force_task_config.moment_space_param_config.value();
-				if (motion_force_task->parametrizeMomentRotMotionSpaces(
-						moment_space_param_config.force_space_dimension,
-						moment_space_param_config.axis)) {
-					reset_inputs = true;
-					motion_force_task_input.goal_position =
-						motion_force_task->getCurrentPosition();
-					motion_force_task_input.goal_linear_velocity.setZero();
-					motion_force_task_input.goal_linear_acceleration.setZero();
-				}
+			const auto& moment_space_param_config =
+				motion_force_task_config.force_control_config
+					.moment_space_param_config;
+			if (motion_force_task->parametrizeMomentRotMotionSpaces(
+					moment_space_param_config.force_space_dimension,
+					moment_space_param_config.axis)) {
+				reset_inputs = true;
+				motion_force_task_input.goal_position =
+					motion_force_task->getCurrentPosition();
+				motion_force_task_input.goal_linear_velocity.setZero();
+				motion_force_task_input.goal_linear_acceleration.setZero();
 			}
 
 			// velocity saturation
-			if (!motion_force_task_config.velocity_saturation_config
-					 .has_value()) {
-				auto velocity_saturation_config =
-					MotionForceTaskConfig::VelSatConfig();
-				velocity_saturation_config.enabled =
-					motion_force_task->getVelocitySaturationEnabled();
-				velocity_saturation_config.linear_velocity_limits =
-					motion_force_task->getLinearSaturationVelocity();
-				velocity_saturation_config.angular_velocity_limits =
-					motion_force_task->getAngularSaturationVelocity();
-				motion_force_task_config.velocity_saturation_config =
-					velocity_saturation_config;
+			const auto& velocity_saturation_config =
+				motion_force_task_config.velocity_saturation_config;
+			if (velocity_saturation_config.enabled) {
+				motion_force_task->enableVelocitySaturation(
+					velocity_saturation_config.linear_velocity_limits,
+					velocity_saturation_config.angular_velocity_limits);
 			} else {
-				const auto& velocity_saturation_config =
-					motion_force_task_config.velocity_saturation_config.value();
-				if (velocity_saturation_config.enabled) {
-					motion_force_task->enableVelocitySaturation(
-						velocity_saturation_config.linear_velocity_limits,
-						velocity_saturation_config.angular_velocity_limits);
-				} else {
-					motion_force_task->disableVelocitySaturation();
-				}
+				motion_force_task->disableVelocitySaturation();
 			}
 
 			// otg
-			if (!motion_force_task_config.otg_config.has_value()) {
-				auto otg_config = MotionForceTaskConfig::OTGConfig();
-				otg_config.enabled = motion_force_task->getInternalOtgEnabled();
-				otg_config.jerk_limited =
-					motion_force_task->getInternalOtg().getJerkLimitEnabled();
-				otg_config.linear_velocity_limit =
-					motion_force_task->getInternalOtg().getMaxLinearVelocity()(
-						0);
-				otg_config.angular_velocity_limit =
-					motion_force_task->getInternalOtg().getMaxAngularVelocity()(
-						0);
-				otg_config.linear_acceleration_limit =
-					motion_force_task->getInternalOtg()
-						.getMaxLinearAcceleration()(0);
-				otg_config.angular_acceleration_limit =
-					motion_force_task->getInternalOtg()
-						.getMaxAngularAcceleration()(0);
-				otg_config.linear_jerk_limit =
-					motion_force_task->getInternalOtg().getMaxLinearJerk()(0);
-				otg_config.angular_jerk_limit =
-					motion_force_task->getInternalOtg().getMaxAngularJerk()(0);
-				motion_force_task_config.otg_config = otg_config;
+			const auto& otg_config = motion_force_task_config.otg_config;
+			if (!otg_config.enabled) {
+				motion_force_task->disableInternalOtg();
+			} else if (otg_config.enabled && !otg_config.jerk_limited) {
+				motion_force_task->enableInternalOtgAccelerationLimited(
+					otg_config.linear_velocity_limit,
+					otg_config.linear_acceleration_limit,
+					otg_config.angular_velocity_limit,
+					otg_config.angular_acceleration_limit);
 			} else {
-				const auto& otg_config =
-					motion_force_task_config.otg_config.value();
-				if (!otg_config.enabled) {
-					motion_force_task->disableInternalOtg();
-				} else if (otg_config.enabled && !otg_config.jerk_limited) {
-					motion_force_task->enableInternalOtgAccelerationLimited(
-						otg_config.linear_velocity_limit,
-						otg_config.linear_acceleration_limit,
-						otg_config.angular_velocity_limit,
-						otg_config.angular_acceleration_limit);
-				} else {
-					motion_force_task->enableInternalOtgJerkLimited(
-						otg_config.linear_velocity_limit,
-						otg_config.linear_acceleration_limit,
-						otg_config.linear_jerk_limit,
-						otg_config.angular_velocity_limit,
-						otg_config.angular_acceleration_limit,
-						otg_config.angular_jerk_limit);
-				}
+				motion_force_task->enableInternalOtgJerkLimited(
+					otg_config.linear_velocity_limit,
+					otg_config.linear_acceleration_limit,
+					otg_config.linear_jerk_limit,
+					otg_config.angular_velocity_limit,
+					otg_config.angular_acceleration_limit,
+					otg_config.angular_jerk_limit);
 			}
 
 			// gains
-			if (!motion_force_task_config.position_gains_config.has_value()) {
-				auto gains_config = GainsConfig();
-				gains_config.kp = Sai2Primitives::extractKpFromGainVector(
-					motion_force_task->getPosControlGains());
-				gains_config.kv = Sai2Primitives::extractKvFromGainVector(
-					motion_force_task->getPosControlGains());
-				gains_config.ki = Sai2Primitives::extractKiFromGainVector(
-					motion_force_task->getPosControlGains());
-				motion_force_task_config.position_gains_config = gains_config;
+			const auto& pos_gains_config =
+				motion_force_task_config.position_gains_config;
+			if (pos_gains_config.safety_checks_enabled) {
+				motion_force_task->setPosControlGains(pos_gains_config.kp,
+													  pos_gains_config.kv,
+													  pos_gains_config.ki);
 			} else {
-				const auto& gains_config =
-					motion_force_task_config.position_gains_config.value();
-				if (gains_config.safety_checks_enabled) {
-					motion_force_task->setPosControlGains(
-						gains_config.kp, gains_config.kv, gains_config.ki);
-				} else {
-					motion_force_task->setPosControlGainsUnsafe(
-						gains_config.kp, gains_config.kv, gains_config.ki);
-				}
+				motion_force_task->setPosControlGainsUnsafe(
+					pos_gains_config.kp, pos_gains_config.kv,
+					pos_gains_config.ki);
 			}
 
-			if (!motion_force_task_config.orientation_gains_config
-					 .has_value()) {
-				auto gains_config = GainsConfig();
-				gains_config.kp = Sai2Primitives::extractKpFromGainVector(
-					motion_force_task->getOriControlGains());
-				gains_config.kv = Sai2Primitives::extractKvFromGainVector(
-					motion_force_task->getOriControlGains());
-				gains_config.ki = Sai2Primitives::extractKiFromGainVector(
-					motion_force_task->getOriControlGains());
-				motion_force_task_config.orientation_gains_config =
-					gains_config;
+			const auto& ori_gains_config =
+				motion_force_task_config.orientation_gains_config;
+			if (ori_gains_config.safety_checks_enabled) {
+				motion_force_task->setOriControlGains(ori_gains_config.kp,
+													  ori_gains_config.kv,
+													  ori_gains_config.ki);
 			} else {
-				const auto& gains_config =
-					motion_force_task_config.orientation_gains_config.value();
-				if (gains_config.safety_checks_enabled) {
-					motion_force_task->setOriControlGains(
-						gains_config.kp, gains_config.kv, gains_config.ki);
-				} else {
-					motion_force_task->setOriControlGainsUnsafe(
-						gains_config.kp, gains_config.kv, gains_config.ki);
-				}
+				motion_force_task->setOriControlGainsUnsafe(
+					ori_gains_config.kp, ori_gains_config.kv,
+					ori_gains_config.ki);
 			}
 
-			if (!motion_force_task_config.force_gains_config.has_value()) {
-				auto gains_config = GainsConfig();
-				gains_config.kp = Sai2Primitives::extractKpFromGainVector(
-					motion_force_task->getForceControlGains());
-				gains_config.kv = Sai2Primitives::extractKvFromGainVector(
-					motion_force_task->getForceControlGains());
-				gains_config.ki = Sai2Primitives::extractKiFromGainVector(
-					motion_force_task->getForceControlGains());
-				motion_force_task_config.force_gains_config = gains_config;
-			} else {
-				const auto& gains_config =
-					motion_force_task_config.force_gains_config.value();
+			if (motion_force_task_config.force_control_config
+					.closed_loop_force_control) {
+				const auto& force_gains_config =
+					motion_force_task_config.force_control_config
+						.force_gains_config;
 				motion_force_task->setForceControlGains(
-					gains_config.kp(0), gains_config.kv(0), gains_config.ki(0));
-			}
-
-			if (!motion_force_task_config.moment_gains_config.has_value()) {
-				auto gains_config = GainsConfig();
-				gains_config.kp = Sai2Primitives::extractKpFromGainVector(
-					motion_force_task->getMomentControlGains());
-				gains_config.kv = Sai2Primitives::extractKvFromGainVector(
-					motion_force_task->getMomentControlGains());
-				gains_config.ki = Sai2Primitives::extractKiFromGainVector(
-					motion_force_task->getMomentControlGains());
-				motion_force_task_config.moment_gains_config = gains_config;
-			} else {
-				const auto& gains_config =
-					motion_force_task_config.moment_gains_config.value();
+					force_gains_config.kp(0), force_gains_config.kv(0),
+					force_gains_config.ki(0));
+				const auto& moment_gains_config =
+					motion_force_task_config.force_control_config
+						.moment_gains_config;
 				motion_force_task->setMomentControlGains(
-					gains_config.kp(0), gains_config.kv(0), gains_config.ki(0));
+					moment_gains_config.kp(0), moment_gains_config.kv(0),
+					moment_gains_config.ki(0));
 			}
 
 			// inputs

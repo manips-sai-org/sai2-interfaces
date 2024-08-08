@@ -1,8 +1,8 @@
 #include "RobotControllerConfigParser.h"
 
-#include <urdf/urdfdom_headers/urdf_model/include/urdf_model/pose.h>
-
 #include <iostream>
+
+#include "helpers/ConfigParserHelpers.h"
 
 using namespace std;
 using namespace Eigen;
@@ -11,110 +11,19 @@ namespace Sai2Interfaces {
 
 namespace {
 
-bool parsePose(Sai2Urdfreader::Pose& pose, tinyxml2::XMLElement* xml) {
-	pose.clear();
-	if (xml) {
-		const char* xyz_str = xml->Attribute("xyz");
-		if (xyz_str != NULL) {
-			try {
-				pose.position.init(xyz_str);
-			} catch (std::exception e) {
-				std::cout << e.what() << std::endl;
-				return false;
-			}
-		}
-
-		const char* rpy_str = xml->Attribute("rpy");
-		if (rpy_str != NULL) {
-			try {
-				pose.rotation.init(rpy_str);
-			} catch (std::exception e) {
-				std::cout << e.what() << std::endl;
-				return false;
-			}
-		}
+std::string parseInterfaceAttribute(const char* attribute) {
+	vector<string> vectorStr = ConfigParserHelpers::splitString(attribute);
+	if (vectorStr.size() == 1) {
+		return vectorStr[0];
+	} else if (vectorStr.size() == 3) {
+		return "[" + vectorStr[0] + "," + vectorStr[1] + "," + vectorStr[2] +
+			   "]";
+	} else {
+		throw runtime_error(
+			"xml parsing error. Cannot parse scalar or Vector3d from the "
+			"string " +
+			string(attribute) + " because it should have 1 or 3 values.");
 	}
-	return true;
-}
-
-Affine3d parsePoseLocal(tinyxml2::XMLElement* xml) {
-	Affine3d pose = Affine3d::Identity();
-
-	Sai2Urdfreader::Pose pose_urdf;
-	parsePose(pose_urdf, xml);
-
-	pose.translation() << pose_urdf.position.x, pose_urdf.position.y,
-		pose_urdf.position.z;
-	pose.linear() = Quaterniond(pose_urdf.rotation.w, pose_urdf.rotation.x,
-								pose_urdf.rotation.y, pose_urdf.rotation.z)
-						.toRotationMatrix();
-
-	return pose;
-}
-
-Vector3d parseVector3dLocal(tinyxml2::XMLElement* xml,
-							string attribute_name = "xyz") {
-	Sai2Urdfreader::Vector3 vec;
-
-	const char* xyz_str = xml->Attribute(attribute_name.c_str());
-	if (xyz_str != NULL) {
-		try {
-			vec.init(xyz_str);
-		} catch (Sai2Urdfreader::ParseError& e) {
-			cout << e.what() << endl;
-			throw runtime_error("Could not parse vector3d");
-		}
-	}
-
-	return Vector3d(vec.x, vec.y, vec.z);
-}
-
-Vector3d parseVector3dLocal(const char* xyz_str) {
-	Sai2Urdfreader::Vector3 vec;
-
-	if (xyz_str != NULL) {
-		try {
-			vec.init(xyz_str);
-		} catch (Sai2Urdfreader::ParseError& e) {
-			cout << e.what() << endl;
-			throw runtime_error("Could not parse vector3d");
-		}
-	}
-
-	return Vector3d(vec.x, vec.y, vec.z);
-}
-
-std::vector<std::string> splitString(const std::string& str,
-									 const std::vector<char>& separators = {
-										 ' ', '\t', '\n', ','}) {
-	std::vector<std::string> tokens;
-	std::istringstream iss(str);
-	std::string token;
-
-	while (std::getline(iss, token)) {
-		std::string current;
-		bool inToken = false;
-
-		for (char ch : token) {
-			if (std::find(separators.begin(), separators.end(), ch) !=
-				separators.end()) {
-				if (inToken) {
-					tokens.push_back(current);
-					current.clear();
-					inToken = false;
-				}
-			} else {
-				current += ch;
-				inToken = true;
-			}
-		}
-
-		if (inToken) {
-			tokens.push_back(current);
-		}
-	}
-
-	return tokens;
 }
 
 enum GainsType {
@@ -130,54 +39,29 @@ MotionForceTaskInterfaceConfig parseInterfaceConfig(
 	MotionForceTaskInterfaceConfig interface_config;
 
 	if (interface_xml->Attribute("minGoalPosition")) {
-		interface_config.min_goal_position =
-			interface_xml->Attribute("minGoalPosition");
-		interface_config.min_goal_position.erase(
-			remove(interface_config.min_goal_position.begin(),
-				   interface_config.min_goal_position.end(), ' '),
-			interface_config.min_goal_position.end());
+		interface_config.min_goal_position = parseInterfaceAttribute(
+			interface_xml->Attribute("minGoalPosition"));
 	}
 	if (interface_xml->Attribute("maxGoalPosition")) {
-		interface_config.max_goal_position =
-			interface_xml->Attribute("maxGoalPosition");
-		interface_config.max_goal_position.erase(
-			remove(interface_config.max_goal_position.begin(),
-				   interface_config.max_goal_position.end(), ' '),
-			interface_config.max_goal_position.end());
+		interface_config.max_goal_position = parseInterfaceAttribute(
+			interface_xml->Attribute("maxGoalPosition"));
 	}
 	if (interface_xml->Attribute("minDesiredForce")) {
-		interface_config.min_desired_force =
-			interface_xml->Attribute("minDesiredForce");
-		interface_config.min_desired_force.erase(
-			remove(interface_config.min_desired_force.begin(),
-				   interface_config.min_desired_force.end(), ' '),
-			interface_config.min_desired_force.end());
+		interface_config.min_desired_force = parseInterfaceAttribute(
+			interface_xml->Attribute("minDesiredForce"));
 	}
 	if (interface_xml->Attribute("maxDesiredForce")) {
-		interface_config.max_desired_force =
-			interface_xml->Attribute("maxDesiredForce");
-		interface_config.max_desired_force.erase(
-			remove(interface_config.max_desired_force.begin(),
-				   interface_config.max_desired_force.end(), ' '),
-			interface_config.max_desired_force.end());
+		interface_config.max_desired_force = parseInterfaceAttribute(
+			interface_xml->Attribute("maxDesiredForce"));
 	}
 	if (interface_xml->Attribute("minDesiredMoment")) {
-		interface_config.min_desired_moment =
-			interface_xml->Attribute("minDesiredMoment");
-		interface_config.min_desired_moment.erase(
-			remove(interface_config.min_desired_moment.begin(),
-				   interface_config.min_desired_moment.end(), ' '),
-			interface_config.min_desired_moment.end());
+		interface_config.min_desired_moment = parseInterfaceAttribute(
+			interface_xml->Attribute("minDesiredMoment"));
 	}
 	if (interface_xml->Attribute("maxDesiredMoment")) {
-		interface_config.max_desired_moment =
-			interface_xml->Attribute("maxDesiredMoment");
-		interface_config.max_desired_moment.erase(
-			remove(interface_config.max_desired_moment.begin(),
-				   interface_config.max_desired_moment.end(), ' '),
-			interface_config.max_desired_moment.end());
+		interface_config.max_desired_moment = parseInterfaceAttribute(
+			interface_xml->Attribute("maxDesiredMoment"));
 	}
-
 	return interface_config;
 }
 
@@ -231,13 +115,13 @@ GainsConfig parseGainsConfig(tinyxml2::XMLElement* xml,
 	vector<string> vectorKi = {};
 
 	if (kp) {
-		vectorKp = splitString(kp);
+		vectorKp = ConfigParserHelpers::splitString(kp);
 	}
 	if (kv) {
-		vectorKv = splitString(kv);
+		vectorKv = ConfigParserHelpers::splitString(kv);
 	}
 	if (ki) {
-		vectorKi = splitString(ki);
+		vectorKi = ConfigParserHelpers::splitString(ki);
 	}
 
 	const int size =
@@ -355,13 +239,14 @@ JointTaskConfig::JointOTGConfig parseOTGJointConfig(
 	vector<string> vectorJerkLimit = {};
 
 	if (velocity_limit) {
-		vectorVelocityLimit = splitString(velocity_limit);
+		vectorVelocityLimit = ConfigParserHelpers::splitString(velocity_limit);
 	}
 	if (acceleration_limit) {
-		vectorAccelerationLimit = splitString(acceleration_limit);
+		vectorAccelerationLimit =
+			ConfigParserHelpers::splitString(acceleration_limit);
 	}
 	if (jerk_limit) {
-		vectorJerkLimit = splitString(jerk_limit);
+		vectorJerkLimit = ConfigParserHelpers::splitString(jerk_limit);
 	}
 
 	const int size =
@@ -459,7 +344,8 @@ JointTaskConfig::JointVelSatConfig parseVelSatJointConfig(
 
 	const char* velocity_limits = vel_sat_xml->Attribute("velocity_limit");
 	if (velocity_limits) {
-		vector<string> vectorVelocityLimits = splitString(velocity_limits);
+		vector<string> vectorVelocityLimits =
+			ConfigParserHelpers::splitString(velocity_limits);
 		const int size = vectorVelocityLimits.size();
 		VectorXd vel_limits_vec = VectorXd(size);
 		for (int i = 0; i < size; i++) {
@@ -506,29 +392,19 @@ std::vector<RobotControllerConfig> RobotControllerConfigParser::parseConfig(
 		const std::string robot_name =
 			robotControlConfiguration->Attribute("robotName");
 
-		// if (robotControlConfiguration->Attribute("file")) {
-		// 	const std::string internal_controller_config_file =
-		// 		robotControlConfiguration->Attribute("file");
-		// 	tinyxml2::XMLDocument doc_internal;
-		// 	if (doc_internal.LoadFile(
-		// 			internal_controller_config_file.c_str()) !=
-		// 		tinyxml2::XML_SUCCESS) {
-		// 		throw runtime_error("Could not load controller config file: " +
-		// 							internal_controller_config_file);
-		// 	}
-		// 	if (doc_internal.FirstChildElement("robotControlConfiguration") ==
-		// 		nullptr) {
-		// 		throw runtime_error(
-		// 			"no 'robotControlConfiguration' element found in config "
-		// 			"file " +
-		// 			internal_controller_config_file);
-		// 	}
-		// 	configs.push_back(parseControllersConfig(
-		// 		doc_internal.FirstChildElement("robotControlConfiguration")));
-		// } else {
+		// get the robot model file
+		if (!robotControlConfiguration->Attribute("robotModelFile")) {
+			throw runtime_error(
+				"Some of the robotControlConfiguration are missing a "
+				"'robotModelFile' attribute field in config file: " +
+				config_file);
+		}
+		const std::string robot_model_file =
+			robotControlConfiguration->Attribute("robotModelFile");
+
 		configs.push_back(parseControllersConfig(robotControlConfiguration));
-		// }
 		configs.back().robot_name = robot_name;
+		configs.back().robot_model_file = robot_model_file;
 
 		// get the redis prefix
 		if (robotControlConfiguration->Attribute("redisPrefix")) {
@@ -550,52 +426,45 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 	tinyxml2::XMLElement* controlConfiguration) {
 	RobotControllerConfig config;
 
-	// Extract the robotModelFile
-	tinyxml2::XMLElement* robotModelFile =
-		controlConfiguration->FirstChildElement("robotModelFile");
-	if (!robotModelFile) {
-		throw runtime_error(
-			"No 'robotModelFile' element found in config file: " +
-			_config_file_name);
-	}
-	config.robot_model_file = robotModelFile->GetText();
-
 	// robot base in world
 	tinyxml2::XMLElement* baseFrame =
 		controlConfiguration->FirstChildElement("baseFrame");
 	if (baseFrame) {
-		config.robot_base_in_world = parsePoseLocal(baseFrame);
+		config.robot_base_in_world = ConfigParserHelpers::parsePose(baseFrame);
 	}
 
 	// world gravity
 	tinyxml2::XMLElement* worldGravity =
 		controlConfiguration->FirstChildElement("worldGravity");
 	if (worldGravity) {
-		config.world_gravity = parseVector3dLocal(worldGravity);
+		config.world_gravity = ConfigParserHelpers::parseVector3d(worldGravity);
 	}
 
 	// extract logger config
 	tinyxml2::XMLElement* logger =
 		controlConfiguration->FirstChildElement("logger");
 	if (logger) {
-		if (logger->FirstChildElement("logFolderName")) {
+		if (logger->NextSiblingElement("logger")) {
+			throw runtime_error(
+				"Only one logger element is allowed per "
+				"'RobotControlConfiguration' in config file: " +
+				_config_file_name);
+		}
+		if (logger->Attribute("logFolderName")) {
 			config.logger_config.folder_name =
-				logger->FirstChildElement("logFolderName")->GetText();
+				logger->Attribute("logFolderName");
 		}
-
-		if (logger->FirstChildElement("logFrequency")) {
+		if (logger->Attribute("logFrequency")) {
 			config.logger_config.frequency =
-				logger->FirstChildElement("logFrequency")->DoubleText();
+				logger->DoubleAttribute("logFrequency");
 		}
-
-		if (logger->FirstChildElement("startWithController")) {
+		if (logger->Attribute("startWithController")) {
 			config.logger_config.start_with_logger_on =
-				logger->FirstChildElement("startWithController")->BoolText();
+				logger->BoolAttribute("startWithController");
 		}
-
-		if (logger->FirstChildElement("timestampInFilename")) {
+		if (logger->Attribute("timestampInFilename")) {
 			config.logger_config.add_timestamp_to_filename =
-				logger->FirstChildElement("timestampInFilename")->BoolText();
+				logger->BoolAttribute("timestampInFilename");
 		}
 	}
 
@@ -637,41 +506,34 @@ vector<variant<JointTaskConfig, MotionForceTaskConfig>>
 RobotControllerConfigParser::parseSingleControllerConfig(
 	tinyxml2::XMLElement* xml) {
 	vector<variant<JointTaskConfig, MotionForceTaskConfig>> configs;
-
 	vector<string> controller_task_names;
 
 	// loop over tasks
-	for (tinyxml2::XMLElement* task = xml->FirstChildElement("task"); task;
-		 task = task->NextSiblingElement("task")) {
-		// get task type
-		const char* type = task->Attribute("type");
-		if (!type) {
-			throw runtime_error("tasks must have a type in config file: " +
-								_config_file_name);
-		}
-		if (string(type) == "joint_task") {
-			configs.push_back(parseJointTaskConfig(task));
-			if (find(controller_task_names.begin(), controller_task_names.end(),
-					 get<JointTaskConfig>(configs.back()).task_name) !=
-				controller_task_names.end()) {
-				throw runtime_error(
-					"tasks from the same controller must have a unique name in "
-					"config file: " +
-					_config_file_name);
-			}
-		} else if (string(type) == "motion_force_task") {
-			configs.push_back(parseMotionForceTaskConfig(task));
-			if (find(controller_task_names.begin(), controller_task_names.end(),
-					 get<MotionForceTaskConfig>(configs.back()).task_name) !=
-				controller_task_names.end()) {
-				throw runtime_error(
-					"tasks from the same controller must have a unique name in "
-					"config file: " +
-					_config_file_name);
-			}
+	for (tinyxml2::XMLElement* element = xml->FirstChildElement(); element;
+		 element = element->NextSiblingElement()) {
+		const char* elementName = element->Name();
+		std::string task_name = "";
+		if (strcmp(elementName, "jointTask") == 0) {
+			configs.push_back(parseJointTaskConfig(element));
+			task_name = get<JointTaskConfig>(configs.back()).task_name;
+		} else if (strcmp(elementName, "motionForceTask") == 0) {
+			configs.push_back(parseMotionForceTaskConfig(element));
+			task_name = get<MotionForceTaskConfig>(configs.back()).task_name;
 		} else {
-			throw runtime_error("Unknown task type: " + string(type));
+			throw runtime_error(
+				"Unknown task type: " + std::string(elementName) +
+				" in config file: " + _config_file_name +
+				". Only supported tasks in 'controller' element are "
+				"'jointTask' and 'motionForceTask'");
 		}
+		if (find(controller_task_names.begin(), controller_task_names.end(),
+				 task_name) != controller_task_names.end()) {
+			throw runtime_error(
+				"tasks from the same controller must have a unique name in "
+				"config file: " +
+				_config_file_name);
+		}
+		controller_task_names.push_back(task_name);
 	}
 	return configs;
 }
@@ -692,26 +554,23 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 	}
 	config.task_name = name;
 
+	// dynamic decoupling
+	if (xml->Attribute("useDynamicDecoupling")) {
+		config.use_dynamic_decoupling =
+			xml->BoolAttribute("useDynamicDecoupling");
+	}
+
+	// bie threshold
+	if (xml->Attribute("bieThreshold")) {
+		config.bie_threshold = xml->DoubleAttribute("bieThreshold");
+	}
+
 	// get controlled joints
 	tinyxml2::XMLElement* controlled_joints =
 		xml->FirstChildElement("controlledJointNames");
 	if (controlled_joints && controlled_joints->GetText()) {
 		config.controlled_joint_names =
-			splitString(controlled_joints->GetText());
-	}
-
-	// dynamic decoupling
-	tinyxml2::XMLElement* dynamic_decoupling =
-		xml->FirstChildElement("dynamicDecoupling");
-	if (dynamic_decoupling) {
-		config.use_dynamic_decoupling = dynamic_decoupling->BoolText();
-	}
-
-	// bie threshold
-	tinyxml2::XMLElement* bie_threshold =
-		xml->FirstChildElement("bieThreshold");
-	if (bie_threshold) {
-		config.bie_threshold = bie_threshold->DoubleText();
+			ConfigParserHelpers::splitString(controlled_joints->GetText());
 	}
 
 	// velocity saturation
@@ -755,40 +614,37 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	config.task_name = name;
 
 	// link name
-	const char* link_name = xml->FirstChildElement("linkName")->GetText();
-	if (!link_name) {
-		throw runtime_error("tasks must have a linkName in config file: " +
-							_config_file_name);
+	if (!xml->Attribute("linkName")) {
+		throw runtime_error(
+			"'motionForceTask' element must have a linkName attribute in "
+			"config file: " +
+			_config_file_name);
 	}
-	config.link_name = link_name;
+	config.link_name = xml->Attribute("linkName");
+
+	// parametrization in compliant frame
+	if (xml->Attribute("parametrizationInCompliantFrame")) {
+		config.is_parametrization_in_compliant_frame =
+			xml->BoolAttribute("parametrizationInCompliantFrame");
+	}
+
+	// use dynamic decoupling
+	if (xml->Attribute("useDynamicDecoupling")) {
+		config.use_dynamic_decoupling =
+			xml->BoolAttribute("useDynamicDecoupling");
+	}
+
+	// bie threshold
+	if (xml->Attribute("bieThreshold")) {
+		config.bie_threshold = xml->DoubleAttribute("bieThreshold");
+	}
 
 	// compliant frame
 	tinyxml2::XMLElement* compliant_frame =
 		xml->FirstChildElement("compliantFrame");
 	if (compliant_frame) {
-		config.compliant_frame = parsePoseLocal(compliant_frame);
-	}
-
-	// parametrization in compliant frame
-	tinyxml2::XMLElement* parametrization_in_compliant_frame =
-		xml->FirstChildElement("parametrizationInCompliantFrame");
-	if (parametrization_in_compliant_frame) {
-		config.is_parametrization_in_compliant_frame =
-			parametrization_in_compliant_frame->BoolText();
-	}
-
-	// use dynamic decoupling
-	tinyxml2::XMLElement* dynamic_decoupling =
-		xml->FirstChildElement("dynamicDecoupling");
-	if (dynamic_decoupling) {
-		config.use_dynamic_decoupling = dynamic_decoupling->BoolText();
-	}
-
-	// bie threshold
-	tinyxml2::XMLElement* bie_threshold =
-		xml->FirstChildElement("bieThreshold");
-	if (bie_threshold) {
-		config.bie_threshold = bie_threshold->DoubleText();
+		config.compliant_frame =
+			ConfigParserHelpers::parsePose(compliant_frame);
 	}
 
 	// controlled directions position
@@ -800,7 +656,8 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 				 controlled_directions_position->FirstChildElement("direction");
 			 direction;
 			 direction = direction->NextSiblingElement("direction")) {
-			controlled_directions.push_back(parseVector3dLocal(direction));
+			controlled_directions.push_back(
+				ConfigParserHelpers::parseVector3d(direction));
 		}
 		config.controlled_directions_position = controlled_directions;
 	}
@@ -815,66 +672,89 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 					 "direction");
 			 direction;
 			 direction = direction->NextSiblingElement("direction")) {
-			controlled_directions.push_back(parseVector3dLocal(direction));
+			controlled_directions.push_back(
+				ConfigParserHelpers::parseVector3d(direction));
 		}
 		config.controlled_directions_orientation = controlled_directions;
 	}
 
-	// closed looop force control
-	tinyxml2::XMLElement* closed_loop_force_control =
-		xml->FirstChildElement("closedLoopForceControl");
-	if (closed_loop_force_control) {
-		config.closed_loop_force_control =
-			closed_loop_force_control->BoolText();
-	}
-
-	// force sensor frame
-	tinyxml2::XMLElement* force_sensor_frame =
-		xml->FirstChildElement("forceSensorFrame");
-	if (force_sensor_frame) {
-		config.force_sensor_frame = parsePoseLocal(force_sensor_frame);
-	} else {
-		config.force_sensor_frame = config.compliant_frame;
-	}
-
-	// force space param
-	tinyxml2::XMLElement* force_space_param =
-		xml->FirstChildElement("forceSpaceParametrization");
-	if (force_space_param) {
-		MotionForceTaskConfig::ForceMotionSpaceParamConfig
-			force_motion_space_config;
-		if (force_space_param->Attribute("dim")) {
-			force_motion_space_config.force_space_dimension =
-				force_space_param->IntAttribute("dim");
+	// Force control
+	tinyxml2::XMLElement* force_control =
+		xml->FirstChildElement("forceControl");
+	if (force_control) {
+		// closed looop force control
+		if (force_control->Attribute("closedLoopForceControl")) {
+			config.force_control_config.closed_loop_force_control =
+				force_control->BoolAttribute("closedLoopForceControl");
 		}
-		if (force_space_param->Attribute("direction")) {
-			force_motion_space_config.axis =
-				parseVector3dLocal(force_space_param->Attribute("direction"));
-			if (force_motion_space_config.axis.norm() > 1e-3) {
-				force_motion_space_config.axis.normalize();
+
+		// force sensor frame
+		tinyxml2::XMLElement* force_sensor_frame =
+			force_control->FirstChildElement("forceSensorFrame");
+		if (force_sensor_frame) {
+			config.force_control_config.force_sensor_frame =
+				ConfigParserHelpers::parsePose(force_sensor_frame);
+		}
+
+		// force space param
+		tinyxml2::XMLElement* force_space_param =
+			force_control->FirstChildElement("forceSpaceParametrization");
+		if (force_space_param) {
+			MotionForceTaskConfig::ForceMotionSpaceParamConfig
+				force_motion_space_config;
+			if (force_space_param->Attribute("dim")) {
+				force_motion_space_config.force_space_dimension =
+					force_space_param->IntAttribute("dim");
 			}
-		}
-		config.force_space_param_config = force_motion_space_config;
-	}
-
-	// moment space param
-	tinyxml2::XMLElement* moment_space_param =
-		xml->FirstChildElement("momentSpaceParametrization");
-	if (moment_space_param) {
-		MotionForceTaskConfig::ForceMotionSpaceParamConfig
-			moment_space_param_config;
-		if (moment_space_param->Attribute("dim")) {
-			moment_space_param_config.force_space_dimension =
-				moment_space_param->IntAttribute("dim");
-		}
-		if (moment_space_param->Attribute("direction")) {
-			moment_space_param_config.axis =
-				parseVector3dLocal(moment_space_param->Attribute("direction"));
-			if (moment_space_param_config.axis.norm() > 1e-3) {
-				moment_space_param_config.axis.normalize();
+			if (force_space_param->Attribute("direction")) {
+				force_motion_space_config.axis =
+					ConfigParserHelpers::parseVector3d(
+						force_space_param->Attribute("direction"));
+				if (force_motion_space_config.axis.norm() > 1e-3) {
+					force_motion_space_config.axis.normalize();
+				}
 			}
+			config.force_control_config.force_space_param_config =
+				force_motion_space_config;
 		}
-		config.moment_space_param_config = moment_space_param_config;
+
+		// moment space param
+		tinyxml2::XMLElement* moment_space_param =
+			force_control->FirstChildElement("momentSpaceParametrization");
+		if (moment_space_param) {
+			MotionForceTaskConfig::ForceMotionSpaceParamConfig
+				moment_space_param_config;
+			if (moment_space_param->Attribute("dim")) {
+				moment_space_param_config.force_space_dimension =
+					moment_space_param->IntAttribute("dim");
+			}
+			if (moment_space_param->Attribute("direction")) {
+				moment_space_param_config.axis =
+					ConfigParserHelpers::parseVector3d(
+						moment_space_param->Attribute("direction"));
+				if (moment_space_param_config.axis.norm() > 1e-3) {
+					moment_space_param_config.axis.normalize();
+				}
+			}
+			config.force_control_config.moment_space_param_config =
+				moment_space_param_config;
+		}
+
+		// force gains
+		tinyxml2::XMLElement* force_gains =
+			force_control->FirstChildElement("forceGains");
+		if (force_gains) {
+			config.force_control_config.force_gains_config = parseGainsConfig(
+				force_gains, _config_file_name, MOTFORCE_FORCE);
+		}
+
+		// moment gains
+		tinyxml2::XMLElement* moment_gains =
+			force_control->FirstChildElement("momentGains");
+		if (moment_gains) {
+			config.force_control_config.moment_gains_config = parseGainsConfig(
+				moment_gains, _config_file_name, MOTFORCE_MOMENT);
+		}
 	}
 
 	// velocity saturation
@@ -886,8 +766,7 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		if (!velocity_saturation->Attribute("enabled")) {
 			throw runtime_error(
 				"velocitySaturation must have an enabled attribute if present "
-				"in "
-				"MotionForceTask in config file: " +
+				"in MotionForceTask in config file: " +
 				_config_file_name);
 		}
 		vel_sat_config.enabled = velocity_saturation->BoolAttribute("enabled");
@@ -915,8 +794,9 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		// type
 		const char* type = otg->Attribute("type");
 		if (!type) {
-			throw runtime_error("otg must have a type in config file: " +
-								_config_file_name);
+			throw runtime_error(
+				"otg must have a type attribute if present in config file: " +
+				_config_file_name);
 		}
 		if (string(type) == "disabled") {
 			otg_config.enabled = false;
@@ -987,20 +867,6 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	if (orientation_gains) {
 		config.orientation_gains_config = parseGainsConfig(
 			orientation_gains, _config_file_name, MOTFORCE_ORI);
-	}
-
-	// force gains
-	tinyxml2::XMLElement* force_gains = xml->FirstChildElement("forceGains");
-	if (force_gains) {
-		config.force_gains_config =
-			parseGainsConfig(force_gains, _config_file_name, MOTFORCE_FORCE);
-	}
-
-	// moment gains
-	tinyxml2::XMLElement* moment_gains = xml->FirstChildElement("momentGains");
-	if (moment_gains) {
-		config.moment_gains_config =
-			parseGainsConfig(moment_gains, _config_file_name, MOTFORCE_MOMENT);
 	}
 
 	// interface config

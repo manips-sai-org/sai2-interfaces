@@ -34,7 +34,7 @@ struct GainsConfig {
 };
 
 struct ControllerLoggerConfig {
-	std::string folder_name = "log_files/controller";
+	std::string folder_name = "log_files/controllers";
 	double frequency = 100.0;
 	bool start_with_logger_on = false;
 	bool add_timestamp_to_filename = true;
@@ -66,8 +66,7 @@ struct JointTaskConfig {
 				JointTaskDefaultParams::otg_max_acceleration *
 				Eigen::VectorXd::Ones(1);
 			Eigen::VectorXd jerk_limit =
-				JointTaskDefaultParams::otg_max_jerk *
-				Eigen::VectorXd::Ones(1);
+				JointTaskDefaultParams::otg_max_jerk * Eigen::VectorXd::Ones(1);
 		};
 
 		bool enabled = JointTaskDefaultParams::use_internal_otg;
@@ -82,16 +81,44 @@ struct JointTaskConfig {
 		Sai2Primitives::DynamicDecouplingType::IMPEDANCE;
 	double bie_threshold = JointTaskDefaultParams::bie_threshold;
 
-	std::optional<JointVelSatConfig> velocity_saturation_config = {};
-	std::optional<JointOTGConfig> otg_config = {};
-	std::optional<GainsConfig> gains_config = {};
+	JointVelSatConfig velocity_saturation_config;
+	JointOTGConfig otg_config;
+	GainsConfig gains_config =
+		GainsConfig(JointTaskDefaultParams::kp, JointTaskDefaultParams::kv,
+					JointTaskDefaultParams::ki);
 };
 
 struct MotionForceTaskConfig {
 	struct ForceMotionSpaceParamConfig {
-		int force_space_dimension =
-			MotionForceTaskDefaultParams::force_space_dimension;
-		Eigen::Vector3d axis = Eigen::Vector3d::UnitZ();
+		int force_space_dimension;
+		Eigen::Vector3d axis;
+
+		ForceMotionSpaceParamConfig()
+			: force_space_dimension(0), axis(Eigen::Vector3d::UnitZ()) {}
+
+		ForceMotionSpaceParamConfig(
+			const int force_space_dimension,
+			const Eigen::Vector3d& axis = Eigen::Vector3d::UnitZ())
+			: force_space_dimension(force_space_dimension), axis(axis) {}
+	};
+
+	struct ForceControlConfig {
+		bool closed_loop_force_control = false;
+		Eigen::Affine3d force_sensor_frame = Eigen::Affine3d::Identity();
+		ForceMotionSpaceParamConfig force_space_param_config =
+			ForceMotionSpaceParamConfig(
+				MotionForceTaskDefaultParams::force_space_dimension);
+		ForceMotionSpaceParamConfig moment_space_param_config =
+			ForceMotionSpaceParamConfig(
+				MotionForceTaskDefaultParams::moment_space_dimension);
+		GainsConfig force_gains_config =
+			GainsConfig(MotionForceTaskDefaultParams::kp_force,
+						MotionForceTaskDefaultParams::kv_force,
+						MotionForceTaskDefaultParams::ki_force);
+		GainsConfig moment_gains_config =
+			GainsConfig(MotionForceTaskDefaultParams::kp_moment,
+						MotionForceTaskDefaultParams::kv_moment,
+						MotionForceTaskDefaultParams::ki_moment);
 	};
 
 	struct VelSatConfig {
@@ -129,22 +156,23 @@ struct MotionForceTaskConfig {
 		Sai2Primitives::DynamicDecouplingType::IMPEDANCE;
 	double bie_threshold = MotionForceTaskDefaultParams::bie_threshold;
 
-	std::optional<std::vector<Eigen::Vector3d>> controlled_directions_position =
-		{};
-	std::optional<std::vector<Eigen::Vector3d>>
-		controlled_directions_orientation = {};
+	std::vector<Eigen::Vector3d> controlled_directions_position = {
+		Vector3d::UnitX(), Vector3d::UnitY(), Vector3d::UnitZ()};
+	std::vector<Eigen::Vector3d> controlled_directions_orientation = {
+		Vector3d::UnitX(), Vector3d::UnitY(), Vector3d::UnitZ()};
 
-	bool closed_loop_force_control = false;
-	Eigen::Affine3d force_sensor_frame = Eigen::Affine3d::Identity();
-	std::optional<ForceMotionSpaceParamConfig> force_space_param_config = {};
-	std::optional<ForceMotionSpaceParamConfig> moment_space_param_config = {};
+	ForceControlConfig force_control_config;
 
-	std::optional<VelSatConfig> velocity_saturation_config = {};
-	std::optional<OTGConfig> otg_config = {};
-	std::optional<GainsConfig> position_gains_config = {};
-	std::optional<GainsConfig> orientation_gains_config = {};
-	std::optional<GainsConfig> force_gains_config = {};
-	std::optional<GainsConfig> moment_gains_config = {};
+	VelSatConfig velocity_saturation_config;
+	OTGConfig otg_config;
+	GainsConfig position_gains_config =
+		GainsConfig(MotionForceTaskDefaultParams::kp_pos,
+					MotionForceTaskDefaultParams::kv_pos,
+					MotionForceTaskDefaultParams::ki_pos);
+	GainsConfig orientation_gains_config =
+		GainsConfig(MotionForceTaskDefaultParams::kp_ori,
+					MotionForceTaskDefaultParams::kv_ori,
+					MotionForceTaskDefaultParams::ki_ori);
 
 	MotionForceTaskInterfaceConfig interface_config;
 };

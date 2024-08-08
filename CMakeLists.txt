@@ -54,6 +54,7 @@ include_directories(${SAI2-PRIMITIVES_INCLUDE_DIRS})
 
 # add redis interface classes
 set(SAI2_INTERFACES_SOURCE
+    ${PROJECT_SOURCE_DIR}/src/helpers/ConfigParserHelpers.cpp
     ${PROJECT_SOURCE_DIR}/src/simviz/SimVizRedisInterface.cpp
     ${PROJECT_SOURCE_DIR}/src/simviz/SimVizConfigParser.cpp
     ${PROJECT_SOURCE_DIR}/src/controller/RobotControllerRedisInterface.cpp

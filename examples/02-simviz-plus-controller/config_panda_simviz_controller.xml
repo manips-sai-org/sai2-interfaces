@@ -1,96 +1,237 @@
 <simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf">
-	<simParameters coeffFriction="0.5"/>
+	<simParameters coeffFriction="0.5" />
 	<forceSensor robotOrObjectName="Panda"
 		linkName="end-effector"
-		filterCutoff="5.0"/>
+		filterCutoff="5.0" />
 </simvizConfiguration>
 
-<!-- One of those per robot to control. In this example, only one is used because there is only one robot -->
-<!-- The robotName attribute is necessary and is used to define the redis keys -->
-<!-- The controlFrequency is optional and defaults to 1000 Hz -->
-<!-- the redisPrefix is optional and defaults to "sai2::interfaces" -->
+<!--
+The <robotControlConfiguration> element contains the control configuration for a robot.
+There can only be one of those per robot (identified by the robot name) in a config file.
+a robot can have multiple controllers, all defined within this element, but only one can be active at a time.
+Its attributes are:
+	- robotName: Required. The name of the robot
+	- robotModelFile: Required. The path to the URDF file of the robot
+	- redisPrefix: Optional. The prefix of the redis keys used by the robot control interface. Defaults to "sai2::interfaces"
+	- controlFrequency: Optional. The control frequency of the robot. Defaults to 1000.0 Hz
+None of the corresponding config parameters can be changed at runtime.
+-->
 <robotControlConfiguration robotName="Panda"
+	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf"
+	redisPrefix="sai2::interfaces"
 	controlFrequency="1000.0">
 
-	<!-- required -->
-	<robotModelFile>${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf</robotModelFile>
-
-	<!-- optional. Base frame of the robot. Defaults to Identity -->
+	<!--
+	The optional <baseFrame> element contains the base frame of the robot with respect to world frame.
+	Its attributes are:
+		- xyz: Optional. The position of the base frame origin in meters. Defaults to 0 0 0
+		- rpy: Optional. The orientation of the base frame in XYZ euler angles in Rad. Defaults to 0 0 0
+	The robot base frame cannot be changed at runtime.
+	-->
 	<baseFrame xyz="0 0 0"
 		rpy="0 0 0" />
 
-	<!-- optional. Gravity vector in world frame. Defaults to 0 0 -9.81 -->
+	<!--
+	The optional <worldGravity> element describes the 3D gravity vector in world frame.
+	Its attributes are:
+		- xyz: Optional. The gravity vector in world frame in m/s^2. Defaults to 0 0 -9.81
+	The gravity vector cannot be changed at runtime.
+	-->
 	<worldGravity xyz="0 0 -9.81" />
 
-	<!-- optional. The following are the default values in case one or more are missing -->
-	<logger>
-		<logFolderName>logs_control</logFolderName>
-		<logFrequency>100</logFrequency>
-		<startWithController>false</startWithController>
-		<timestampInFilename>true</timestampInFilename>
-	</logger>
+	<!--
+	The optional <logger> element contains the parameters for the robot controller logger.
+	Only one is allowed per robotControlConfiguration element.
+	Its attributes are:
+		- logFolderName: Optional. The relative path of the folder where the log files will be saved. Defaults to "log_files/controllers"
+		- logFrequency: Optional. The frequency in Hz at which the log files are saved. Defaults to 100 Hz
+		- startWithController: Optional. Whether to start logging data as soon as the controller starts. Defaults to false
+		- addTimestampToFilename: Optional. Whether to add the timestamp of the logging start to the log file name. Defaults to true
+	None of the corresponding config parameters can be changed at runtime.
+	-->
+	<logger logFolderName="log_files/controllers"
+		logFrequency="100"
+		startWithController="false"
+		timestampInFilename="true" />
 
-	<!-- We can define several controllers and switch between them at runtime -->
-	<!-- The controller initially active is the one defined first in the config file -->
-	<!-- each controller is defined by a list of tasks -->
-	<!-- each controller must have a unique, non empty name -->
+	<!--
+	The <controller> element contains the configuration for one controller.
+	There can be multiple controllers per robotControlConfiguration element.
+	Each controller must have a unique name inside the robotControlConfiguration element.
+	A controller is parametrized by a sequence of tasks that are defined within the controller element.
+	The order in which the tasks are defined determined the hierarchical structure of the controller.
+	Each subsequent task will be performed in the nullspace of the previous tasks.
+	The supported tasks are:
+		- jointTask: a task to control the robot joints
+		- motionForceTask: a task to control the robot end-effector in cartesian space
+	The attributes of the controller element are:
+		- name: Required. The name of the controller. Two controllers on the same robot cannot have the same name
+	Only one controller can be active at a time.
+	The active controller initially is the one defined first in the robotControlConfiguration element.
+	The active controller can be changed at runtime.
+	-->
 	<controller name="cartesian_controller">
-		<!-- each task from a given controller must have a unique (within the controller) non empty name -->
-		<!-- the task type can be either "joint_task" or "motion_force_task" -->
-		<task name="cartesian_task"
-			type="motion_force_task">
-			<!-- required. Name of the link to control -->
-			<linkName>end-effector</linkName>
-			<!-- optional. defaults to identity -->
+		<!--
+		The <motionForceTask> element contains the configuration for a motion-force task.
+		A motion-force task is a task to control the robot end-effector in cartesian space.
+		The motion-force task can be controlled in translation and rotation, and in force and moment.
+		Its attributes are:
+			- name: Required - Fixed. The name of the task. Two tasks within a controller cannot have the same name
+			- linkName: Required - Fixed. The name of the link to control
+			- parametrizatonInCompliantFrame: Optional - Fixed. Whether to parametrize the task in the compliant frame.
+				If set to true, then the gains and force space parametrizations are defined in the compliant frame.
+				Otherwise, they are defined in the world frame.
+			- useDynamicDecoupling: Optional. Whether to use dynamic decoupling within the task.
+			- bieThreshold: Optional - Fixed. The threshold for the bounded inertia estimates method.
+				The bounded inertia estimate method is a tradeoff between perfect dynamic decoupling
+				and orientation controlability in systems with very non isotropic inertia properties.
+				When controlling an actual robot, it is advised to leave it between 0.01 and 0.1.
+				In simulation, you can set it to 0 in order to have perfect dynamic decoupling.
+		All default values for the optional parameters here and in the sub-elements are the default
+		values defined in the MotionForceTask class in the sai2-primitives library
+		see (https://github.com/manips-sai-org/sai2-primitives).
+		Dynamic decoupling can be switched on and off at runtime.
+		The rest of the parameters corresponding to those attributes are fixed and cannot be changed at runtime.
+		-->
+		<motionForceTask name="cartesian_task"
+			linkName="end-effector"
+			parametrizatonInCompliantFrame="false"
+			useDynamicDecoupling="true"
+			bieThreshold="0.1">
+
+			<!--
+			The optional <compliantFrame> element contains the position and orientation of the
+			compliant frame with respect to the kinematic frame of the controlled link.
+			The compliant frame is the frame controlled by the task.
+			Its attributes are:
+				- xyz: Optional. The position of the compliant frame origin in meters.
+				- rpy: Optional. The orientation of the compliant frame in XYZ euler angles in Rad.
+			The compliant frame cannot be changed at runtime.
+			-->
 			<compliantFrame xyz="0 0 0"
 				rpy="0 0 0" />
-			<!-- optional. defaults to false -->
-			<parametrizatonInCompliantFrame>false</parametrizatonInCompliantFrame>
-			<!-- optional. defaults to true -->
-			<useDynamicDecoupling>true</useDynamicDecoupling>
 
-			<!-- optional. those are the controlled directions in translation for the task -->
-			<!-- if not specified, all directions are controlled -->
-			<!-- the controlled translation space is the range of the vectors provided here -->
+			<!--
+			The optional <controlledDirectionsTranslation> element contains the directions in translation that are controlled by the task.
+			This enabled to control only a subset of the translation directions (for example for a planar robot).
+			Its children are <direction> elements, each with an xyz attribute.
+			Each direction is a vector in the world frame, and there can be as many as needed.
+			The controlled translation space is the range of the vectors provided here.
+			If not specified, all directions are controlled.
+			The controlled directions cannot be changed at runtime.
+			-->
 			<controlledDirectionsTranslation>
 				<direction xyz="1 0 0" />
 				<direction xyz="0 1 0" />
 				<direction xyz="0 0 1" />
 			</controlledDirectionsTranslation>
-			<!-- same for the controlled rotation space -->
+
+			<!--
+			The optional <controlledDirectionsRotation> element contains the directions in rotation that are controlled by the task.
+			It is the same as the controlledDirectionsTranslation element, but for rotation.
+			-->
 			<controlledDirectionsRotation>
 				<direction xyz="1 0 0" />
 				<direction xyz="0 1 0" />
 				<direction xyz="0 0 1" />
 			</controlledDirectionsRotation>
 
-			<!-- optional. defaults to false -->
-			<closedLoopForceControl>false</closedLoopForceControl>
-			<!-- optional. Defaults to identity -->
-			<forceSensorFameInLinkFrame xyz="0 0 0"
-				rpy="0 0 0" />
-			<!-- optional. defaults to a full motion control -->
-			<forceSpaceParametrization dim="0"
-				direction="0 0 1"/>
-			<!-- optional. defaults to a full motion control -->
-			<momentSpaceParametrization dim="0"
-				direction="0 0 1"/>
+			<!--
+			The optional <forceControl> element contains the parameters for the force control.
+			Its attributes are:
+				- closedLoopForceControl: Optional. Whether to use closed loop force control.
+					If false, open loop force control will be used.
+			Closed loop force control can be switched on and off at runtime.
+			Default value can be found in the MotionForceTask class in the sai2-primitives library.
+			-->
+			<forceControl closedLoopForceControl="false">
+				<!--
+				The optional <forceSensorFrame> element contains the position and orientation of the
+				force sensor frame with respect to the compliant frame.
+				Its attributes are:
+					- xyz: Optional. The position of the force sensor frame origin in meters.
+					- rpy: Optional. The orientation of the force sensor frame in XYZ euler angles in Rad.
+				The force sensor frame location cannot be changed at runtime.
+				-->
+				<forceSensorFrame xyz="0 0 0"
+					rpy="0 0 0" />
+				<!-- 
+				The optional <forceSpaceParametrization> element contains the parameters for the force space parametrization.
+				It allows to control certain directions in motion and others in force.
+				Its attributes are:
+					- dim: Optional. The dimension of the force space.
+						- 0: Full motion control
+						- 1: A line of force control and a plane of motion control
+						- 2: A plane of force control and a line of motion control
+						- 3: Full force control
+					- direction: Optional. The direction of line when the dimension is 1 or 2 (unused when the dimension is 0 or 3).
+				Those values can be changed at runtime.
+				Default value for the dim can be found in the MotionForceTask class in the sai2-primitives library.
+				-->
+				<forceSpaceParametrization dim="0"
+					direction="0 0 1" />
+				<!-- 
+				the Optional <momentSpaceParametrization> element contains the parameters for the moment space parametrization.
+				It is the same as the forceSpaceParametrization element, but for orientation/moment control.
+				-->
+				<momentSpaceParametrization dim="0"
+					direction="0 0 1" />
+				<!-- 
+				The optional <forceGains> element contains the gains for the force control.
+				Its attributes are:
+					- kp: Optional. The proportional gain for the force control.
+					- kv: Optional. The derivative gain for the force control (velocity-based damping).
+					- ki: Optional. The integral gain for the force control.
+				Those values can be changed at runtime.
+				Default values can be found in the MotionForceTask class in the sai2-primitives library.
+				-->
+				<forceGains kp="1.0"
+					kv="20.0"
+					ki="1.5" />
+				<!-- 
+				The optional <momentGains> element contains the gains for the moment control.
+				Its attributes are:
+					- kp: Optional. The proportional gain for the moment control.
+					- kv: Optional. The derivative gain for the moment control (velocity-based damping).
+					- ki: Optional. The integral gain for the moment control.
+				Those values can be changed at runtime.
+				Default values can be found in the MotionForceTask class in the sai2-primitives library.
+				-->
+				<momentGains kp="1.0"
+					kv="20.0"
+					ki="1.5" />
+			</forceControl>
 
-			<!-- optional. the attributes are:
-			- enabled: defaults to false
-			- linear_velocity_limit: defaults to 0.3
-			- angular_velocity_limit: defaults to pi/3 -->
+			<!-- 
+			The optional <velocitySaturation> element contains the velocity saturation parameters for the task.
+			Velocity saturation limits the velocity of the controlled frame by limiting the control force applied in a particular way.
+			Its attributes are:
+				- enabled: Required if element present. Whether to use velocity saturation.
+				- linear_velocity_limit: Optional. The limit for the linear velocity in m/s.
+				- angular_velocity_limit: Optional. The limit for the angular velocity in Rad/s.
+			Those values can be changed at runtime.
+			Default values can be found in the MotionForceTask class in the sai2-primitives library.
+			-->
 			<velocitySaturation enabled="true"
 				linear_velocity_limit="0.35"
 				angular_velocity_limit="0.78" />
-			<!-- optional. the attributes are:
-			- type: can be "disabled" "acceleration" or "jerk". defaults to acceleration
-			- max_linear_velocity: defaults to 0.3
-			- max_linear_acceleration: defaults to 2.0
-			- max_linear_jerk: defaults to 10.0
-			- max_angular_velocity: defaults to pi/3
-			- max_angular_acceleration: defaults to 2*pi
-			- max_angular_jerk: defaults to 10*pi -->
+
+			<!-- 
+			the optional <otg> element contains the parameters for the online trajectory generation.
+			Its attributes are:
+				- type: Required if element present. The value can be
+					- "disabled": no otg
+					- "acceleration": acceleration limited trajectories
+					- "jerk": jerk limited trajectories
+				- max_linear_velocity: Optional. The maximum linear velocity in m/s.
+				- max_linear_acceleration: Optional. The maximum linear acceleration in m/s^2.
+				- max_linear_jerk: Optional. The maximum linear jerk in m/s^3.
+				- max_angular_velocity: Optional. The maximum angular velocity in Rad/s.
+				- max_angular_acceleration: Optional. The maximum angular acceleration in Rad/s^2.
+				- max_angular_jerk: Optional. The maximum angular jerk in Rad/s^3.
+			Those values can be changed at runtime.
+			Default values can be found in the MotionForceTask class in the sai2-primitives library.
+			-->
 			<otg type="disabled"
 				max_linear_velocity="0.35"
 				max_linear_acceleration="1.5"
@@ -99,48 +240,93 @@
 				max_angular_acceleration="3.0"
 				max_angular_jerk="100" />
 
-			<!-- all gains are optional. they can be defined with the attributes kp, kv and ki.
-			if there are 3 values, the gains will be different in each direction. -->
-			<!-- positionGains defauls to kp=100, kv=20, ki=0
-			orientationGains defaults to kp=200, kv=28.3, ki=0
-			forceGains defaults to kp=0.7, kv=10, ki=1.3
-			momentGains defaults to kp=0.7, kv=10, ki=1.3 -->
+			<!-- 
+			The optional <positionGains> element contains the gains for the position control.
+			Unlike the force gains, the position gains can be either isotropic or anisotropic.
+			If defined as a single number, the gains are isotropic.
+			If defined as a list of 3 numbers, the gains are anisotropic.
+			Its attributes are:
+				- kp: Optional. The proportional gain for the position control.
+				- kv: Optional. The derivative gain for the position control.
+				- ki: Optional. The integral gain for the position control.
+			Those values can be changed at runtime.
+			Default values can be found in the MotionForceTask class in the sai2-primitives library.
+			-->
 			<positionGains kp="100.0 110.0 100.0"
 				kv="20.0" />
+			
+			<!--
+			The optional <orientationGains> element contains the gains for the orientation control.
+			Unlike the moment gains, the orientation gains can be either isotropic or anisotropic.
+			If defined as a single number, the gains are isotropic.
+			If defined as a list of 3 numbers, the gains are anisotropic.
+			Its attributes are:
+				- kp: Optional. The proportional gain for the orientation control.
+				- kv: Optional. The derivative gain for the orientation control.
+				- ki: Optional. The integral gain for the orientation control.
+			Those values can be changed at runtime.
+			Default values can be found in the MotionForceTask class in the sai2-primitives library.
+			-->
 			<orientationGains kp="100.0"
 				kv="20.0" />
-			<forceGains kp="1.0"
-				kv="20.0"
-				ki="1.5" />
-			<momentGains kp="1.0"
-				kv="20.0"
-				ki="1.5" />
 
-			<!-- We can set limits for interface sliders here for this task. This is optionnal.
-			This only affects the sliders in the interface, not the actual robot.
-			The following are the default values
-			For joint tasks, the limits are set from the robot joint limits automatically -->
-			<interface minGoalPosition='[-0.5,-0.5,0.0]'
-				maxGoalPosition='[0.5,0.5,0.8]'
+			<!-- 
+			The optional <interface> element contains the limits for the interface sliders.
+			They can either be a single number (the sliders will all take that value)
+			or a list of 3 numbers (one for each slider).
+			Its attributes are:
+				- minGoalPosition: Optional. The minimum value for the goal position slider.
+				- maxGoalPosition: Optional. The maximum value for the goal position slider.
+				- minDesiredForce: Optional. The minimum value for the desired force slider.
+				- maxDesiredForce: Optional. The maximum value for the desired force slider.
+				- minDesiredMoment: Optional. The minimum value for the desired moment slider.
+				- maxDesiredMoment: Optional. The maximum value for the desired moment slider.
+			Those values cannot be changed at runtime.
+			The default values can be found in the RobotControllerConfog.h file under the MotionForceTaskInterfaceConfig struct.
+			-->
+			<interface minGoalPosition='-0.5 -0.5 0.0'
+				maxGoalPosition='0.5 0.5 0.8'
 				minDesiredForce='-50'
 				maxDesiredForce='50'
 				minDesiredMoment='-5'
-				maxDesiredMoment='5'
-				
-			/>
-</task>
+				maxDesiredMoment='5' />
+		</motionForceTask>
 
-<task name="joint_task"
-				type="joint_task">
-				<otg type="disabled" />
-			</task>
-		</controller>
+		<!-- 
+		The other possible task is the joint task. See the joint task example a little later.
+		-->
+		<jointTask name="joint_task">
+			<otg type="disabled" />
+		</jointTask>
+	</controller>
 
-		<controller name="joint_controller">
-			<task name="joint_task"
-				type="joint_task">
-				<!-- optional. defaults to all the robot joints. if left empty, it will mean all the robot joints -->
-				<controlledJointNames>
+	<controller name="joint_controller">
+		<!-- 
+		The <jointTask> element contains the configuration for a joint task.
+		A joint task is a task to control the robot joints.
+		Its attributes are:
+			- name: Required - Fixed. The name of the task. Two tasks within a controller cannot have the same name
+			- useDynamicDecoupling: Optional. Whether to use dynamic decoupling within the task.
+			- bieThreshold: Optional - Fixed. The threshold for the bounded inertia estimates method.
+				The bounded inertia estimate method is a tradeoff between perfect dynamic decoupling
+				and orientation controlability in systems with very non isotropic inertia properties.
+				When controlling an actual robot, it is advised to leave it between 0.01 and 0.1.
+				In simulation, you can set it to 0 in order to have perfect dynamic decoupling.
+		All default values for the optional parameters here and in the sub-elements are the default
+		values defined in the JointTask class in the sai2-primitives library
+		see (https://github.com/manips-sai-org/sai2-primitives).
+		Dynamic decoupling can be switched on and off at runtime.
+		The rest of the parameters corresponding to those attributes are fixed and cannot be changed at runtime.		
+		-->
+		<jointTask name="joint_task"
+			useDynamicDecoupling="true"
+			bieThreshold="0.1">
+			<!--
+			The optional <controlledJointNames> element contains the names of the joints to control as a list.
+			It enables the definition of a partial joint task.
+			If not specified or left empty, all joints are controlled and we get a full joint task
+			-->
+			<controlledJointNames>
 				joint1
 				joint2
 				joint3
@@ -148,33 +334,58 @@
 				joint5
 				joint6
 				joint7
-				</controlledJointNames>
-				<!-- optional. Defaults to true -->
-				<useDynamicDecoupling>true</useDynamicDecoupling>
-				<!-- optional. the attributes are:
-			- enabled: defaults to false
-			- velocity_limit: can be a single number or a list of the correct size (one element per joint)
-				defaults to pi/3 on all joints -->
-				<velocitySaturation enabled="false"
-					velocity_limit="1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7" />
-				<!-- optional. the attributes are:
-			- type: can be "disabled" "acceleration" or "jerk". defaults to acceleration
-			- max_velocity: can be a single number or a list of the correct size
-				defaults to pi/3 on all joints
-			- max_acceleration: can be a single number or a list of the correct size
-				defaults to 2*pi on all joints
-			- max_jerk: can be a single number or a list of the correct size
-				defaults to 10*pi on all joints -->
-				<otg type="acceleration"
-					max_velocity="1.05"
-					max_acceleration="6.28"
-					max_jerk="31.4" />
-				<!-- optional. the gains can be defined as a single number or a list of the correct size.
-			the default values are kp=500, kv=14, ki=0 -->
-				<gains kp="50.0"
-					kv="14.0"
-					ki="0.0" />
-			</task>
-		</controller>
+			</controlledJointNames>
 
-	</robotControlConfiguration>
+			<!--
+			The optional <velocitySaturation> element contains the velocity saturation parameters for the task.
+			Velocity saturation limits the velocity of the controlled joints by limiting the control force applied in a particular way.
+			Its attributes are:
+				- enabled: Required if element present. Whether to use velocity saturation.
+				- velocity_limit: Optional. The limit for the velocity in Rad/s. Can be defined as a single number 
+					or a list of the correct size for a different limit per joint.
+			Those values can be changed at runtime.
+			Default values can be found in the JointTask class in the sai2-primitives library.
+			-->
+			<velocitySaturation enabled="false"
+				velocity_limit="1.1 1.2 1.3 1.4 1.5 1.6 1.7" />
+
+			<!-- 
+			The optional <otg> element contains the parameters for the online trajectory generation.
+			Its attributes are:
+				- type: Required if element present. The value can be
+					- "disabled": no otg
+					- "acceleration": acceleration limited trajectories
+					- "jerk": jerk limited trajectories
+				- max_velocity: Optional. The maximum velocity in Rad/s. Can be defined as a single number 
+					or a list of the correct size for a different limit per joint.
+				- max_acceleration: Optional. The maximum acceleration in Rad/s^2. Can be defined as a single number 
+					or a list of the correct size for a different limit per joint.
+				- max_jerk: Optional. The maximum jerk in Rad/s^3. Can be defined as a single number 
+					or a list of the correct size for a different limit per joint.
+			Those values can be changed at runtime.
+			Default values can be found in the JointTask class in the sai2-primitives library.
+			-->
+			<otg type="acceleration"
+				max_velocity="1.05"
+				max_acceleration="6.28"
+				max_jerk="31.4" />
+
+			<!-- 
+			The optional <gains> element contains the gains for the joint control.
+			Its attributes are:
+				- kp: Optional. The proportional gain for the joint control. Can be defined as a single number 
+					or a list of the correct size for a different gain per joint.
+				- kv: Optional. The derivative gain for the joint control. Can be defined as a single number 
+					or a list of the correct size for a different gain per joint.
+				- ki: Optional. The integral gain for the joint control. Can be defined as a single number 
+					or a list of the correct size for a different gain per joint.
+			Those values can be changed at runtime.
+			Default values can be found in the JointTask class in the sai2-primitives library.
+			-->
+			<gains kp="50.0"
+				kv="14.0"
+				ki="0.0" />
+		</jointTask>
+	</controller>
+
+</robotControlConfiguration>

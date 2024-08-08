@@ -1,56 +1,10 @@
 #include "SimVizConfigParser.h"
 
 #include <tinyxml2.h>
-#include <urdf/urdfdom_headers/urdf_model/include/urdf_model/pose.h>
 
 #include <iostream>
 
-namespace {
-
-bool parsePose(Sai2Urdfreader::Pose& pose, tinyxml2::XMLElement* xml) {
-	pose.clear();
-	if (xml) {
-		const char* xyz_str = xml->Attribute("xyz");
-		if (xyz_str != NULL) {
-			try {
-				pose.position.init(xyz_str);
-			} catch (std::exception e) {
-				std::cout << e.what() << std::endl;
-				return false;
-			}
-		}
-
-		const char* rpy_str = xml->Attribute("rpy");
-		if (rpy_str != NULL) {
-			try {
-				pose.rotation.init(rpy_str);
-			} catch (std::exception e) {
-				std::cout << e.what() << std::endl;
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-Eigen::Affine3d parsePoseLocal(tinyxml2::XMLElement* xml) {
-	Eigen::Affine3d pose = Eigen::Affine3d::Identity();
-
-	Sai2Urdfreader::Pose pose_urdf;
-	parsePose(pose_urdf, xml);
-
-	pose.translation() << pose_urdf.position.x, pose_urdf.position.y,
-		pose_urdf.position.z;
-	pose.linear() =
-		Eigen::Quaterniond(pose_urdf.rotation.w, pose_urdf.rotation.x,
-						   pose_urdf.rotation.y, pose_urdf.rotation.z)
-			.toRotationMatrix();
-
-	return pose;
-}
-
-}  // namespace
-
+#include "helpers/ConfigParserHelpers.h"
 namespace Sai2Interfaces {
 
 SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
@@ -217,7 +171,8 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 		}
 		tinyxml2::XMLElement* origin = forceSensor->FirstChildElement("origin");
 		if (origin) {
-			force_sensor_config.transform_in_link = parsePoseLocal(origin);
+			force_sensor_config.transform_in_link =
+				ConfigParserHelpers::parsePose(origin);
 		}
 		config.force_sensors.push_back(force_sensor_config);
 	}
