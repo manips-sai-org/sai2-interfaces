@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 		std::string(EXAMPLE_FOLDER_PATH) + "/config_files";
 
 	// initial config file (optionnal)
-	std::string config_file = "panda_simviz_control_1.xml";
+	std::string config_file = "panda_simviz_control.xml";
 
 	Sai2Interfaces::MainRedisInterface main_interface(config_folder_path,
 													  config_file);

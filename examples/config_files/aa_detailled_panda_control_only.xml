@@ -1,10 +1,3 @@
-<simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf">
-	<simParameters coeffFriction="0.5" />
-	<forceSensor robotOrObjectName="Panda"
-		linkName="end-effector"
-		filterCutoff="5.0" />
-</simvizConfiguration>
-
 <!--
 The <robotControlConfiguration> element contains the control configuration for a robot.
 There can only be one of those per robot (identified by the robot name) in a config file.
@@ -71,6 +64,7 @@ None of the corresponding config parameters can be changed at runtime.
 	The active controller can be changed at runtime.
 	-->
 	<controller name="cartesian_controller">
+
 		<!--
 		The <motionForceTask> element contains the configuration for a motion-force task.
 		A motion-force task is a task to control the robot end-effector in cartesian space.
@@ -290,6 +284,7 @@ None of the corresponding config parameters can be changed at runtime.
 				maxDesiredForce='50'
 				minDesiredMoment='-5'
 				maxDesiredMoment='5' />
+
 		</motionForceTask>
 
 		<!-- 
@@ -301,6 +296,7 @@ None of the corresponding config parameters can be changed at runtime.
 	</controller>
 
 	<controller name="joint_controller">
+
 		<!-- 
 		The <jointTask> element contains the configuration for a joint task.
 		A joint task is a task to control the robot joints.
@@ -321,6 +317,7 @@ None of the corresponding config parameters can be changed at runtime.
 		<jointTask name="joint_task"
 			useDynamicDecoupling="true"
 			bieThreshold="0.1">
+
 			<!--
 			The optional <controlledJointNames> element contains the names of the joints to control as a list.
 			It enables the definition of a partial joint task.
@@ -385,7 +382,9 @@ None of the corresponding config parameters can be changed at runtime.
 			<gains kp="50.0"
 				kv="14.0"
 				ki="0.0" />
+
 		</jointTask>
+
 	</controller>
 
 </robotControlConfiguration>
