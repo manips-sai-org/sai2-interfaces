@@ -1,8 +1,0 @@
-<simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_kukas.urdf">
-	<forceSensor robotOrObjectName="Kuka1"
-		linkName="end-effector"
-		filterCutoff="15.0"/>
-	<forceSensor robotOrObjectName="Kuka2"
-		linkName="end-effector"
-		filterCutoff="15.0"/>
-</simvizConfiguration>

@@ -1,6 +1,6 @@
 <simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_kukas.urdf">
 
-	<logger logFolderName="logs_simviz_kukas" />
+	<logger logFolderName="log_files/simviz/kukas" />
 
 	<forceSensor robotOrObjectName="Kuka1"
 		linkName="end-effector"

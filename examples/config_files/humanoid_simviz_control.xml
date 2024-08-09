@@ -1,5 +1,7 @@
 <simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_humanoid.urdf">
 
+	<logger logFolderName="log_files/simviz/humanoid" />
+
 	<forceSensor robotOrObjectName="HRP4"
 		linkName="L_WRIST_R_LINK" />
 	<forceSensor robotOrObjectName="HRP4"
@@ -17,6 +19,8 @@
 	<baseFrame xyz="0 0 0.7"
 		rpy="0 0 0" />
 	<worldGravity xyz="0 0 -9.81" />
+
+	<logger logFolderName="log_files/controllers/humanoid" />
 
 	<controller name="whole_body_controller">
 		<motionForceTask name="hip_pose"
