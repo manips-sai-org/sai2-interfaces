@@ -34,9 +34,9 @@ enum GainsType {
 	MOTFORCE_MOMENT
 };
 
-MotionForceTaskInterfaceConfig parseInterfaceConfig(
+MotionForceTaskConfig::InterfaceConfig parseInterfaceConfig(
 	tinyxml2::XMLElement* interface_xml) {
-	MotionForceTaskInterfaceConfig interface_config;
+	MotionForceTaskConfig::InterfaceConfig interface_config;
 
 	if (interface_xml->Attribute("minGoalPosition")) {
 		interface_config.min_goal_position = parseInterfaceAttribute(
@@ -230,9 +230,9 @@ JointTaskConfig::JointOTGConfig parseOTGJointConfig(
 		throw runtime_error("Unknown otg type: " + string(type));
 	}
 
-	const char* velocity_limit = otg_xml->Attribute("max_velocity");
-	const char* acceleration_limit = otg_xml->Attribute("max_acceleration");
-	const char* jerk_limit = otg_xml->Attribute("max_jerk");
+	const char* velocity_limit = otg_xml->Attribute("maxVelocity");
+	const char* acceleration_limit = otg_xml->Attribute("maxAcceleration");
+	const char* jerk_limit = otg_xml->Attribute("maxJerk");
 
 	vector<string> vectorVelocityLimit = {};
 	vector<string> vectorAccelerationLimit = {};
@@ -259,15 +259,15 @@ JointTaskConfig::JointOTGConfig parseOTGJointConfig(
 
 	if (size == 1) {
 		if (vectorVelocityLimit.size() == 1) {
-			otg_config.limits.velocity_limit.setConstant(
+			otg_config.limits.max_velocity.setConstant(
 				1, stod(vectorVelocityLimit[0]));
 		}
 		if (vectorAccelerationLimit.size() == 1) {
-			otg_config.limits.acceleration_limit.setConstant(
+			otg_config.limits.max_acceleration.setConstant(
 				1, stod(vectorAccelerationLimit[0]));
 		}
 		if (vectorJerkLimit.size() == 1) {
-			otg_config.limits.jerk_limit.setConstant(1,
+			otg_config.limits.max_jerk.setConstant(1,
 													 stod(vectorJerkLimit[0]));
 		}
 		return otg_config;
@@ -278,52 +278,52 @@ JointTaskConfig::JointOTGConfig parseOTGJointConfig(
 			vectorAccelerationLimit.size() != size ||
 		vectorJerkLimit.size() > 1 && vectorJerkLimit.size() != size) {
 		throw runtime_error(
-			"otg config limits must have the same number of max_velocity, "
-			"max_acceleration, and max_jerk values for those in vector form in "
+			"otg config limits must have the same number of maxVelocity, "
+			"maxAcceleration, and maxJerk values for those in vector form in "
 			"config file: " +
 			config_file_name);
 	}
 
 	if (vectorVelocityLimit.size() == 0) {
-		otg_config.limits.velocity_limit.setConstant(
+		otg_config.limits.max_velocity.setConstant(
 			size, JointTaskDefaultParams::otg_max_velocity);
 	} else if (vectorVelocityLimit.size() == 1) {
-		otg_config.limits.velocity_limit.setConstant(
+		otg_config.limits.max_velocity.setConstant(
 			size, stod(vectorVelocityLimit[0]));
 	} else {
 		VectorXd vel_limits_vec = VectorXd(size);
 		for (int i = 0; i < size; i++) {
 			vel_limits_vec[i] = stod(vectorVelocityLimit[i]);
 		}
-		otg_config.limits.velocity_limit = vel_limits_vec;
+		otg_config.limits.max_velocity = vel_limits_vec;
 	}
 
 	if (vectorAccelerationLimit.size() == 0) {
-		otg_config.limits.acceleration_limit.setConstant(
+		otg_config.limits.max_acceleration.setConstant(
 			size, JointTaskDefaultParams::otg_max_acceleration);
 	} else if (vectorAccelerationLimit.size() == 1) {
-		otg_config.limits.acceleration_limit.setConstant(
+		otg_config.limits.max_acceleration.setConstant(
 			size, stod(vectorAccelerationLimit[0]));
 	} else {
 		VectorXd acc_limits_vec = VectorXd(size);
 		for (int i = 0; i < size; i++) {
 			acc_limits_vec[i] = stod(vectorAccelerationLimit[i]);
 		}
-		otg_config.limits.acceleration_limit = acc_limits_vec;
+		otg_config.limits.max_acceleration = acc_limits_vec;
 	}
 
 	if (vectorJerkLimit.size() == 0) {
-		otg_config.limits.jerk_limit.setConstant(
+		otg_config.limits.max_jerk.setConstant(
 			size, JointTaskDefaultParams::otg_max_jerk);
 	} else if (vectorJerkLimit.size() == 1) {
-		otg_config.limits.jerk_limit.setConstant(size,
+		otg_config.limits.max_jerk.setConstant(size,
 												 stod(vectorJerkLimit[0]));
 	} else {
 		VectorXd jerk_limits_vec = VectorXd(size);
 		for (int i = 0; i < size; i++) {
 			jerk_limits_vec[i] = stod(vectorJerkLimit[i]);
 		}
-		otg_config.limits.jerk_limit = jerk_limits_vec;
+		otg_config.limits.max_jerk = jerk_limits_vec;
 	}
 
 	return otg_config;
@@ -342,16 +342,16 @@ JointTaskConfig::JointVelSatConfig parseVelSatJointConfig(
 	}
 	vel_sat_config.enabled = vel_sat_xml->BoolAttribute("enabled");
 
-	const char* velocity_limits = vel_sat_xml->Attribute("velocity_limit");
+	const char* velocity_limits = vel_sat_xml->Attribute("velocityLimit");
 	if (velocity_limits) {
-		vector<string> vectorVelocityLimits =
+		vector<string> vectorVelocityLimit =
 			ConfigParserHelpers::splitString(velocity_limits);
-		const int size = vectorVelocityLimits.size();
+		const int size = vectorVelocityLimit.size();
 		VectorXd vel_limits_vec = VectorXd(size);
 		for (int i = 0; i < size; i++) {
-			vel_limits_vec[i] = stod(vectorVelocityLimits[i]);
+			vel_limits_vec[i] = stod(vectorVelocityLimit[i]);
 		}
-		vel_sat_config.velocity_limits = vel_limits_vec;
+		vel_sat_config.velocity_limit = vel_limits_vec;
 	}
 	return vel_sat_config;
 }
@@ -771,18 +771,18 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		}
 		vel_sat_config.enabled = velocity_saturation->BoolAttribute("enabled");
 
-		const char* linear_velocity_limits =
-			velocity_saturation->Attribute("linear_velocity_limit");
-		if (linear_velocity_limits) {
-			vel_sat_config.linear_velocity_limits =
-				stod(linear_velocity_limits);
+		const char* linear_velocity_limit =
+			velocity_saturation->Attribute("linearVelocityLimit");
+		if (linear_velocity_limit) {
+			vel_sat_config.linear_velocity_limit =
+				stod(linear_velocity_limit);
 		}
 
-		const char* angular_velocity_limits =
-			velocity_saturation->Attribute("angular_velocity_limit");
-		if (angular_velocity_limits) {
-			vel_sat_config.angular_velocity_limits =
-				stod(angular_velocity_limits);
+		const char* angular_velocity_limit =
+			velocity_saturation->Attribute("angularVelocityLimit");
+		if (angular_velocity_limit) {
+			vel_sat_config.angular_velocity_limit =
+				stod(angular_velocity_limit);
 		}
 		config.velocity_saturation_config = vel_sat_config;
 	}
@@ -813,42 +813,42 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		}
 
 		// velocity limits
-		const char* linear_velocity_limits =
-			otg->Attribute("max_linear_velocity");
-		if (linear_velocity_limits) {
-			otg_config.linear_velocity_limit = stod(linear_velocity_limits);
+		const char* max_linear_velocity =
+			otg->Attribute("maxLinearVelocity");
+		if (max_linear_velocity) {
+			otg_config.max_linear_velocity = stod(max_linear_velocity);
 		}
 
-		const char* angular_velocity_limits =
-			otg->Attribute("max_angular_velocity");
-		if (angular_velocity_limits) {
-			otg_config.angular_velocity_limit = stod(angular_velocity_limits);
+		const char* max_angular_velocity =
+			otg->Attribute("maxAngularVelocity");
+		if (max_angular_velocity) {
+			otg_config.max_angular_velocity = stod(max_angular_velocity);
 		}
 
 		// acceleration limit
-		const char* linear_acceleration_limit =
-			otg->Attribute("max_linear_acceleration");
-		if (linear_acceleration_limit) {
-			otg_config.linear_acceleration_limit =
-				stod(linear_acceleration_limit);
+		const char* max_linear_acceleration =
+			otg->Attribute("maxLinearAcceleration");
+		if (max_linear_acceleration) {
+			otg_config.max_linear_acceleration =
+				stod(max_linear_acceleration);
 		}
 
-		const char* angular_acceleration_limit =
-			otg->Attribute("max_angular_acceleration");
-		if (angular_acceleration_limit) {
-			otg_config.angular_acceleration_limit =
-				stod(angular_acceleration_limit);
+		const char* max_angular_acceleration =
+			otg->Attribute("maxAngularAcceleration");
+		if (max_angular_acceleration) {
+			otg_config.max_angular_acceleration =
+				stod(max_angular_acceleration);
 		}
 
 		// jerk limit
-		const char* linear_jerk_limit = otg->Attribute("max_linear_jerk");
-		if (linear_jerk_limit) {
-			otg_config.linear_jerk_limit = stod(linear_jerk_limit);
+		const char* max_linear_jerk = otg->Attribute("maxLinearJerk");
+		if (max_linear_jerk) {
+			otg_config.max_linear_jerk = stod(max_linear_jerk);
 		}
 
-		const char* angular_jerk_limit = otg->Attribute("max_angular_jerk");
-		if (angular_jerk_limit) {
-			otg_config.angular_jerk_limit = stod(angular_jerk_limit);
+		const char* max_angular_jerk = otg->Attribute("maxAngularJerk");
+		if (max_angular_jerk) {
+			otg_config.max_angular_jerk = stod(max_angular_jerk);
 		}
 		config.otg_config = otg_config;
 	}

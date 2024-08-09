@@ -8,8 +8,25 @@
 
 namespace Sai2Interfaces {
 
+/**
+ * @brief Main class to run for launching a simulation and controllers from the
+ * custom xml config files and provide an easy method of interaction via redis
+ *
+ */
 class MainRedisInterface {
 public:
+	/**
+	 * @brief The constructor for the MainRedisInterface class. It does all the
+	 * work: read the config file, generate the ui file (it is generated in the
+	 * config_folder_path/webui_generated_file/ folder), start the simviz
+	 * interface and the controllers interfaces.
+	 *
+	 * @param config_folder_path The path to the config files. This is required
+	 * in order to switch between configs. Only the config files in this folder
+	 * can be used by this application.
+	 * @param config_file_name The name of the initial config file. If not
+	 * given, a config file can be sent via redis later.
+	 */
 	MainRedisInterface(const std::string& config_folder_path,
 					   const std::string& config_file_name = "");
 	~MainRedisInterface() = default;

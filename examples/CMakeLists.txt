@@ -1,6 +1,9 @@
 set( EXAMPLE_FOLDER_PATH ${CMAKE_CURRENT_SOURCE_DIR} )
 add_definitions(-DEXAMPLE_FOLDER_PATH="${EXAMPLE_FOLDER_PATH}")
 
-ADD_SUBDIRECTORY(01-simviz-only)
-ADD_SUBDIRECTORY(02-simviz-plus-controller)
-ADD_SUBDIRECTORY(03-main-interface)
+add_executable(MainRedisInterfaceExample MainRedisInterfaceExample.cpp)
+add_executable(AuxPandaSimvizOnly AuxPandaSimvizOnly.cpp)
+
+# and link the library against the executable
+target_link_libraries(MainRedisInterfaceExample ${SAI2-INTERFACES_LIBRARIES})
+target_link_libraries(AuxPandaSimvizOnly ${SAI2-INTERFACES_LIBRARIES})

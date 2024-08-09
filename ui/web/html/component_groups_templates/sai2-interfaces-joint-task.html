@@ -21,7 +21,7 @@
 				<sai2-interfaces-accordion displayName="Use Velocity Saturation"
 					key="{{_prefix_}}::velocity_saturation_enabled">
 					<div class="section p-2 mt-3">
-						<sai2-interfaces-slider key="{{_prefix_}}::velocity_saturation_limits" display='max_velocity'
+						<sai2-interfaces-slider key="{{_prefix_}}::velocity_saturation_limit" display='max_velocity'
 							min="0.01" max="0.5" step="0.01" />
 					</div>
 				</sai2-interfaces-accordion>
@@ -73,13 +73,13 @@
 			<div class="row">
 				<div class="col-md-4">
 					<div class="section p-2">
-						<sai2-interfaces-slider key="{{_prefix_}}::otg_velocity_limit" display='max velocity' min="0.01"
+						<sai2-interfaces-slider key="{{_prefix_}}::otg_max_velocity" display='max velocity' min="0.01"
 							max="3.14" step="0.01" />
 					</div>
 				</div>
 				<div class="col-md-4">
 					<div class="section p-2">
-						<sai2-interfaces-slider key="{{_prefix_}}::otg_acceleration_limit" display='max acceleration'
+						<sai2-interfaces-slider key="{{_prefix_}}::otg_max_acceleration" display='max acceleration'
 							min="0.01" max="15.0" step="0.01" />
 					</div>
 				</div>
@@ -87,7 +87,7 @@
 					<sai2-interfaces-toggle-group name="Use jerk limits" key="{{_prefix_}}::otg_jerk_limited">
 						<sai2-interfaces-toggle-group-enabled>
 							<div class="section p-2">
-								<sai2-interfaces-slider key="{{_prefix_}}::otg_jerk_limit" display='max jerk' min="0.01"
+								<sai2-interfaces-slider key="{{_prefix_}}::otg_max_jerk" display='max jerk' min="0.01"
 									max="150" step="0.1" />
 							</div>
 						</sai2-interfaces-toggle-group-enabled>

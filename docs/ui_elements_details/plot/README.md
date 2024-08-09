@@ -45,10 +45,6 @@ Writing keys...
 Now let's start up the interface:
 ```
 ~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/plot/plot.html 
- * Restarting with stat
- * Debugger is active!
- * Debugger PIN: 142-257-956
-(22855) wsgi starting up on http://127.0.0.1:8000
 ```
 
 Then, select the keys `sai2::interfaces::tutorial::scalar_key` and 
