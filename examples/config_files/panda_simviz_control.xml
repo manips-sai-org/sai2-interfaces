@@ -1,5 +1,5 @@
 <simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf">
-	<simParameters coeffFriction="0.5" />
+	<simParameters frictionCoefficient="0.5" />
 	<logger logFolderName="log_files/simviz/panda" />
 	<forceSensor robotOrObjectName="Panda"
 		linkName="end-effector" />
