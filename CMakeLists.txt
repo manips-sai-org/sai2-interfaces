@@ -97,7 +97,7 @@ endif()
 #
 # export package
 #
-set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/interface)
+set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/ui)
 
 # export package for use from the build tree
 export(TARGETS sai2-interfaces

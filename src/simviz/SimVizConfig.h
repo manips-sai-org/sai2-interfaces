@@ -5,7 +5,12 @@
 #include <map>
 #include <string>
 
+#include "helpers/CommonConfigs.h"
+
 namespace Sai2Interfaces {
+
+/// @brief Default name of the folder where the log files will be saved
+const std::string default_logger_folder_name_simviz = "log_files/simviz";
 
 /// @brief Enum to specify the mode of the simulation and visualization
 enum SimVizMode { SIMVIZ = 0, SIM_ONLY = 1, VIZ_ONLY = 2 };
@@ -87,33 +92,6 @@ struct SimForceSensorConfig {
 };
 
 /**
- * @brief Configuration struct for the simulation and visualization logger
- * object.
- *
- * This is parsed from the xml file from the following element:
- * 	<logger folderName="..." logFrequency="..." startWithSimulation="..."
- * addTimestampToFilename="..." />
- *
- */
-struct SimLoggerConfig {
-	/// @brief The path to the folder where the log files will be saved
-	std::string folder_name = "log_files/simviz";
-	/// @brief The frequency at which the logger will log the data
-	double frequency = 100.0;
-	/// @brief Whether to start the logger when the simulation starts
-	bool start_with_logger_on = false;
-	/// @brief Whether to add a timestamp to the filename of the log files
-	bool add_timestamp_to_filename = true;
-
-	bool operator==(const SimLoggerConfig& other) const {
-		return (folder_name == other.folder_name) &&
-			   (frequency == other.frequency) &&
-			   (start_with_logger_on == other.start_with_logger_on) &&
-			   (add_timestamp_to_filename == other.add_timestamp_to_filename);
-	}
-};
-
-/**
  * @brief Main configuration struct for the simulation and visualization.
  *
  * This is parsed from the xml file from the following element:
@@ -157,7 +135,8 @@ struct SimVizConfig {
 	std::vector<SimForceSensorConfig> force_sensors = {};
 
 	/// @brief The logger configuration for the simulation and visualization
-	SimLoggerConfig logger_config;
+	LoggerConfig logger_config =
+		LoggerConfig(default_logger_folder_name_simviz);
 
 	bool operator==(const SimVizConfig& other) const {
 		return (world_file == other.world_file) &&

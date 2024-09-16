@@ -13,8 +13,8 @@
 	<worldGravity xyz="0 0 -9.81" />
 
 	<logger logFolderName="log_files/controllers/panda"
-		startWithController="true"
-		timestampInFilename="false" />
+		enabledAtStartup="true"
+		addTimestampToFilename="false" />
 
 	<controller name="cartesian_controller">
 		<motionForceTask name="cartesian_task"

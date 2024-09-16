@@ -7,12 +7,17 @@
 #include <variant>
 
 #include "Sai2Primitives.h"
+#include "helpers/CommonConfigs.h"
 
 using JointTaskDefaultParams = Sai2Primitives::JointTask::DefaultParameters;
 using MotionForceTaskDefaultParams =
 	Sai2Primitives::MotionForceTask::DefaultParameters;
 
 namespace Sai2Interfaces {
+
+/// @brief Default name of the folder where the log files will be saved
+const std::string default_logger_folder_name_controller =
+	"log_files/controllers";
 
 /**
  * @brief A config object for the gains of a controller. It contains the P, D,
@@ -74,25 +79,6 @@ struct GainsConfig {
 		this->kv = Eigen::VectorXd::Constant(1, kv);
 		this->ki = Eigen::VectorXd::Constant(1, ki);
 	}
-};
-
-/**
- * @brief Config for the logger attached to the RobotControllerRedisInterface.
- *
- * This is parsed from the xml config file, from the following element:
- * 	<logger logFolderName="..." logFrequency="..." startWithController="..."
- * timestampInFilename="..." />
- *
- */
-struct ControllerLoggerConfig {
-	/// @brief Relative path to the folder where the log files will be saved
-	std::string folder_name = "log_files/controllers";
-	/// @brief Frequency at which the logger will write to the log files
-	double frequency = 100.0;
-	/// @brief Flag to start the logger on controller startup
-	bool start_with_logger_on = false;
-	/// @brief Flag to add a timestamp to the filename of the log files (such
-	bool add_timestamp_to_filename = true;
 };
 
 /**
@@ -405,7 +391,8 @@ struct RobotControllerConfig {
 
 	/// @brief Config for the logger attached to the
 	/// RobotControllerRedisInterface
-	ControllerLoggerConfig logger_config;
+	LoggerConfig logger_config =
+		LoggerConfig(default_logger_folder_name_controller);
 
 	/// @brief Name of the controller to start with, it will initially be the
 	/// first controller in the list of controllers in the xml config file
