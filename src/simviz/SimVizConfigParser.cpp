@@ -188,26 +188,8 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 				"element in config file: " +
 				config_file);
 		}
-
-		if (logger->Attribute("logFolderName")) {
-			config.logger_config.folder_name =
-				logger->Attribute("logFolderName");
-		}
-
-		if (logger->Attribute("logFrequency")) {
-			config.logger_config.frequency =
-				logger->DoubleAttribute("logFrequency");
-		}
-
-		if (logger->Attribute("startWithSimulation")) {
-			config.logger_config.start_with_logger_on =
-				logger->BoolAttribute("startWithSimulation");
-		}
-
-		if (logger->Attribute("timestampInFilename")) {
-			config.logger_config.add_timestamp_to_filename =
-				logger->BoolAttribute("timestampInFilename");
-		}
+		config.logger_config = ConfigParserHelpers::parseLoggerConfig(
+			logger, default_logger_folder_name_simviz);
 	}
 
 	return config;

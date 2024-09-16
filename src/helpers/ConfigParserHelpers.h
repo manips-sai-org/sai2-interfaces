@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include "CommonConfigs.h"
+
 // \cond
 // for internal use only
 namespace Sai2Interfaces {
@@ -19,6 +21,9 @@ Eigen::Vector3d parseVector3d(const char* vec_str);
 Eigen::Vector3d parseVector3d(tinyxml2::XMLElement* xml,
 							  std::string attribute_name = "xyz");
 Eigen::Affine3d parsePose(tinyxml2::XMLElement* xml);
+
+LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger,
+							   const std::string& default_folder_name);
 
 }  // namespace ConfigParserHelpers
 }  // namespace Sai2Interfaces

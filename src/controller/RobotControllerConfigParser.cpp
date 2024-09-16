@@ -267,8 +267,7 @@ JointTaskConfig::JointOTGConfig parseOTGJointConfig(
 				1, stod(vectorAccelerationLimit[0]));
 		}
 		if (vectorJerkLimit.size() == 1) {
-			otg_config.limits.max_jerk.setConstant(1,
-													 stod(vectorJerkLimit[0]));
+			otg_config.limits.max_jerk.setConstant(1, stod(vectorJerkLimit[0]));
 		}
 		return otg_config;
 	}
@@ -316,8 +315,7 @@ JointTaskConfig::JointOTGConfig parseOTGJointConfig(
 		otg_config.limits.max_jerk.setConstant(
 			size, JointTaskDefaultParams::otg_max_jerk);
 	} else if (vectorJerkLimit.size() == 1) {
-		otg_config.limits.max_jerk.setConstant(size,
-												 stod(vectorJerkLimit[0]));
+		otg_config.limits.max_jerk.setConstant(size, stod(vectorJerkLimit[0]));
 	} else {
 		VectorXd jerk_limits_vec = VectorXd(size);
 		for (int i = 0; i < size; i++) {
@@ -450,22 +448,8 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 				"'RobotControlConfiguration' in config file: " +
 				_config_file_name);
 		}
-		if (logger->Attribute("logFolderName")) {
-			config.logger_config.folder_name =
-				logger->Attribute("logFolderName");
-		}
-		if (logger->Attribute("logFrequency")) {
-			config.logger_config.frequency =
-				logger->DoubleAttribute("logFrequency");
-		}
-		if (logger->Attribute("startWithController")) {
-			config.logger_config.start_with_logger_on =
-				logger->BoolAttribute("startWithController");
-		}
-		if (logger->Attribute("timestampInFilename")) {
-			config.logger_config.add_timestamp_to_filename =
-				logger->BoolAttribute("timestampInFilename");
-		}
+		config.logger_config = ConfigParserHelpers::parseLoggerConfig(
+			logger, default_logger_folder_name_controller);
 	}
 
 	// parse all controller configs
@@ -774,8 +758,7 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		const char* linear_velocity_limit =
 			velocity_saturation->Attribute("linearVelocityLimit");
 		if (linear_velocity_limit) {
-			vel_sat_config.linear_velocity_limit =
-				stod(linear_velocity_limit);
+			vel_sat_config.linear_velocity_limit = stod(linear_velocity_limit);
 		}
 
 		const char* angular_velocity_limit =
@@ -813,14 +796,12 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		}
 
 		// velocity limits
-		const char* max_linear_velocity =
-			otg->Attribute("maxLinearVelocity");
+		const char* max_linear_velocity = otg->Attribute("maxLinearVelocity");
 		if (max_linear_velocity) {
 			otg_config.max_linear_velocity = stod(max_linear_velocity);
 		}
 
-		const char* max_angular_velocity =
-			otg->Attribute("maxAngularVelocity");
+		const char* max_angular_velocity = otg->Attribute("maxAngularVelocity");
 		if (max_angular_velocity) {
 			otg_config.max_angular_velocity = stod(max_angular_velocity);
 		}
@@ -829,8 +810,7 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 		const char* max_linear_acceleration =
 			otg->Attribute("maxLinearAcceleration");
 		if (max_linear_acceleration) {
-			otg_config.max_linear_acceleration =
-				stod(max_linear_acceleration);
+			otg_config.max_linear_acceleration = stod(max_linear_acceleration);
 		}
 
 		const char* max_angular_acceleration =
