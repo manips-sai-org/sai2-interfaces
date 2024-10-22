@@ -49,17 +49,19 @@ void RobotControllerRedisInterface::runRedisCommunication(
 	// thread is running the control loop, we should be fine without mutexes
 	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
+		{
+			lock_guard<mutex> lock(_switching_controller_mutex);
+			if (_reset_redis_inputs) {
+				_redis_client.sendAllFromGroup(
+					{"default", reset_inputs_redis_group});
+				_reset_redis_inputs = false;
+			} else {
+				_redis_client.sendAllFromGroup();
+			}
 
-		if (_reset_redis_inputs) {
-			_redis_client.sendAllFromGroup(
-				{"default", reset_inputs_redis_group});
-			_reset_redis_inputs = false;
-		} else {
-			_redis_client.sendAllFromGroup();
+			_redis_client.receiveAllFromGroup(
+				std::vector<std::string>{"default", _active_controller_name});
 		}
-
-		_redis_client.receiveAllFromGroup(
-			std::vector<std::string>{"default", _active_controller_name});
 	}
 	timer.stop();
 	// timer.printInfoPostRun();
@@ -84,11 +86,19 @@ void RobotControllerRedisInterface::run(
 		// switch controller if needed
 		switchController(_tentative_next_active_controller_name);
 
+		if (_reset_redis_inputs) {
+			// let the inputs reset and keep the same control for one tick
+			// if the reset was triggered by a controller switching
+			continue;
+		}
+
 		// process inputs
 		processInputs();
 
 		if (_reset_redis_inputs) {
 			// let the inputs reset and keep the same control for one tick
+			// repeat here in case the reset inputs was triggered by a config
+			// change in process inputs
 			continue;
 		}
 
@@ -240,33 +250,38 @@ void RobotControllerRedisInterface::switchController(
 			 << endl;
 		return;
 	}
-	if (_active_controller_name != "") {  // for the initialization case
-		_is_active_controller.at(_active_controller_name) = false;
-	}
-	_active_controller_name = controller_name;
-	_is_active_controller.at(_active_controller_name) = true;
-
-	_robot_model->setQ(_robot_q);
-	_robot_model->setDq(_robot_dq);
-	_robot_model->updateModel();
-	_robot_controllers.at(_active_controller_name)->reinitializeTasks();
-
-	// reset inputs for new active controller
-	for (auto& task_input : _controller_inputs.at(_active_controller_name)) {
-		if (holds_alternative<JointTaskInput>(task_input.second)) {
-			auto& joint_task_input = get<JointTaskInput>(task_input.second);
-			joint_task_input.setFromTask(
-				_robot_controllers.at(_active_controller_name)
-					->getJointTaskByName(task_input.first));
-		} else if (holds_alternative<MotionForceTaskInput>(task_input.second)) {
-			auto& motion_force_task_input =
-				get<MotionForceTaskInput>(task_input.second);
-			motion_force_task_input.setFromTask(
-				_robot_controllers.at(_active_controller_name)
-					->getMotionForceTaskByName(task_input.first));
+	{
+		lock_guard<mutex> lock(_switching_controller_mutex);
+		if (_active_controller_name != "") {  // for the initialization case
+			_is_active_controller.at(_active_controller_name) = false;
 		}
+		_active_controller_name = controller_name;
+		_is_active_controller.at(_active_controller_name) = true;
+
+		_robot_model->setQ(_robot_q);
+		_robot_model->setDq(_robot_dq);
+		_robot_model->updateModel();
+		_robot_controllers.at(_active_controller_name)->reinitializeTasks();
+
+		// reset inputs for new active controller
+		for (auto& task_input :
+			 _controller_inputs.at(_active_controller_name)) {
+			if (holds_alternative<JointTaskInput>(task_input.second)) {
+				auto& joint_task_input = get<JointTaskInput>(task_input.second);
+				joint_task_input.setFromTask(
+					_robot_controllers.at(_active_controller_name)
+						->getJointTaskByName(task_input.first));
+			} else if (holds_alternative<MotionForceTaskInput>(
+						   task_input.second)) {
+				auto& motion_force_task_input =
+					get<MotionForceTaskInput>(task_input.second);
+				motion_force_task_input.setFromTask(
+					_robot_controllers.at(_active_controller_name)
+						->getMotionForceTaskByName(task_input.first));
+			}
+		}
+		_reset_redis_inputs = true;
 	}
-	_reset_redis_inputs = true;
 }
 
 void RobotControllerRedisInterface::initializeRedisTasksIO() {
@@ -357,8 +372,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					joint_task_config.velocity_saturation_config.enabled,
 					"velocity_saturation_enabled");
 				task_logger->addToLog(
-					joint_task_config.velocity_saturation_config
-						.velocity_limit,
+					joint_task_config.velocity_saturation_config.velocity_limit,
 					"velocity_saturation_limit");
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
@@ -366,8 +380,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "velocity_saturation_limit",
-					joint_task_config.velocity_saturation_config
-						.velocity_limit,
+					joint_task_config.velocity_saturation_config.velocity_limit,
 					controller_name);
 
 				// otg
@@ -580,9 +593,9 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					motion_force_task_config.otg_config.max_angular_velocity,
 					"otg_max_angular_velocity");
-				task_logger->addToLog(motion_force_task_config.otg_config
-										  .max_linear_acceleration,
-									  "otg_max_linear_acceleration");
+				task_logger->addToLog(
+					motion_force_task_config.otg_config.max_linear_acceleration,
+					"otg_max_linear_acceleration");
 				task_logger->addToLog(motion_force_task_config.otg_config
 										  .max_angular_acceleration,
 									  "otg_max_angular_acceleration");
@@ -610,8 +623,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_max_linear_acceleration",
-					motion_force_task_config.otg_config
-						.max_linear_acceleration,
+					motion_force_task_config.otg_config.max_linear_acceleration,
 					controller_name);
 				_redis_client.addToReceiveGroup(
 					key_prefix + "otg_max_angular_acceleration",
@@ -1075,8 +1087,7 @@ void RobotControllerRedisInterface::processInputs() {
 				motion_force_task->enableInternalOtgJerkLimited(
 					otg_config.max_linear_velocity,
 					otg_config.max_linear_acceleration,
-					otg_config.max_linear_jerk,
-					otg_config.max_angular_velocity,
+					otg_config.max_linear_jerk, otg_config.max_angular_velocity,
 					otg_config.max_angular_acceleration,
 					otg_config.max_angular_jerk);
 			}

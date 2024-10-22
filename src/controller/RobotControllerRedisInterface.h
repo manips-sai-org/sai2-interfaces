@@ -222,6 +222,7 @@ private:
 		_controller_task_monitoring_data;
 
 	bool _reset_redis_inputs;
+	mutex _switching_controller_mutex;
 
 	std::map<std::string,
 			 std::map<std::string, std::unique_ptr<Sai2Common::Logger>>>
