@@ -34,8 +34,6 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	}
 
 	// Extract the worldFilePath
-	// tinyxml2::XMLElement* worldFilePath =
-	// simviz_config_xml->FirstChildElement("worldFilePath");
 	if (!simviz_config_xml->Attribute("worldFilePath")) {
 		throw std::runtime_error(
 			"No 'worldFilePath' Attribute found in simVizConfiguration element "
@@ -43,11 +41,6 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 			config_file);
 	}
 	config.world_file = simviz_config_xml->Attribute("worldFilePath");
-
-	// get the redis prefix
-	if (simviz_config_xml->Attribute("redisPrefix")) {
-		config.redis_prefix = simviz_config_xml->Attribute("redisPrefix");
-	}
 
 	// Extract the simviz mode
 	if (simviz_config_xml->Attribute("mode")) {

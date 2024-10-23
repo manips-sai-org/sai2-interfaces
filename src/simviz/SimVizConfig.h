@@ -103,8 +103,6 @@ struct SimForceSensorConfig {
 struct SimVizConfig {
 	/// @brief The path to the world file to be loaded in the simulation
 	std::string world_file = "";
-	/// @brief The prefix to be used for the redis keys
-	std::string redis_prefix = "sai2::interfaces";
 	/// @brief Whether to enable the robot joint limits in the simulation
 	bool enable_joint_limits = true;
 	/// @brief Whether to enable gravity compensation for the robots by the
@@ -137,6 +135,9 @@ struct SimVizConfig {
 	/// @brief The logger configuration for the simulation and visualization
 	LoggerConfig logger_config =
 		LoggerConfig(default_logger_folder_name_simviz);
+
+	/// @brief The redis configuration for the simulation and visualization
+	RedisConfig redis_config;
 
 	bool operator==(const SimVizConfig& other) const {
 		return (world_file == other.world_file) &&

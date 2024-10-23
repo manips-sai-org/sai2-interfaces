@@ -101,7 +101,7 @@ private:
 	SimVizConfig _config;
 	SimVizConfig _new_config;
 
-	Sai2Common::RedisClient _redis_client;
+	std::unique_ptr<Sai2Common::RedisClient> _redis_client;
 
 	std::unique_ptr<Sai2Graphics::Sai2Graphics> _graphics;
 	std::unique_ptr<Sai2Simulation::Sai2Simulation> _simulation;

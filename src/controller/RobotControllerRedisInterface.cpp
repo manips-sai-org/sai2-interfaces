@@ -25,7 +25,10 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 	_logging_on = _config.logger_config.start_with_logger_on;
 	_logging_state = _logging_on ? LoggingState::START : LoggingState::OFF;
 
-	_redis_client.connect();
+	_redis_client = make_unique<Sai2Common::RedisClient>(
+		_config.redis_config.redis_namespace_prefix);
+	_redis_client->connect(_config.redis_config.redis_ip,
+						  _config.redis_config.redis_port);
 
 	_reset_redis_inputs = false;
 	initialize();
@@ -52,14 +55,14 @@ void RobotControllerRedisInterface::runRedisCommunication(
 		{
 			lock_guard<mutex> lock(_switching_controller_mutex);
 			if (_reset_redis_inputs) {
-				_redis_client.sendAllFromGroup(
+				_redis_client->sendAllFromGroup(
 					{"default", reset_inputs_redis_group});
 				_reset_redis_inputs = false;
 			} else {
-				_redis_client.sendAllFromGroup();
+				_redis_client->sendAllFromGroup();
 			}
 
-			_redis_client.receiveAllFromGroup(
+			_redis_client->receiveAllFromGroup(
 				std::vector<std::string>{"default", _active_controller_name});
 		}
 	}
@@ -130,8 +133,8 @@ void RobotControllerRedisInterface::run(
 	// stop redis communication
 	redis_communication_thread.join();
 
-	_redis_client.setEigen(
-		_config.redis_prefix + "::robot_command_torques::" + _config.robot_name,
+	_redis_client->setEigen(
+		"robot_command_torques::" + _config.robot_name,
 		Eigen::VectorXd::Zero(_robot_model->dof()));
 
 	timer.printInfoPostRun();
@@ -146,20 +149,20 @@ void RobotControllerRedisInterface::initialize() {
 	_robot_dq.setZero(_robot_model->dof());
 	_robot_command_torques.setZero(_robot_model->dof());
 
-	_redis_client.addToSendGroup(
-		_config.redis_prefix + "::robot_command_torques::" + _config.robot_name,
+	_redis_client->addToSendGroup(
+		"robot_command_torques::" + _config.robot_name,
 		_robot_command_torques);
 
-	_redis_client.addToReceiveGroup(
-		_config.redis_prefix + "::robot_q::" + _config.robot_name, _robot_q);
-	_redis_client.addToReceiveGroup(
-		_config.redis_prefix + "::robot_dq::" + _config.robot_name, _robot_dq);
-	_redis_client.addToReceiveGroup(_config.redis_prefix + "::controller::" +
+	_redis_client->addToReceiveGroup(
+		"robot_q::" + _config.robot_name, _robot_q);
+	_redis_client->addToReceiveGroup(
+		"robot_dq::" + _config.robot_name, _robot_dq);
+	_redis_client->addToReceiveGroup("controller::" +
 										_config.robot_name + "::logging_on",
 									_logging_on);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	_redis_client.receiveAllFromGroup();
+	_redis_client->receiveAllFromGroup();
 	_robot_model->setQ(_robot_q);
 	_robot_model->updateModel();
 	_robot_M = _robot_model->M();
@@ -230,8 +233,7 @@ void RobotControllerRedisInterface::initialize() {
 
 	_tentative_next_active_controller_name =
 		_config.initial_active_controller_name;
-	_redis_client.addToReceiveGroup(_config.redis_prefix +
-										"::controller::" + _config.robot_name +
+	_redis_client->addToReceiveGroup("controller::" + _config.robot_name +
 										"::active_controller_name",
 									_tentative_next_active_controller_name);
 	initializeRedisTasksIO();
@@ -285,7 +287,7 @@ void RobotControllerRedisInterface::switchController(
 }
 
 void RobotControllerRedisInterface::initializeRedisTasksIO() {
-	_redis_client.createNewSendGroup(reset_inputs_redis_group);
+	_redis_client->createNewSendGroup(reset_inputs_redis_group);
 
 	if (!std::filesystem::exists(_config.logger_config.folder_name)) {
 		std::filesystem::create_directories(_config.logger_config.folder_name);
@@ -305,7 +307,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 		_controller_inputs[controller_name] = {};
 		_controller_task_monitoring_data[controller_name] = {};
-		_redis_client.createNewReceiveGroup(controller_name);
+		_redis_client->createNewReceiveGroup(controller_name);
 
 		if (!std::filesystem::exists(_config.logger_config.folder_name + '/' +
 									 controller_name)) {
@@ -338,14 +340,13 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 									  "is_active");
 
 				const string& key_prefix =
-					_config.redis_prefix +
-					"::controller::" + _config.robot_name +
+					"controller::" + _config.robot_name +
 					"::" + controller_name + "::" + task_name + "::";
 
 				// dynamic decoupling
 				task_logger->addToLog(joint_task_config.use_dynamic_decoupling,
 									  "use_dynamic_decoupling");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "use_dynamic_decoupling",
 					joint_task_config.use_dynamic_decoupling, controller_name);
 
@@ -353,16 +354,16 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(joint_task_config.gains_config.kp, "kp");
 				task_logger->addToLog(joint_task_config.gains_config.kv, "kv");
 				task_logger->addToLog(joint_task_config.gains_config.ki, "ki");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "kp", joint_task_config.gains_config.kp,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "kv", joint_task_config.gains_config.kv,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "ki", joint_task_config.gains_config.ki,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "gains_safety_checks_enabled",
 					joint_task_config.gains_config.safety_checks_enabled,
 					controller_name);
@@ -374,11 +375,11 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					joint_task_config.velocity_saturation_config.velocity_limit,
 					"velocity_saturation_limit");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
 					joint_task_config.velocity_saturation_config.enabled,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "velocity_saturation_limit",
 					joint_task_config.velocity_saturation_config.velocity_limit,
 					controller_name);
@@ -397,21 +398,21 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					joint_task_config.otg_config.limits.max_jerk,
 					"otg_max_jerk");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_enabled",
 					joint_task_config.otg_config.enabled, controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_jerk_limited",
 					joint_task_config.otg_config.jerk_limited, controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_velocity",
 					joint_task_config.otg_config.limits.max_velocity,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_acceleration",
 					joint_task_config.otg_config.limits.max_acceleration,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_jerk",
 					joint_task_config.otg_config.limits.max_jerk,
 					controller_name);
@@ -426,22 +427,22 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 									  "goal_velocity");
 				task_logger->addToLog(joint_task_input.goal_acceleration,
 									  "goal_acceleration");
-				_redis_client.addToSendGroup(key_prefix + "goal_position",
+				_redis_client->addToSendGroup(key_prefix + "goal_position",
 											 joint_task_input.goal_position,
 											 reset_inputs_redis_group);
-				_redis_client.addToSendGroup(key_prefix + "goal_velocity",
+				_redis_client->addToSendGroup(key_prefix + "goal_velocity",
 											 joint_task_input.goal_velocity,
 											 reset_inputs_redis_group);
-				_redis_client.addToSendGroup(key_prefix + "goal_acceleration",
+				_redis_client->addToSendGroup(key_prefix + "goal_acceleration",
 											 joint_task_input.goal_acceleration,
 											 reset_inputs_redis_group);
-				_redis_client.addToReceiveGroup(key_prefix + "goal_position",
+				_redis_client->addToReceiveGroup(key_prefix + "goal_position",
 												joint_task_input.goal_position,
 												controller_name);
-				_redis_client.addToReceiveGroup(key_prefix + "goal_velocity",
+				_redis_client->addToReceiveGroup(key_prefix + "goal_velocity",
 												joint_task_input.goal_velocity,
 												controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "goal_acceleration",
 					joint_task_input.goal_acceleration, controller_name);
 
@@ -465,10 +466,10 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					joint_task_monitoring_data.desired_acceleration,
 					"desired_acceleration");
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "current_position",
 					joint_task_monitoring_data.current_position);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "current_velocity",
 					joint_task_monitoring_data.current_velocity);
 
@@ -498,15 +499,14 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 									  "is_active");
 
 				const string key_prefix =
-					_config.redis_prefix +
-					"::controller::" + _config.robot_name +
+					"controller::" + _config.robot_name +
 					"::" + controller_name + "::" + task_name + "::";
 
 				// dynamic decoupling
 				task_logger->addToLog(
 					motion_force_task_config.use_dynamic_decoupling,
 					"use_dynamic_decoupling");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "use_dynamic_decoupling",
 					motion_force_task_config.use_dynamic_decoupling,
 					controller_name);
@@ -528,27 +528,27 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.force_control_config
 						.moment_space_param_config.axis,
 					"moment_or_rotmotion_axis");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "closed_loop_force_control",
 					motion_force_task_config.force_control_config
 						.closed_loop_force_control,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "force_space_dimension",
 					motion_force_task_config.force_control_config
 						.force_space_param_config.force_space_dimension,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "force_space_axis",
 					motion_force_task_config.force_control_config
 						.force_space_param_config.axis,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "moment_space_dimension",
 					motion_force_task_config.force_control_config
 						.moment_space_param_config.force_space_dimension,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "moment_space_axis",
 					motion_force_task_config.force_control_config
 						.moment_space_param_config.axis,
@@ -566,16 +566,16 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.velocity_saturation_config
 						.angular_velocity_limit,
 					"angular_velocity_saturation_limit");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "velocity_saturation_enabled",
 					motion_force_task_config.velocity_saturation_config.enabled,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "linear_velocity_saturation_limit",
 					motion_force_task_config.velocity_saturation_config
 						.linear_velocity_limit,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "angular_velocity_saturation_limit",
 					motion_force_task_config.velocity_saturation_config
 						.angular_velocity_limit,
@@ -605,36 +605,36 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					motion_force_task_config.otg_config.max_angular_jerk,
 					"otg_max_angular_jerk");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_enabled",
 					motion_force_task_config.otg_config.enabled,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_jerk_limited",
 					motion_force_task_config.otg_config.jerk_limited,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_linear_velocity",
 					motion_force_task_config.otg_config.max_linear_velocity,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_angular_velocity",
 					motion_force_task_config.otg_config.max_angular_velocity,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_linear_acceleration",
 					motion_force_task_config.otg_config.max_linear_acceleration,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_angular_acceleration",
 					motion_force_task_config.otg_config
 						.max_angular_acceleration,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_linear_jerk",
 					motion_force_task_config.otg_config.max_linear_jerk,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "otg_max_angular_jerk",
 					motion_force_task_config.otg_config.max_angular_jerk,
 					controller_name);
@@ -682,66 +682,66 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_config.force_control_config
 						.moment_gains_config.ki,
 					"moment_ki");
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "position_kp",
 					motion_force_task_config.position_gains_config.kp,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "position_kv",
 					motion_force_task_config.position_gains_config.kv,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "position_ki",
 					motion_force_task_config.position_gains_config.ki,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "position_gains_safety_checks_enabled",
 					motion_force_task_config.position_gains_config
 						.safety_checks_enabled,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "orientation_kp",
 					motion_force_task_config.orientation_gains_config.kp,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "orientation_kv",
 					motion_force_task_config.orientation_gains_config.kv,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "orientation_ki",
 					motion_force_task_config.orientation_gains_config.ki,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "orientation_gains_safety_checks_enabled",
 					motion_force_task_config.orientation_gains_config
 						.safety_checks_enabled,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "force_kp",
 					motion_force_task_config.force_control_config
 						.force_gains_config.kp,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "force_kv",
 					motion_force_task_config.force_control_config
 						.force_gains_config.kv,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "force_ki",
 					motion_force_task_config.force_control_config
 						.force_gains_config.ki,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "moment_kp",
 					motion_force_task_config.force_control_config
 						.moment_gains_config.kp,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "moment_kv",
 					motion_force_task_config.force_control_config
 						.moment_gains_config.kv,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "moment_ki",
 					motion_force_task_config.force_control_config
 						.moment_gains_config.ki,
@@ -778,87 +778,83 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					motion_force_task_input.sensed_moment_sensor_frame,
 					"sensed_moment_sensor_frame");
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "goal_position",
 					motion_force_task_input.goal_position,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "goal_linear_velocity",
 					motion_force_task_input.goal_linear_velocity,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "goal_linear_acceleration",
 					motion_force_task_input.goal_linear_acceleration,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "goal_orientation",
 					motion_force_task_input.goal_orientation,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "goal_angular_velocity",
 					motion_force_task_input.goal_angular_velocity,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "goal_angular_acceleration",
 					motion_force_task_input.goal_angular_acceleration,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "desired_force",
 					motion_force_task_input.desired_force,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "desired_moment",
 					motion_force_task_input.desired_moment,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
-					_config.redis_prefix +
-						"::force_sensor::" + _config.robot_name +
+				_redis_client->addToSendGroup(
+					"force_sensor::" + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::force",
 					motion_force_task_input.sensed_force_sensor_frame,
 					reset_inputs_redis_group);
-				_redis_client.addToSendGroup(
-					_config.redis_prefix +
-						"::force_sensor::" + _config.robot_name +
+				_redis_client->addToSendGroup(
+					"force_sensor::" + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::moment",
 					motion_force_task_input.sensed_moment_sensor_frame,
 					reset_inputs_redis_group);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "goal_position",
 					motion_force_task_input.goal_position, controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "goal_linear_velocity",
 					motion_force_task_input.goal_linear_velocity,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "goal_linear_acceleration",
 					motion_force_task_input.goal_linear_acceleration,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "goal_orientation",
 					motion_force_task_input.goal_orientation, controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "goal_angular_velocity",
 					motion_force_task_input.goal_angular_velocity,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "goal_angular_acceleration",
 					motion_force_task_input.goal_angular_acceleration,
 					controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "desired_force",
 					motion_force_task_input.desired_force, controller_name);
-				_redis_client.addToReceiveGroup(
+				_redis_client->addToReceiveGroup(
 					key_prefix + "desired_moment",
 					motion_force_task_input.desired_moment, controller_name);
-				_redis_client.addToReceiveGroup(
-					_config.redis_prefix +
-						"::force_sensor::" + _config.robot_name +
+				_redis_client->addToReceiveGroup(
+					"force_sensor::" + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::force",
 					motion_force_task_input.sensed_force_sensor_frame,
 					controller_name);
-				_redis_client.addToReceiveGroup(
-					_config.redis_prefix +
-						"::force_sensor::" + _config.robot_name +
+				_redis_client->addToReceiveGroup(
+					"force_sensor::" + _config.robot_name +
 						"::" + motion_force_task_config.link_name + "::moment",
 					motion_force_task_input.sensed_moment_sensor_frame,
 					controller_name);
@@ -905,22 +901,22 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(
 					motion_force_task_monitoring_data.sensed_moment_world_frame,
 					"sensed_moment_world_frame");
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "sensed_force",
 					motion_force_task_monitoring_data.sensed_force_world_frame);
-				_redis_client.addToSendGroup(key_prefix + "sensed_moment",
+				_redis_client->addToSendGroup(key_prefix + "sensed_moment",
 											 motion_force_task_monitoring_data
 												 .sensed_moment_world_frame);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "current_position",
 					motion_force_task_monitoring_data.current_position);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "current_orientation",
 					motion_force_task_monitoring_data.current_orientation);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "current_linear_velocity",
 					motion_force_task_monitoring_data.current_linear_velocity);
-				_redis_client.addToSendGroup(
+				_redis_client->addToSendGroup(
 					key_prefix + "current_angular_velocity",
 					motion_force_task_monitoring_data.current_angular_velocity);
 			}

@@ -26,8 +26,8 @@
 <body>
 	<div class="row my-3 justify-content-center">
 		<div class="col-6">
-			<sai2-interfaces-config-selector config_key="sai2::interfaces::main_interface::config_file_name"
-				reset_key="sai2::interfaces::main_interface::reset" />
+			<sai2-interfaces-config-selector config_key="{{_prefix_}}main_interface::config_file_name"
+				reset_key="{{_prefix_}}main_interface::reset" />
 		</div>
 		<div class="col-auto">
 			<sai2-interfaces-plot-button />

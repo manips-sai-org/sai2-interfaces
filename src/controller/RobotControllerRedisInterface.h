@@ -209,7 +209,7 @@ private:
 	std::string _active_controller_name;
 	std::string _tentative_next_active_controller_name;
 
-	Sai2Common::RedisClient _redis_client;
+	std::unique_ptr<Sai2Common::RedisClient> _redis_client;
 
 	Eigen::VectorXd _robot_q;
 	Eigen::VectorXd _robot_dq;

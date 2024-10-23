@@ -35,9 +35,12 @@ SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
 	_simulation = std::make_unique<Sai2Simulation::Sai2Simulation>(
 		_config.world_file, false);
 
-	_redis_client.connect();
-	_redis_client.createNewSendGroup(group_name);
-	_redis_client.createNewReceiveGroup(group_name);
+	_redis_client = std::make_unique<Sai2Common::RedisClient>(
+		_config.redis_config.redis_namespace_prefix);
+	_redis_client->connect(_config.redis_config.redis_ip,
+						   _config.redis_config.redis_port);
+	_redis_client->createNewSendGroup(group_name);
+	_redis_client->createNewReceiveGroup(group_name);
 	initializeRedisDatabase();
 	resetInternal();
 
@@ -68,17 +71,16 @@ void SimVizRedisInterface::resetInternal() {
 	_simulation->setCoeffFrictionStatic(_config.global_friction_coefficient);
 	_simulation->setCoeffFrictionDynamic(_config.global_friction_coefficient);
 
-	_redis_client.setBool(
-		_config.redis_prefix + "::simviz::gravity_comp_enabled",
-		_config.enable_gravity_compensation);
+	_redis_client->setBool("simviz::gravity_comp_enabled",
+						   _config.enable_gravity_compensation);
 	_simulation->enableGravityCompensation(_config.enable_gravity_compensation);
 
 	_robot_ui_torques.clear();
 	_object_ui_torques.clear();
-	_redis_client.deleteSendGroup(group_name);
-	_redis_client.deleteReceiveGroup(group_name);
-	_redis_client.createNewSendGroup(group_name);
-	_redis_client.createNewReceiveGroup(group_name);
+	_redis_client->deleteSendGroup(group_name);
+	_redis_client->deleteReceiveGroup(group_name);
+	_redis_client->createNewSendGroup(group_name);
+	_redis_client->createNewReceiveGroup(group_name);
 
 	_robot_control_torques.clear();
 	_robot_q.clear();
@@ -95,8 +97,7 @@ void SimVizRedisInterface::resetInternal() {
 	}
 
 	_logging_on = _config.logger_config.start_with_logger_on;
-	_redis_client.setBool(_config.redis_prefix + "::simviz::logging_on",
-						  _logging_on);
+	_redis_client->setBool("simviz::logging_on", _logging_on);
 	_logging_state = _logging_on ? LoggingState::START : LoggingState::OFF;
 
 	for (auto& robot_name : _simulation->getRobotNames()) {
@@ -133,9 +134,8 @@ void SimVizRedisInterface::resetInternal() {
 		// dynamic parameters receive via redis
 		_model_specific_params_string[robot_name] = glz::write_json(
 			_config.model_specific_dynamic_and_rendering_params.at(robot_name));
-		_redis_client.addToReceiveGroup(
-			_config.redis_prefix +
-				"::simviz::model_specific_params::" + robot_name,
+		_redis_client->addToReceiveGroup(
+			"simviz::model_specific_params::" + robot_name,
 			_model_specific_params_string.at(robot_name), group_name);
 
 		// setup if there is simulation
@@ -145,15 +145,13 @@ void SimVizRedisInterface::resetInternal() {
 			_robot_control_torques[robot_name] = VectorXd::Zero(robot_dof);
 
 			// redis
-			_redis_client.addToReceiveGroup(
-				_config.redis_prefix + "::robot_command_torques::" + robot_name,
+			_redis_client->addToReceiveGroup(
+				"robot_command_torques::" + robot_name,
 				_robot_control_torques.at(robot_name), group_name);
-			_redis_client.addToSendGroup(
-				_config.redis_prefix + "::robot_q::" + robot_name,
-				_robot_q.at(robot_name), group_name);
-			_redis_client.addToSendGroup(
-				_config.redis_prefix + "::robot_dq::" + robot_name,
-				_robot_dq.at(robot_name), group_name);
+			_redis_client->addToSendGroup("robot_q::" + robot_name,
+										  _robot_q.at(robot_name), group_name);
+			_redis_client->addToSendGroup("robot_dq::" + robot_name,
+										  _robot_dq.at(robot_name), group_name);
 
 			// logger
 			_loggers.at(robot_name)
@@ -162,12 +160,11 @@ void SimVizRedisInterface::resetInternal() {
 			_loggers.at(robot_name)
 				->addToLog(_robot_ui_torques.at(robot_name), "ui_torques");
 		} else {  // setup for viz only
-			_redis_client.addToReceiveGroup(
-				_config.redis_prefix + "::robot_q::" + robot_name,
-				_robot_q.at(robot_name), group_name);
-			_redis_client.addToReceiveGroup(
-				_config.redis_prefix + "::robot_dq::" + robot_name,
-				_robot_dq.at(robot_name), group_name);
+			_redis_client->addToReceiveGroup(
+				"robot_q::" + robot_name, _robot_q.at(robot_name), group_name);
+			_redis_client->addToReceiveGroup("robot_dq::" + robot_name,
+											 _robot_dq.at(robot_name),
+											 group_name);
 		}
 	}
 
@@ -204,18 +201,17 @@ void SimVizRedisInterface::resetInternal() {
 		_model_specific_params_string[object_name] = glz::write_json(
 			_config.model_specific_dynamic_and_rendering_params.at(
 				object_name));
-		_redis_client.addToReceiveGroup(
-			_config.redis_prefix +
-				"::simviz::model_specific_params::" + object_name,
+		_redis_client->addToReceiveGroup(
+			"simviz::model_specific_params::" + object_name,
 			_model_specific_params_string.at(object_name), group_name);
 
 		// setup if there is simulation
 		if (_config.mode != SimVizMode::VIZ_ONLY) {
-			_redis_client.addToSendGroup(
-				_config.redis_prefix + "::simviz::obj_pose::" + object_name,
-				_object_pose.at(object_name), group_name);
-			_redis_client.addToSendGroup(
-				_config.redis_prefix + "::simviz::obj_velocity::" + object_name,
+			_redis_client->addToSendGroup("simviz::obj_pose::" + object_name,
+										  _object_pose.at(object_name),
+										  group_name);
+			_redis_client->addToSendGroup(
+				"simviz::obj_velocity::" + object_name,
 				_object_vel.at(object_name), group_name);
 
 			_graphics->addUIForceInteraction(object_name);
@@ -224,11 +220,11 @@ void SimVizRedisInterface::resetInternal() {
 			_loggers.at(object_name)
 				->addToLog(_object_ui_torques.at(object_name), "ui_torques");
 		} else {  // setup for viz only
-			_redis_client.addToReceiveGroup(
-				_config.redis_prefix + "::simviz::obj_pose::" + object_name,
-				_object_pose.at(object_name), group_name);
-			_redis_client.addToReceiveGroup(
-				_config.redis_prefix + "::simviz::obj_velocity::" + object_name,
+			_redis_client->addToReceiveGroup("simviz::obj_pose::" + object_name,
+											 _object_pose.at(object_name),
+											 group_name);
+			_redis_client->addToReceiveGroup(
+				"simviz::obj_velocity::" + object_name,
 				_object_vel.at(object_name), group_name);
 		}
 	}
@@ -253,14 +249,12 @@ void SimVizRedisInterface::resetInternal() {
 		_force_sensor_data = _simulation->getAllForceSensorData();
 		for (auto& force_sensor_data : _force_sensor_data) {
 			_graphics->addForceSensorDisplay(force_sensor_data);
-			_redis_client.addToSendGroup(
-				_config.redis_prefix + "::force_sensor::" +
-					force_sensor_data.robot_or_object_name +
+			_redis_client->addToSendGroup(
+				"force_sensor::" + force_sensor_data.robot_or_object_name +
 					"::" + force_sensor_data.link_name + "::force",
 				force_sensor_data.force_local_frame, group_name);
-			_redis_client.addToSendGroup(
-				_config.redis_prefix + "::force_sensor::" +
-					force_sensor_data.robot_or_object_name +
+			_redis_client->addToSendGroup(
+				"force_sensor::" + force_sensor_data.robot_or_object_name +
 					"::" + force_sensor_data.link_name + "::moment",
 				force_sensor_data.moment_local_frame, group_name);
 
@@ -277,15 +271,13 @@ void SimVizRedisInterface::resetInternal() {
 }
 
 void SimVizRedisInterface::initializeRedisDatabase() {
-	_redis_client.createNewReceiveGroup(sim_param_group_name);
-	_redis_client.addToReceiveGroup(_config.redis_prefix + "::simviz::pause",
-									_pause, sim_param_group_name);
-	_redis_client.addToReceiveGroup(
-		_config.redis_prefix + "::simviz::gravity_comp_enabled",
-		_enable_grav_comp, sim_param_group_name);
-	_redis_client.addToReceiveGroup(
-		_config.redis_prefix + "::simviz::logging_on", _logging_on,
-		sim_param_group_name);
+	_redis_client->createNewReceiveGroup(sim_param_group_name);
+	_redis_client->addToReceiveGroup("simviz::pause", _pause,
+									 sim_param_group_name);
+	_redis_client->addToReceiveGroup("simviz::gravity_comp_enabled",
+									 _enable_grav_comp, sim_param_group_name);
+	_redis_client->addToReceiveGroup("simviz::logging_on", _logging_on,
+									 sim_param_group_name);
 }
 
 void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
@@ -386,13 +378,13 @@ void SimVizRedisInterface::redisCommunicationLoopRun(
 
 	while (!user_stop_signal && !external_stop_signal) {
 		_communication_timer->waitForNextLoop();
-		_redis_client.receiveAllFromGroup(sim_param_group_name);
+		_redis_client->receiveAllFromGroup(sim_param_group_name);
 		processSimParametrization();
 
-		_redis_client.receiveAllFromGroup(group_name);
+		_redis_client->receiveAllFromGroup(group_name);
 
 		if (_config.mode != SimVizMode::VIZ_ONLY) {
-			_redis_client.sendAllFromGroup(group_name);
+			_redis_client->sendAllFromGroup(group_name);
 		}
 	}
 	_communication_timer->stop();
@@ -510,9 +502,8 @@ void SimVizRedisInterface::processSimParametrization() {
 			pair.second = glz::write_json(
 				_config.model_specific_dynamic_and_rendering_params.at(
 					pair.first));
-			_redis_client.set(
-				_config.redis_prefix +
-					"::simviz::model_specific_params::" + pair.first,
+			_redis_client->set(
+				"simviz::model_specific_params::" + pair.first,
 				pair.second);
 		}
 	}

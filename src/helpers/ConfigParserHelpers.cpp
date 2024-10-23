@@ -120,5 +120,21 @@ LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger, const std::string& 
 	return config;
 }
 
+RedisConfig parseRedisConfig(tinyxml2::XMLElement* redis) {
+	RedisConfig config;
+
+	if (redis->Attribute("ip")) {
+		config.redis_ip = redis->Attribute("ip");
+	}
+	if (redis->Attribute("port")) {
+		config.redis_port = redis->IntAttribute("port");
+	}
+	if (redis->Attribute("namespacePrefix")) {
+		config.redis_namespace_prefix = redis->Attribute("namespacePrefix");
+	}
+
+	return config;
+}
+
 }  // namespace ConfigParserHelpers
 }  // namespace Sai2Interfaces

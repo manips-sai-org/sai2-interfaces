@@ -404,12 +404,6 @@ std::vector<RobotControllerConfig> RobotControllerConfigParser::parseConfig(
 		configs.back().robot_name = robot_name;
 		configs.back().robot_model_file = robot_model_file;
 
-		// get the redis prefix
-		if (robotControlConfiguration->Attribute("redisPrefix")) {
-			configs.back().redis_prefix =
-				robotControlConfiguration->Attribute("redisPrefix");
-		}
-
 		// get the controller frequency
 		if (robotControlConfiguration->Attribute("controlFrequency")) {
 			configs.back().control_frequency =

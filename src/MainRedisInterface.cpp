@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "controller/RobotControllerConfigParser.h"
+#include "helpers/ConfigParserHelpers.h"
 #include "simviz/SimVizConfigParser.h"
 
 namespace {
@@ -118,9 +119,8 @@ void addInterfaceCartesianLimits(
 	additionalContent += "\nmaxDesiredMoments=" + maxDesiredMoment;
 }
 
-const std::string CONFIG_FILE_NAME_KEY =
-	"sai2::interfaces::main_interface::config_file_name";
-const std::string RESET_KEY = "sai2::interfaces::main_interface::reset";
+const std::string CONFIG_FILE_NAME_KEY = "main_interface::config_file_name";
+const std::string RESET_KEY = "main_interface::reset";
 
 const std::string WEBUI_TEMPLATE_FILE_PATH =
 	std::string(UI_FOLDER) + "/web/html/webui_template.html";
@@ -185,17 +185,33 @@ bool MainRedisInterface::parseConfig(const std::string& config_file_name) {
 
 	_config_file_name = config_file_name;
 
+	if (doc.FirstChildElement("redisConfiguration")) {
+		if (doc.FirstChildElement("redisConfiguration")
+				->NextSiblingElement("redisConfiguration")) {
+			std::cerr << "Error: Only one 'redisConfiguration' element is "
+						 "allowed in config file: "
+					  << config_file_path << std::endl;
+			return false;
+		}
+		_redis_config = ConfigParserHelpers::parseRedisConfig(
+			doc.FirstChildElement("redisConfiguration"));
+	}
+
 	_simviz_config = nullptr;
 	if (doc.FirstChildElement("simvizConfiguration")) {
 		SimVizConfigParser simviz_parser;
 		_simviz_config = make_unique<SimVizConfig>(
 			simviz_parser.parseConfig(config_file_path));
+		_simviz_config->redis_config = _redis_config;
 	}
 
 	_controllers_configs.clear();
 	if (doc.FirstChildElement("robotControlConfiguration")) {
 		RobotControllerConfigParser controller_parser;
 		_controllers_configs = controller_parser.parseConfig(config_file_path);
+		for (auto& config : _controllers_configs) {
+			config.redis_config = _redis_config;
+		}
 	}
 	return true;
 }
@@ -302,6 +318,21 @@ void MainRedisInterface::generateUiFile() {
 	std::string htmlContent((std::istreambuf_iterator<char>(templateHtml)),
 							(std::istreambuf_iterator<char>()));
 
+	// replace redis prefix in the template
+	std::string prefix_to_replace = "{{_prefix_}}";
+	// size_t start_pos = htmlContent.find(prefix_to_replace);
+	std::string redis_prefix =
+		_redis_config.redis_namespace_prefix == ""
+			? ""
+			: _redis_config.redis_namespace_prefix + "::";
+    size_t start_pos = 0;
+    while ((start_pos = htmlContent.find(prefix_to_replace, start_pos)) != std::string::npos) {
+	// if (start_pos != std::string::npos) {
+		htmlContent.replace(start_pos, prefix_to_replace.length(),
+							redis_prefix);
+		start_pos += redis_prefix.length();
+	}
+
 	// Close the original file
 	templateHtml.close();
 
@@ -325,12 +356,12 @@ void MainRedisInterface::generateUiFile() {
 		additionalContent +=
 			"<div class='row my-3'>\n<sai2-interfaces-robot-controller "
 			"robotName='" +
-			config.robot_name + "'\nredisPrefix='" + config.redis_prefix +
-			"'\ncontrollerNames='" + controller_names_and_tasks[0] +
-			"'\ncontrollerTaskNames='" + controller_names_and_tasks[1] +
-			"'\ncontrollerTaskTypes='" + controller_names_and_tasks[2] +
-			"'\ncontrollerTaskSelections='" + controller_names_and_tasks[3] +
-			"'";
+			config.robot_name + "'\nredisPrefix='" +
+			_redis_config.redis_namespace_prefix + "'\ncontrollerNames='" +
+			controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
+			controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
+			controller_names_and_tasks[2] + "'\ncontrollerTaskSelections='" +
+			controller_names_and_tasks[3] + "'";
 
 		// joint limits in interface
 		additionalContent +=
@@ -374,7 +405,7 @@ void MainRedisInterface::generateUiFile() {
 		model_types += "]\'";
 
 		additionalContent += "<sai2-interfaces-simviz\nredisPrefix='" +
-							 _simviz_config->redis_prefix +
+							 _redis_config.redis_namespace_prefix +
 							 "'\nmodelNames=" + model_names +
 							 "\nmodelTypes=" + model_types + " />\n";
 
@@ -412,8 +443,8 @@ void MainRedisInterface::generateUiFile() {
 }
 
 void MainRedisInterface::runInterfaceLoop() {
-	Sai2Common::RedisClient redis_client;
-	redis_client.connect();
+	Sai2Common::RedisClient redis_client(_redis_config.redis_namespace_prefix);
+	redis_client.connect(_redis_config.redis_ip, _redis_config.redis_port);
 
 	redis_client.set(CONFIG_FILE_NAME_KEY, _config_file_name);
 	redis_client.setBool(RESET_KEY, true);
