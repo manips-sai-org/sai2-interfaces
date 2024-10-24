@@ -55,8 +55,18 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
 		this.plot = null;
 		this.layout = {
 			autosize: true,
-			showLegend: true,
-			// legend: { x: 0, y: -0.25, orientation: 'h' }
+			legend:{
+				yanchor:"top",
+				y:1.0,
+				xanchor:"right",
+				x:1.2
+			},
+			margin: {
+				l: 50,
+				r: 150,
+				t: 50,
+				b: 50,
+			},
 		};
 		this.config = {
 			responsive: true,
@@ -113,7 +123,7 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
 										x: this.data[this.x_key],
 										y: this.data[adj_y_key],
 										type: 'scattergl',
-										name: adj_y_key
+										name: adj_y_key.split("::").slice(-1)[0]
 									});
 								}
 
@@ -136,8 +146,8 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
 
 				let latest_time = this.data[this.x_key][this.data[this.x_key].length - 1];
 				let initial_time = 0;
-				if(this.window_size > 0) {
-					initial_time = Math.max(latest_time-this.window_size, 0);
+				if (this.window_size > 0) {
+					initial_time = Math.max(latest_time - this.window_size, 0);
 				}
 				this.layout.xaxis = { title: 'Time', range: [initial_time, latest_time] };
 
@@ -218,7 +228,6 @@ customElements.define('sai2-interfaces-plot', class extends HTMLElement {
 				Plotly.react(this.plot, this.series, this.layout, this.config);
 
 				// determine rate. convert from sec -> ms
-
 				let query_rate = parseFloat(query_rate_input.value);
 				if (isNaN(query_rate) || query_rate < 0) {
 					query_rate = 0.1;
