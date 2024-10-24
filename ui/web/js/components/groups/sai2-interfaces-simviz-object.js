@@ -2,7 +2,7 @@ class Sai2InterfacesSimvizObject extends HTMLElement {
 	constructor() {
 		super();
 		this.objectName = this.getAttribute('objectName');
-		this.redisPrefix =  this.getAttribute('RedisPrefix') || "sai2::interfaces";
+		this.redisPrefix =  this.getAttribute('RedisPrefix') + "::" || "";
 
 		// Fetch the HTML template
 		fetch('html/component_groups_templates/sai2-interfaces-simviz-object.html')

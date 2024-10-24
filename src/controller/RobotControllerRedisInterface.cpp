@@ -28,7 +28,7 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 	_redis_client = make_unique<Sai2Common::RedisClient>(
 		_config.redis_config.redis_namespace_prefix);
 	_redis_client->connect(_config.redis_config.redis_ip,
-						  _config.redis_config.redis_port);
+						   _config.redis_config.redis_port);
 
 	_reset_redis_inputs = false;
 	initialize();
@@ -134,7 +134,7 @@ void RobotControllerRedisInterface::run(
 	redis_communication_thread.join();
 
 	_redis_client->setEigen(
-		"robot_command_torques::" + _config.robot_name,
+		"commands::" + _config.robot_name + "::control_torques",
 		Eigen::VectorXd::Zero(_robot_model->dof()));
 
 	timer.printInfoPostRun();
@@ -150,16 +150,15 @@ void RobotControllerRedisInterface::initialize() {
 	_robot_command_torques.setZero(_robot_model->dof());
 
 	_redis_client->addToSendGroup(
-		"robot_command_torques::" + _config.robot_name,
+		"commands::" + _config.robot_name + "::control_torques",
 		_robot_command_torques);
 
 	_redis_client->addToReceiveGroup(
-		"robot_q::" + _config.robot_name, _robot_q);
+		"sensors::" + _config.robot_name + "::joint_positions", _robot_q);
 	_redis_client->addToReceiveGroup(
-		"robot_dq::" + _config.robot_name, _robot_dq);
-	_redis_client->addToReceiveGroup("controller::" +
-										_config.robot_name + "::logging_on",
-									_logging_on);
+		"sensors::" + _config.robot_name + "::joint_velocities", _robot_dq);
+	_redis_client->addToReceiveGroup(
+		"controllers::" + _config.robot_name + "::logging_on", _logging_on);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	_redis_client->receiveAllFromGroup();
@@ -233,9 +232,9 @@ void RobotControllerRedisInterface::initialize() {
 
 	_tentative_next_active_controller_name =
 		_config.initial_active_controller_name;
-	_redis_client->addToReceiveGroup("controller::" + _config.robot_name +
-										"::active_controller_name",
-									_tentative_next_active_controller_name);
+	_redis_client->addToReceiveGroup(
+		"controllers::" + _config.robot_name + "::active_controller_name",
+		_tentative_next_active_controller_name);
 	initializeRedisTasksIO();
 
 	switchController(_tentative_next_active_controller_name);
@@ -297,10 +296,10 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 		_config.logger_config.folder_name + '/' + _config.robot_name,
 		_config.logger_config.add_timestamp_to_filename);
 
-	_robot_logger->addToLog(_robot_q, "q");
-	_robot_logger->addToLog(_robot_dq, "dq");
-	_robot_logger->addToLog(_robot_command_torques, "command_torques");
-	_robot_logger->addToLog(_robot_M, "Mass_Matrix");
+	_robot_logger->addToLog(_robot_q, "joint_positions");
+	_robot_logger->addToLog(_robot_dq, "joint_velocities");
+	_robot_logger->addToLog(_robot_command_torques, "control_torques");
+	_robot_logger->addToLog(_robot_M, "mass_matrix");
 
 	for (auto& pair : _config.controllers_configs) {
 		const string& controller_name = pair.first;
@@ -340,7 +339,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 									  "is_active");
 
 				const string& key_prefix =
-					"controller::" + _config.robot_name +
+					"controllers::" + _config.robot_name +
 					"::" + controller_name + "::" + task_name + "::";
 
 				// dynamic decoupling
@@ -428,20 +427,21 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(joint_task_input.goal_acceleration,
 									  "goal_acceleration");
 				_redis_client->addToSendGroup(key_prefix + "goal_position",
-											 joint_task_input.goal_position,
-											 reset_inputs_redis_group);
+											  joint_task_input.goal_position,
+											  reset_inputs_redis_group);
 				_redis_client->addToSendGroup(key_prefix + "goal_velocity",
-											 joint_task_input.goal_velocity,
-											 reset_inputs_redis_group);
-				_redis_client->addToSendGroup(key_prefix + "goal_acceleration",
-											 joint_task_input.goal_acceleration,
-											 reset_inputs_redis_group);
+											  joint_task_input.goal_velocity,
+											  reset_inputs_redis_group);
+				_redis_client->addToSendGroup(
+					key_prefix + "goal_acceleration",
+					joint_task_input.goal_acceleration,
+					reset_inputs_redis_group);
 				_redis_client->addToReceiveGroup(key_prefix + "goal_position",
-												joint_task_input.goal_position,
-												controller_name);
+												 joint_task_input.goal_position,
+												 controller_name);
 				_redis_client->addToReceiveGroup(key_prefix + "goal_velocity",
-												joint_task_input.goal_velocity,
-												controller_name);
+												 joint_task_input.goal_velocity,
+												 controller_name);
 				_redis_client->addToReceiveGroup(
 					key_prefix + "goal_acceleration",
 					joint_task_input.goal_acceleration, controller_name);
@@ -498,9 +498,9 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 				task_logger->addToLog(_is_active_controller.at(controller_name),
 									  "is_active");
 
-				const string key_prefix =
-					"controller::" + _config.robot_name +
-					"::" + controller_name + "::" + task_name + "::";
+				const string key_prefix = "controllers::" + _config.robot_name +
+										  "::" + controller_name +
+										  "::" + task_name + "::";
 
 				// dynamic decoupling
 				task_logger->addToLog(
@@ -811,13 +811,13 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					motion_force_task_input.desired_moment,
 					reset_inputs_redis_group);
 				_redis_client->addToSendGroup(
-					"force_sensor::" + _config.robot_name +
-						"::" + motion_force_task_config.link_name + "::force",
+					"sensors::" + _config.robot_name + "::ft_sensor::" +
+						motion_force_task_config.link_name + "::force",
 					motion_force_task_input.sensed_force_sensor_frame,
 					reset_inputs_redis_group);
 				_redis_client->addToSendGroup(
-					"force_sensor::" + _config.robot_name +
-						"::" + motion_force_task_config.link_name + "::moment",
+					"sensors::" + _config.robot_name + "::ft_sensor::" +
+						motion_force_task_config.link_name + "::moment",
 					motion_force_task_input.sensed_moment_sensor_frame,
 					reset_inputs_redis_group);
 				_redis_client->addToReceiveGroup(
@@ -849,13 +849,13 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					key_prefix + "desired_moment",
 					motion_force_task_input.desired_moment, controller_name);
 				_redis_client->addToReceiveGroup(
-					"force_sensor::" + _config.robot_name +
-						"::" + motion_force_task_config.link_name + "::force",
+					"sensors::" + _config.robot_name + "::ft_sensor::" +
+						motion_force_task_config.link_name + "::force",
 					motion_force_task_input.sensed_force_sensor_frame,
 					controller_name);
 				_redis_client->addToReceiveGroup(
-					"force_sensor::" + _config.robot_name +
-						"::" + motion_force_task_config.link_name + "::moment",
+					"sensors::" + _config.robot_name + "::ft_sensor::" +
+						motion_force_task_config.link_name + "::moment",
 					motion_force_task_input.sensed_moment_sensor_frame,
 					controller_name);
 
@@ -905,8 +905,8 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					key_prefix + "sensed_force",
 					motion_force_task_monitoring_data.sensed_force_world_frame);
 				_redis_client->addToSendGroup(key_prefix + "sensed_moment",
-											 motion_force_task_monitoring_data
-												 .sensed_moment_world_frame);
+											  motion_force_task_monitoring_data
+												  .sensed_moment_world_frame);
 				_redis_client->addToSendGroup(
 					key_prefix + "current_position",
 					motion_force_task_monitoring_data.current_position);

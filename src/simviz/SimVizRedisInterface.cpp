@@ -110,8 +110,10 @@ void SimVizRedisInterface::resetInternal() {
 		_loggers[robot_name] = std::make_unique<Sai2Common::Logger>(
 			_config.logger_config.folder_name + "/" + robot_name,
 			_config.logger_config.add_timestamp_to_filename);
-		_loggers.at(robot_name)->addToLog(_robot_q.at(robot_name), "q");
-		_loggers.at(robot_name)->addToLog(_robot_dq.at(robot_name), "dq");
+		_loggers.at(robot_name)
+			->addToLog(_robot_q.at(robot_name), "joint_positions");
+		_loggers.at(robot_name)
+			->addToLog(_robot_dq.at(robot_name), "joint_velocities");
 
 		// model specific parameters
 		// if it does not exists yet, create it with the default and global
@@ -135,7 +137,7 @@ void SimVizRedisInterface::resetInternal() {
 		_model_specific_params_string[robot_name] = glz::write_json(
 			_config.model_specific_dynamic_and_rendering_params.at(robot_name));
 		_redis_client->addToReceiveGroup(
-			"simviz::model_specific_params::" + robot_name,
+			"simviz::" + robot_name + "::model_specific_parameters",
 			_model_specific_params_string.at(robot_name), group_name);
 
 		// setup if there is simulation
@@ -146,25 +148,28 @@ void SimVizRedisInterface::resetInternal() {
 
 			// redis
 			_redis_client->addToReceiveGroup(
-				"robot_command_torques::" + robot_name,
+				"commands::" + robot_name + "::control_torques",
 				_robot_control_torques.at(robot_name), group_name);
-			_redis_client->addToSendGroup("robot_q::" + robot_name,
-										  _robot_q.at(robot_name), group_name);
-			_redis_client->addToSendGroup("robot_dq::" + robot_name,
-										  _robot_dq.at(robot_name), group_name);
+			_redis_client->addToSendGroup(
+				"sensors::" + robot_name + "::joint_positions",
+				_robot_q.at(robot_name), group_name);
+			_redis_client->addToSendGroup(
+				"sensors::" + robot_name + "::joint_velocities",
+				_robot_dq.at(robot_name), group_name);
 
 			// logger
 			_loggers.at(robot_name)
 				->addToLog(_robot_control_torques.at(robot_name),
-						   "command_torques");
+						   "control_torques");
 			_loggers.at(robot_name)
 				->addToLog(_robot_ui_torques.at(robot_name), "ui_torques");
 		} else {  // setup for viz only
 			_redis_client->addToReceiveGroup(
-				"robot_q::" + robot_name, _robot_q.at(robot_name), group_name);
-			_redis_client->addToReceiveGroup("robot_dq::" + robot_name,
-											 _robot_dq.at(robot_name),
-											 group_name);
+				"sensors::" + robot_name + "::joint_positions",
+				_robot_q.at(robot_name), group_name);
+			_redis_client->addToReceiveGroup(
+				"sensors::" + robot_name + "::joint_velocities",
+				_robot_dq.at(robot_name), group_name);
 		}
 	}
 
@@ -202,16 +207,16 @@ void SimVizRedisInterface::resetInternal() {
 			_config.model_specific_dynamic_and_rendering_params.at(
 				object_name));
 		_redis_client->addToReceiveGroup(
-			"simviz::model_specific_params::" + object_name,
+			"simviz::" + object_name + "::model_specific_parameters",
 			_model_specific_params_string.at(object_name), group_name);
 
 		// setup if there is simulation
 		if (_config.mode != SimVizMode::VIZ_ONLY) {
-			_redis_client->addToSendGroup("simviz::obj_pose::" + object_name,
+			_redis_client->addToSendGroup("sensors::" + object_name + "::object_pose",
 										  _object_pose.at(object_name),
 										  group_name);
 			_redis_client->addToSendGroup(
-				"simviz::obj_velocity::" + object_name,
+				"sensors::" + object_name + "::object_velocity",
 				_object_vel.at(object_name), group_name);
 
 			_graphics->addUIForceInteraction(object_name);
@@ -220,11 +225,11 @@ void SimVizRedisInterface::resetInternal() {
 			_loggers.at(object_name)
 				->addToLog(_object_ui_torques.at(object_name), "ui_torques");
 		} else {  // setup for viz only
-			_redis_client->addToReceiveGroup("simviz::obj_pose::" + object_name,
-											 _object_pose.at(object_name),
-											 group_name);
 			_redis_client->addToReceiveGroup(
-				"simviz::obj_velocity::" + object_name,
+				"sensrs::" + object_name + "::object_pose",
+				_object_pose.at(object_name), group_name);
+			_redis_client->addToReceiveGroup(
+				"sensors::" + object_name + "::object_velocity",
 				_object_vel.at(object_name), group_name);
 		}
 	}
@@ -250,12 +255,12 @@ void SimVizRedisInterface::resetInternal() {
 		for (auto& force_sensor_data : _force_sensor_data) {
 			_graphics->addForceSensorDisplay(force_sensor_data);
 			_redis_client->addToSendGroup(
-				"force_sensor::" + force_sensor_data.robot_or_object_name +
-					"::" + force_sensor_data.link_name + "::force",
+				"sensors::" + force_sensor_data.robot_or_object_name +
+					"::ft_sensor::" + force_sensor_data.link_name + "::force",
 				force_sensor_data.force_local_frame, group_name);
 			_redis_client->addToSendGroup(
-				"force_sensor::" + force_sensor_data.robot_or_object_name +
-					"::" + force_sensor_data.link_name + "::moment",
+				"sensors::" + force_sensor_data.robot_or_object_name +
+					"::ft_sensor::" + force_sensor_data.link_name + "::moment",
 				force_sensor_data.moment_local_frame, group_name);
 
 			_loggers.at(force_sensor_data.robot_or_object_name)
@@ -502,9 +507,8 @@ void SimVizRedisInterface::processSimParametrization() {
 			pair.second = glz::write_json(
 				_config.model_specific_dynamic_and_rendering_params.at(
 					pair.first));
-			_redis_client->set(
-				"simviz::model_specific_params::" + pair.first,
-				pair.second);
+			_redis_client->set("simviz::model_specific_params::" + pair.first,
+							   pair.second);
 		}
 	}
 

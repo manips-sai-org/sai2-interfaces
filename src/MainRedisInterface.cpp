@@ -119,8 +119,8 @@ void addInterfaceCartesianLimits(
 	additionalContent += "\nmaxDesiredMoments=" + maxDesiredMoment;
 }
 
-const std::string CONFIG_FILE_NAME_KEY = "main_interface::config_file_name";
-const std::string RESET_KEY = "main_interface::reset";
+const std::string CONFIG_FILE_NAME_KEY = "::sai2-interfaces-webui::config_file_name";
+const std::string RESET_KEY = "::sai2-interfaces-webui::reset";
 
 const std::string WEBUI_TEMPLATE_FILE_PATH =
 	std::string(UI_FOLDER) + "/web/html/webui_template.html";
@@ -318,21 +318,6 @@ void MainRedisInterface::generateUiFile() {
 	std::string htmlContent((std::istreambuf_iterator<char>(templateHtml)),
 							(std::istreambuf_iterator<char>()));
 
-	// replace redis prefix in the template
-	std::string prefix_to_replace = "{{_prefix_}}";
-	// size_t start_pos = htmlContent.find(prefix_to_replace);
-	std::string redis_prefix =
-		_redis_config.redis_namespace_prefix == ""
-			? ""
-			: _redis_config.redis_namespace_prefix + "::";
-    size_t start_pos = 0;
-    while ((start_pos = htmlContent.find(prefix_to_replace, start_pos)) != std::string::npos) {
-	// if (start_pos != std::string::npos) {
-		htmlContent.replace(start_pos, prefix_to_replace.length(),
-							redis_prefix);
-		start_pos += redis_prefix.length();
-	}
-
 	// Close the original file
 	templateHtml.close();
 
@@ -443,8 +428,8 @@ void MainRedisInterface::generateUiFile() {
 }
 
 void MainRedisInterface::runInterfaceLoop() {
-	Sai2Common::RedisClient redis_client(_redis_config.redis_namespace_prefix);
-	redis_client.connect(_redis_config.redis_ip, _redis_config.redis_port);
+	Sai2Common::RedisClient redis_client;
+	redis_client.connect();
 
 	redis_client.set(CONFIG_FILE_NAME_KEY, _config_file_name);
 	redis_client.setBool(RESET_KEY, true);
