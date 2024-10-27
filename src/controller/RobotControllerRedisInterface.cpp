@@ -293,7 +293,8 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 	}
 
 	_robot_logger = std::make_unique<Sai2Common::Logger>(
-		_config.logger_config.folder_name + '/' + _config.robot_name,
+		_config.logger_config.folder_name + '/' + _config.robot_name +
+			"_control",
 		_config.logger_config.add_timestamp_to_filename);
 
 	_robot_logger->addToLog(_robot_q, "joint_positions");
@@ -308,10 +309,12 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 		_controller_task_monitoring_data[controller_name] = {};
 		_redis_client->createNewReceiveGroup(controller_name);
 
-		if (!std::filesystem::exists(_config.logger_config.folder_name + '/' +
-									 controller_name)) {
+		const std::string& current_controller_logger_folder =
+			_config.logger_config.folder_name + '/' + _config.robot_name + '_' +
+			controller_name;
+		if (!std::filesystem::exists(current_controller_logger_folder)) {
 			std::filesystem::create_directory(
-				_config.logger_config.folder_name + '/' + controller_name);
+				current_controller_logger_folder);
 		}
 
 		auto& task_configs = pair.second;
@@ -330,8 +333,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 				_task_loggers[controller_name][task_name] =
 					std::make_unique<Sai2Common::Logger>(
-						_config.logger_config.folder_name + '/' +
-							controller_name + '/' + task_name,
+						current_controller_logger_folder + '/' + task_name,
 						_config.logger_config.add_timestamp_to_filename);
 				auto task_logger =
 					_task_loggers.at(controller_name).at(task_name).get();
@@ -490,8 +492,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 
 				_task_loggers[controller_name][task_name] =
 					std::make_unique<Sai2Common::Logger>(
-						_config.logger_config.folder_name + '/' +
-							controller_name + '/' + task_name,
+						current_controller_logger_folder + '/' + task_name,
 						_config.logger_config.add_timestamp_to_filename);
 				auto task_logger =
 					_task_loggers.at(controller_name).at(task_name).get();

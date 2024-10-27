@@ -108,7 +108,7 @@ void SimVizRedisInterface::resetInternal() {
 
 		// logger for all modes
 		_loggers[robot_name] = std::make_unique<Sai2Common::Logger>(
-			_config.logger_config.folder_name + "/" + robot_name,
+			_config.logger_config.folder_name + "/" + robot_name + "_simviz",
 			_config.logger_config.add_timestamp_to_filename);
 		_loggers.at(robot_name)
 			->addToLog(_robot_q.at(robot_name), "joint_positions");
@@ -181,7 +181,7 @@ void SimVizRedisInterface::resetInternal() {
 
 		// logger for all modes
 		_loggers[object_name] = std::make_unique<Sai2Common::Logger>(
-			_config.logger_config.folder_name + "/" + object_name,
+			_config.logger_config.folder_name + "/" + object_name + "_simviz",
 			_config.logger_config.add_timestamp_to_filename);
 		_loggers.at(object_name)
 			->addToLog(_object_pose.at(object_name), "pose");

@@ -102,8 +102,8 @@ Affine3d parsePose(tinyxml2::XMLElement* xml) {
 LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger, const std::string& default_folder_name) {
 	LoggerConfig config = LoggerConfig(default_folder_name);
 
-	if (logger->Attribute("folderName")) {
-		config.folder_name = logger->Attribute("folderName");
+	if (logger->Attribute("logFolderName")) {
+		config.folder_name = logger->Attribute("logFolderName");
 	}
 	if (logger->Attribute("logFrequency")) {
 		config.frequency = logger->DoubleAttribute("logFrequency");
