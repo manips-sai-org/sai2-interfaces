@@ -212,9 +212,9 @@ void SimVizRedisInterface::resetInternal() {
 
 		// setup if there is simulation
 		if (_config.mode != SimVizMode::VIZ_ONLY) {
-			_redis_client->addToSendGroup("sensors::" + object_name + "::object_pose",
-										  _object_pose.at(object_name),
-										  group_name);
+			_redis_client->addToSendGroup(
+				"sensors::" + object_name + "::object_pose",
+				_object_pose.at(object_name), group_name);
 			_redis_client->addToSendGroup(
 				"sensors::" + object_name + "::object_velocity",
 				_object_vel.at(object_name), group_name);
@@ -254,21 +254,42 @@ void SimVizRedisInterface::resetInternal() {
 		_force_sensor_data = _simulation->getAllForceSensorData();
 		for (auto& force_sensor_data : _force_sensor_data) {
 			_graphics->addForceSensorDisplay(force_sensor_data);
-			_redis_client->addToSendGroup(
-				"sensors::" + force_sensor_data.robot_or_object_name +
-					"::ft_sensor::" + force_sensor_data.link_name + "::force",
-				force_sensor_data.force_local_frame, group_name);
-			_redis_client->addToSendGroup(
-				"sensors::" + force_sensor_data.robot_or_object_name +
-					"::ft_sensor::" + force_sensor_data.link_name + "::moment",
-				force_sensor_data.moment_local_frame, group_name);
+			if (force_sensor_data.link_name ==
+				Sai2Simulation::object_link_name) {
+				_redis_client->addToSendGroup(
+					"sensors::" + force_sensor_data.robot_or_object_name +
+						"::ft_sensor::force",
+					force_sensor_data.force_local_frame, group_name);
+				_redis_client->addToSendGroup(
+					"sensors::" + force_sensor_data.robot_or_object_name +
+						"::ft_sensor::moment",
+					force_sensor_data.moment_local_frame, group_name);
 
-			_loggers.at(force_sensor_data.robot_or_object_name)
-				->addToLog(force_sensor_data.force_local_frame,
-						   force_sensor_data.link_name + "_sensed_force");
-			_loggers.at(force_sensor_data.robot_or_object_name)
-				->addToLog(force_sensor_data.moment_local_frame,
-						   force_sensor_data.link_name + "_sensed_moment");
+				_loggers.at(force_sensor_data.robot_or_object_name)
+					->addToLog(force_sensor_data.force_local_frame,
+							   "sensed_force");
+				_loggers.at(force_sensor_data.robot_or_object_name)
+					->addToLog(force_sensor_data.moment_local_frame,
+							   "sensed_moment");
+			} else {
+				_redis_client->addToSendGroup(
+					"sensors::" + force_sensor_data.robot_or_object_name +
+						"::ft_sensor::" + force_sensor_data.link_name +
+						"::force",
+					force_sensor_data.force_local_frame, group_name);
+				_redis_client->addToSendGroup(
+					"sensors::" + force_sensor_data.robot_or_object_name +
+						"::ft_sensor::" + force_sensor_data.link_name +
+						"::moment",
+					force_sensor_data.moment_local_frame, group_name);
+
+				_loggers.at(force_sensor_data.robot_or_object_name)
+					->addToLog(force_sensor_data.force_local_frame,
+							   force_sensor_data.link_name + "_sensed_force");
+				_loggers.at(force_sensor_data.robot_or_object_name)
+					->addToLog(force_sensor_data.moment_local_frame,
+							   force_sensor_data.link_name + "_sensed_moment");
+			}
 		}
 	}
 
