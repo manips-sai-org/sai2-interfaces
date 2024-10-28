@@ -376,9 +376,6 @@ struct RobotControllerConfig {
 	/// @brief Name of the robot to control, parsed from the corresponding
 	/// attribute of the <robotControlConfiguration> element
 	std::string robot_name = "";
-	/// @brief Prefix for the redis keys used by the controller, parsed from the
-	/// corresponding attribute of the <robotControlConfiguration> element
-	std::string redis_prefix = "sai2::interfaces";
 	/// @brief Base frame of the robot in the world, parsed from the xml config
 	/// element <baseFrame xyz="..." rpy="..." />
 	Eigen::Affine3d robot_base_in_world = Eigen::Affine3d::Identity();
@@ -393,6 +390,9 @@ struct RobotControllerConfig {
 	/// RobotControllerRedisInterface
 	LoggerConfig logger_config =
 		LoggerConfig(default_logger_folder_name_controller);
+
+	/// @brief Config for the redis interface attached to the robot controller
+	RedisConfig redis_config;
 
 	/// @brief Name of the controller to start with, it will initially be the
 	/// first controller in the list of controllers in the xml config file

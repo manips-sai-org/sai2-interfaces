@@ -2,7 +2,7 @@ class Sai2InterfacesSimvizRobot extends HTMLElement {
 	constructor() {
 		super();
 		this.robotName = this.getAttribute('robotName');
-		this.redisPrefix =  this.getAttribute('RedisPrefix') || "sai2::interfaces";
+		this.redisPrefix =  this.getAttribute('RedisPrefix') + "::" || "";
 
 		// Fetch the HTML template
 		fetch('html/component_groups_templates/sai2-interfaces-simviz-robot.html')

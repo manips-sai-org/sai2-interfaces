@@ -25,6 +25,8 @@ Eigen::Affine3d parsePose(tinyxml2::XMLElement* xml);
 LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger,
 							   const std::string& default_folder_name);
 
+RedisConfig parseRedisConfig(tinyxml2::XMLElement* redis);
+
 }  // namespace ConfigParserHelpers
 }  // namespace Sai2Interfaces
 

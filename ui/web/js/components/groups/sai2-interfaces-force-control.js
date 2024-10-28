@@ -5,15 +5,15 @@ class Sai2InterfacesForceControl extends HTMLElement {
 		this.robotName = this.getAttribute('robotName');
 		this.controllerName = this.getAttribute('controllerName');
 		this.taskName = this.getAttribute('taskName');
-		this.redisPrefix = "sai2::interfaces::controller::";
+		this.redisPrefix = "controllers::";
 		this.min_desired_force = this.getAttribute('minDesiredForce');
 		this.max_desired_force = this.getAttribute('maxDesiredForce');
 		this.min_desired_moment = this.getAttribute('minDesiredMoment');
 		this.max_desired_moment = this.getAttribute('maxDesiredMoment');
 		if (this.getAttribute('redisPrefix')) {
-			this.redisPrefix = this.getAttribute('redisPrefix') + "::controller::";
+			this.redisPrefix = this.getAttribute('redisPrefix') + "::controllers::";
 		}
-		this.redisPrefix += this.robotName + "::" + this.controllerName + "::" + this.taskName;
+		this.redisPrefix += this.robotName + "::" + this.controllerName + "::" + this.taskName + "::";
 
 		// Fetch the HTML template
 		fetch('html/component_groups_templates/sai2-interfaces-force-control.html')

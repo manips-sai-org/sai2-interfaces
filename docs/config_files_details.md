@@ -3,12 +3,30 @@ Sai2-Interface config files details
 
 The config files used to parametrize the simulation and/or controller are custom xml files.
 
-Such a config file can contain one `<simvizConfiguration>` element, and several `<robotControlConfiguration>` elements (one per robot to control).
+Such a config file can contain one `<redisConfiguration>`, one `<simvizConfiguration>` element, and several `<robotControlConfiguration>` elements (one per robot to control).
 We will go over those in details using the two example files [ `aa_detailled_panda_simviz_only.xml` ](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_simviz_only.xml) and [ `aa_detailled_panda_control_only.xml` ](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_control_only.xml).
+
+### The `<redisConfiguration>` element
+Let's start with the redis configuration. This one is very simple. It is optionnal, but if present, only one can be present. It has 3 potential attributes to define the namespace prefix for redis keys, the ip address and port of the redis server.
+
+```
+<!-- 
+The <redisConfiguration> element contains the configuration for the redis clients used by the controllers (and the simviz if present).
+Only one is allowed per configuration file.
+Its attributes are:
+	- namespacePrefix: Optional. The prefix that will be added to all keys. Defaults to "sai2::interfaces"
+	- ip: Optional. The ip address of the redis server. Defaults to 127.0.0.1 (localhost)
+	- port: Optional. The port of the redis server. Defaults to 6379
+None of the corresponding config parameters can be changed at runtime.
+-->
+<redisConfiguration namespacePrefix="sai2::interfaces" 
+	ip="127.0.0.1" 
+	port="6379" />
+```
 
 ### The `<simvizConfiguration>` element
 
-Let's start with the simviz configuration. If we want an application with a simulation or rendering, we need to set a simviz configuration in the config file by using the `<simvizConfiguration>` element. We will go step by step over the [commented example file](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_simviz_only.xml) to explain the possible attributes and children elements. The only required attribute is the `worldFilePath` that provides the path to the world file defining the virtual world. For more details on the world file, see the [example world file](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/world/panda_world.urdf)
+Let's continue with the simviz configuration. If we want an application with a simulation or rendering, we need to set a simviz configuration in the config file by using the `<simvizConfiguration>` element. We will go step by step over the [commented example file](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_simviz_only.xml) to explain the possible attributes and children elements. The only required attribute is the `worldFilePath` that provides the path to the world file defining the virtual world. For more details on the world file, see the [example world file](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/world/panda_world.urdf)
 
 ```
 <!-- 

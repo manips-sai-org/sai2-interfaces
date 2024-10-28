@@ -1,3 +1,16 @@
+<!-- 
+The <redisConfiguration> element contains the configuration for the redis clients used by the controllers (and the simviz if present).
+Only one is allowed per configuration file.
+Its attributes are:
+	- namespacePrefix: Optional. The prefix that will be added to all keys. Defaults to "sai2::interfaces"
+	- ip: Optional. The ip address of the redis server. Defaults to 127.0.0.1 (localhost)
+	- port: Optional. The port of the redis server. Defaults to 6379
+None of the corresponding config parameters can be changed at runtime.
+-->
+<redisConfiguration namespacePrefix="sai2::interfaces" 
+	ip="127.0.0.1" 
+	port="6379" />
+
 <!--
 The <robotControlConfiguration> element contains the control configuration for a robot.
 There can only be one of those per robot (identified by the robot name) in a config file.
@@ -5,13 +18,11 @@ a robot can have multiple controllers, all defined within this element, but only
 Its attributes are:
 	- robotName: Required. The name of the robot
 	- robotModelFile: Required. The path to the URDF file of the robot
-	- redisPrefix: Optional. The prefix of the redis keys used by the robot control interface. Defaults to "sai2::interfaces"
 	- controlFrequency: Optional. The control frequency of the robot. Defaults to 1000.0 Hz
 None of the corresponding config parameters can be changed at runtime.
 -->
 <robotControlConfiguration robotName="Panda"
 	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf"
-	redisPrefix="sai2::interfaces"
 	controlFrequency="1000.0">
 
 	<!--

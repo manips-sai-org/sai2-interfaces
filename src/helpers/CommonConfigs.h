@@ -32,6 +32,25 @@ struct LoggerConfig {
 
 	LoggerConfig(const std::string& folder_name) : folder_name(folder_name) {}
 };
+
+/**
+ * @brief Configuration struct for the redis config object (one per config file, used by simviz and controllers)
+ *
+ * This is parsed from the xml file from the following element:
+ * 	<redisConfig namespacePrefix="..." ip="..." port="..." />
+ *
+ */
+struct RedisConfig {
+	/// @brief The address of the redis server
+	std::string redis_ip = "127.0.0.1";
+
+	/// @brief The port of the redis server
+	int redis_port = 6379;
+
+	/// @brief The default redis namespace prefix
+	std::string redis_namespace_prefix = "sai2::interfaces";
+};
+
 }  // namespace Sai2Interfaces
 
 #endif	// SAI2_INTERFACES_CONFIG_COMMON_CONFIGS_H

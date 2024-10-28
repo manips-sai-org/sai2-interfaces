@@ -56,6 +56,7 @@ private:
 
 	std::unique_ptr<SimVizConfig> _simviz_config;
 	std::vector<RobotControllerConfig> _controllers_configs;
+	RedisConfig _redis_config;
 
 	std::string _config_folder_path;
 	std::string _config_file_name;

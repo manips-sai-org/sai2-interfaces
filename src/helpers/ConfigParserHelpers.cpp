@@ -102,8 +102,8 @@ Affine3d parsePose(tinyxml2::XMLElement* xml) {
 LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger, const std::string& default_folder_name) {
 	LoggerConfig config = LoggerConfig(default_folder_name);
 
-	if (logger->Attribute("folderName")) {
-		config.folder_name = logger->Attribute("folderName");
+	if (logger->Attribute("logFolderName")) {
+		config.folder_name = logger->Attribute("logFolderName");
 	}
 	if (logger->Attribute("logFrequency")) {
 		config.frequency = logger->DoubleAttribute("logFrequency");
@@ -115,6 +115,22 @@ LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger, const std::string& 
 	if (logger->Attribute("addTimestampToFilename")) {
 		config.add_timestamp_to_filename =
 			logger->BoolAttribute("addTimestampToFilename");
+	}
+
+	return config;
+}
+
+RedisConfig parseRedisConfig(tinyxml2::XMLElement* redis) {
+	RedisConfig config;
+
+	if (redis->Attribute("ip")) {
+		config.redis_ip = redis->Attribute("ip");
+	}
+	if (redis->Attribute("port")) {
+		config.redis_port = redis->IntAttribute("port");
+	}
+	if (redis->Attribute("namespacePrefix")) {
+		config.redis_namespace_prefix = redis->Attribute("namespacePrefix");
 	}
 
 	return config;

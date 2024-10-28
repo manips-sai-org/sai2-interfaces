@@ -6,6 +6,7 @@
 #include <filesystem>
 
 #include "controller/RobotControllerConfigParser.h"
+#include "helpers/ConfigParserHelpers.h"
 #include "simviz/SimVizConfigParser.h"
 
 namespace {
@@ -118,9 +119,8 @@ void addInterfaceCartesianLimits(
 	additionalContent += "\nmaxDesiredMoments=" + maxDesiredMoment;
 }
 
-const std::string CONFIG_FILE_NAME_KEY =
-	"sai2::interfaces::main_interface::config_file_name";
-const std::string RESET_KEY = "sai2::interfaces::main_interface::reset";
+const std::string CONFIG_FILE_NAME_KEY = "::sai2-interfaces-webui::config_file_name";
+const std::string RESET_KEY = "::sai2-interfaces-webui::reset";
 
 const std::string WEBUI_TEMPLATE_FILE_PATH =
 	std::string(UI_FOLDER) + "/web/html/webui_template.html";
@@ -185,17 +185,33 @@ bool MainRedisInterface::parseConfig(const std::string& config_file_name) {
 
 	_config_file_name = config_file_name;
 
+	if (doc.FirstChildElement("redisConfiguration")) {
+		if (doc.FirstChildElement("redisConfiguration")
+				->NextSiblingElement("redisConfiguration")) {
+			std::cerr << "Error: Only one 'redisConfiguration' element is "
+						 "allowed in config file: "
+					  << config_file_path << std::endl;
+			return false;
+		}
+		_redis_config = ConfigParserHelpers::parseRedisConfig(
+			doc.FirstChildElement("redisConfiguration"));
+	}
+
 	_simviz_config = nullptr;
 	if (doc.FirstChildElement("simvizConfiguration")) {
 		SimVizConfigParser simviz_parser;
 		_simviz_config = make_unique<SimVizConfig>(
 			simviz_parser.parseConfig(config_file_path));
+		_simviz_config->redis_config = _redis_config;
 	}
 
 	_controllers_configs.clear();
 	if (doc.FirstChildElement("robotControlConfiguration")) {
 		RobotControllerConfigParser controller_parser;
 		_controllers_configs = controller_parser.parseConfig(config_file_path);
+		for (auto& config : _controllers_configs) {
+			config.redis_config = _redis_config;
+		}
 	}
 	return true;
 }
@@ -325,12 +341,12 @@ void MainRedisInterface::generateUiFile() {
 		additionalContent +=
 			"<div class='row my-3'>\n<sai2-interfaces-robot-controller "
 			"robotName='" +
-			config.robot_name + "'\nredisPrefix='" + config.redis_prefix +
-			"'\ncontrollerNames='" + controller_names_and_tasks[0] +
-			"'\ncontrollerTaskNames='" + controller_names_and_tasks[1] +
-			"'\ncontrollerTaskTypes='" + controller_names_and_tasks[2] +
-			"'\ncontrollerTaskSelections='" + controller_names_and_tasks[3] +
-			"'";
+			config.robot_name + "'\nredisPrefix='" +
+			_redis_config.redis_namespace_prefix + "'\ncontrollerNames='" +
+			controller_names_and_tasks[0] + "'\ncontrollerTaskNames='" +
+			controller_names_and_tasks[1] + "'\ncontrollerTaskTypes='" +
+			controller_names_and_tasks[2] + "'\ncontrollerTaskSelections='" +
+			controller_names_and_tasks[3] + "'";
 
 		// joint limits in interface
 		additionalContent +=
@@ -374,7 +390,7 @@ void MainRedisInterface::generateUiFile() {
 		model_types += "]\'";
 
 		additionalContent += "<sai2-interfaces-simviz\nredisPrefix='" +
-							 _simviz_config->redis_prefix +
+							 _redis_config.redis_namespace_prefix +
 							 "'\nmodelNames=" + model_names +
 							 "\nmodelTypes=" + model_types + " />\n";
 

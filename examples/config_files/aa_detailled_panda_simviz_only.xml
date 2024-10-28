@@ -1,15 +1,26 @@
 <!-- 
+The <redisConfiguration> element contains the configuration for the redis client used by the simviz (and the controllers if present).
+Only one is allowed per configuration file.
+Its attributes are:
+	- namespacePrefix: Optional. The prefix that will be added to all keys. Defaults to "sai2::interfaces"
+	- ip: Optional. The ip address of the redis server. Defaults to 127.0.0.1 (localhost)
+	- port: Optional. The port of the redis server. Defaults to 6379
+None of the corresponding config parameters can be changed at runtime.
+-->
+<redisConfiguration namespacePrefix="sai2::interfaces" 
+	ip="127.0.0.1" 
+	port="6379" />
+
+<!-- 
 The <simvizConfiguration> element contains the configuration for the simulation and visualization of
 the virtual world. Only one is allowed per configuration file.
 Its attributes are:
 	- worldFilePath: Required. The path to the world file to be used
 	- mode: Optional. The mode of the simulation. Possible values are simviz, simOnly, vizOnly. Defaults to simviz
-	- redisPrefix: Optional. The prefix of the redis keys used by the simviz interface. Defaults to "sai2::interfaces"
 None of the corresponding config parameters can be changed at runtime.
 -->
 <simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf"
-	mode="simviz"
-	redisPrefix="sai2::interfaces">
+	mode="simviz">
 
 	<!-- 
 	The optional <simParameters> element contains the parameters for the simulation. Only one is allowed per simvizConfiguration element.
