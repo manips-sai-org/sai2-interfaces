@@ -226,7 +226,7 @@ void SimVizRedisInterface::resetInternal() {
 				->addToLog(_object_ui_torques.at(object_name), "ui_torques");
 		} else {  // setup for viz only
 			_redis_client->addToReceiveGroup(
-				"sensrs::" + object_name + "::object_pose",
+				"sensors::" + object_name + "::object_pose",
 				_object_pose.at(object_name), group_name);
 			_redis_client->addToReceiveGroup(
 				"sensors::" + object_name + "::object_velocity",

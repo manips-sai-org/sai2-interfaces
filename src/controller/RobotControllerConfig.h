@@ -294,8 +294,8 @@ struct MotionForceTaskConfig {
 	 *
 	 */
 	struct InterfaceConfig {
-		std::string min_goal_position = "[-0.5,-0.5,0.0]";
-		std::string max_goal_position = "[0.5,0.5,0.8]";
+		std::string min_goal_position = "[-0.7,-0.7,0.0]";
+		std::string max_goal_position = "[0.7,0.7,0.9]";
 		std::string min_desired_force = "-50";
 		std::string max_desired_force = "50";
 		std::string min_desired_moment = "-5";
