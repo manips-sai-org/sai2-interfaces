@@ -22,12 +22,12 @@ class Sai2InterfacesMotionControl extends HTMLElement {
 				if (this.min_goal_position) {
 					replacedHTML = replacedHTML.replaceAll('{{_min_goal_position_}}', this.min_goal_position);
 				} else {
-					replacedHTML = replacedHTML.replaceAll('{{_min_goal_position_}}', "[-0.5,-0.5,0.0]");
+					replacedHTML = replacedHTML.replaceAll('{{_min_goal_position_}}', "[-0.7,-0.7,0.0]");
 				}
 				if (this.max_goal_position) {
 					replacedHTML = replacedHTML.replaceAll('{{_max_goal_position_}}', this.max_goal_position);
 				} else {
-					replacedHTML = replacedHTML.replaceAll('{{_max_goal_position_}}', "[0.5,0.5,0.8]");
+					replacedHTML = replacedHTML.replaceAll('{{_max_goal_position_}}', "[0.7,0.7,0.9]");
 				}
 				
 				this.innerHTML = replacedHTML;
