@@ -26,6 +26,7 @@ SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
 	  _new_config(config),
 	  _pause(false),
 	  _reset(false),
+	  _can_reset(true),
 	  _enable_grav_comp(true),
 	  _logging_on(false),
 	  _reset_complete(false),
@@ -444,6 +445,7 @@ void SimVizRedisInterface::simLoopRun(
 			_sim_timer->stop();
 			_simulation->pause();
 		} else {
+			_can_reset = false;
 			if (_simulation->isPaused()) {
 				_simulation->unpause();
 				_sim_timer->reinitializeTimer();
@@ -475,6 +477,7 @@ void SimVizRedisInterface::simLoopRun(
 					_simulation->getObjectVelocity(object_name);
 			}
 			_force_sensor_data = _simulation->getAllForceSensorData();
+			_can_reset = true;
 		}
 	}
 	_sim_timer->stop();
@@ -487,6 +490,9 @@ void SimVizRedisInterface::simLoopRun(
 
 void SimVizRedisInterface::processSimParametrization() {
 	if (_reset) {
+		while (!_can_reset) {
+			this_thread::sleep_for(chrono::microseconds(50));
+		}
 		std::lock_guard<mutex> lock(_mutex_parametrization);
 		_config = _new_config;
 		_simulation->resetWorld(_config.world_file);
