@@ -110,8 +110,8 @@ class Sai2InterfacesRobotController extends HTMLElement {
 		if (this.hasAttribute('lowerJointLimits')) {
 			if (controlled_joint_indexes.length > 0) {
 				let lowerJointLimits = JSON.parse(this.getAttribute('lowerJointLimits'));
-				let controlled_lowerJointLimits = controlled_joint_indexes.map(index => lowerJointLimits[index]).join(', ');
-				optional_ui_joint_task += `lowerJointLimits="${controlled_lowerJointLimits}" `;
+				let controlled_lowerJointLimits = controlled_joint_indexes.map(index => lowerJointLimits[index]).join(',');
+				optional_ui_joint_task += `lowerJointLimits="[${controlled_lowerJointLimits}]" `;
 			} else {
 				optional_ui_joint_task += `lowerJointLimits="${this.getAttribute('lowerJointLimits')}" `;
 			}
@@ -119,8 +119,8 @@ class Sai2InterfacesRobotController extends HTMLElement {
 		if (this.hasAttribute('upperJointLimits')) {
 			if (controlled_joint_indexes.length > 0) {
 				let upperJointLimits = JSON.parse(this.getAttribute('upperJointLimits'));
-				let controlled_upperJointLimits = controlled_joint_indexes.map(index => upperJointLimits[index]).join(', ');
-				optional_ui_joint_task += `upperJointLimits="${controlled_upperJointLimits}" `;
+				let controlled_upperJointLimits = controlled_joint_indexes.map(index => upperJointLimits[index]).join(',');
+				optional_ui_joint_task += `upperJointLimits="[${controlled_upperJointLimits}]" `;
 			} else {
 				optional_ui_joint_task += `upperJointLimits="${this.getAttribute('upperJointLimits')}" `;
 			}

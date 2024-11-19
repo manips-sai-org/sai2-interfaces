@@ -129,6 +129,7 @@ private:
 	bool _logging_on;
 	bool _pause;
 	bool _reset;
+	bool _can_reset;
 	bool _enable_grav_comp;
 
 	bool _reset_complete;
