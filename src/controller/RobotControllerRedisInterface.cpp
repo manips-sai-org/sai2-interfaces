@@ -70,8 +70,8 @@ void RobotControllerRedisInterface::runRedisCommunication(
 	// timer.printInfoPostRun();
 
 	// let redis know the controller is no longer running for that robot
-	_redis_client->setBool("controllers::" + _config.robot_name + "::is_running",
-					   false);
+	_redis_client->setBool(
+		"controllers::" + _config.robot_name + "::is_running", false);
 }
 
 void RobotControllerRedisInterface::run(
@@ -112,7 +112,11 @@ void RobotControllerRedisInterface::run(
 		// update task models
 		_robot_model->setQ(_robot_q);
 		_robot_model->setDq(_robot_dq);
-		_robot_model->updateModel();
+		if (_config.get_mass_matrix_from_redis) {
+			_robot_model->updateModel(_robot_M);
+		} else {
+			_robot_model->updateModel();
+		}
 		_robot_controllers.at(_active_controller_name)
 			->updateControllerTaskModels();
 
@@ -162,6 +166,7 @@ void RobotControllerRedisInterface::initialize() {
 	_robot_q.setZero(_robot_model->dof());
 	_robot_dq.setZero(_robot_model->dof());
 	_robot_command_torques.setZero(_robot_model->dof());
+	_robot_M.setIdentity(_robot_model->dof(), _robot_model->dof());
 
 	_redis_client->addToSendGroup(
 		"commands::" + _config.robot_name + "::control_torques",
@@ -171,18 +176,25 @@ void RobotControllerRedisInterface::initialize() {
 		"sensors::" + _config.robot_name + "::joint_positions", _robot_q);
 	_redis_client->addToReceiveGroup(
 		"sensors::" + _config.robot_name + "::joint_velocities", _robot_dq);
+	if (_config.get_mass_matrix_from_redis) {
+		_redis_client->addToReceiveGroup(
+			"sensors::" + _config.robot_name + "::mass_matrix", _robot_M);
+	}
 	_redis_client->addToReceiveGroup(
 		"controllers::" + _config.robot_name + "::logging_on", _logging_on);
 
 	// let redis know the controller is running for that robot
-	_redis_client->setBool("controllers::" + _config.robot_name + "::is_running",
-					   true);
+	_redis_client->setBool(
+		"controllers::" + _config.robot_name + "::is_running", true);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	_redis_client->receiveAllFromGroup();
 	_robot_model->setQ(_robot_q);
-	_robot_model->updateModel();
-	_robot_M = _robot_model->M();
+	if (_config.get_mass_matrix_from_redis) {
+		_robot_model->updateModel(_robot_M);
+	} else {
+		_robot_model->updateModel();
+	}
 
 	for (const auto& pair : _config.controllers_configs) {
 		vector<shared_ptr<Sai2Primitives::TemplateTask>> ordered_tasks_list;
@@ -279,7 +291,11 @@ void RobotControllerRedisInterface::switchController(
 
 		_robot_model->setQ(_robot_q);
 		_robot_model->setDq(_robot_dq);
-		_robot_model->updateModel();
+		if (_config.get_mass_matrix_from_redis) {
+			_robot_model->updateModel(_robot_M);
+		} else {
+			_robot_model->updateModel();
+		}
 		_robot_controllers.at(_active_controller_name)->reinitializeTasks();
 
 		// reset inputs for new active controller
@@ -331,8 +347,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 			_config.logger_config.folder_name + '/' + _config.robot_name + '_' +
 			controller_name;
 		if (!std::filesystem::exists(current_controller_logger_folder)) {
-			std::filesystem::create_directory(
-				current_controller_logger_folder);
+			std::filesystem::create_directory(current_controller_logger_folder);
 		}
 
 		auto& task_configs = pair.second;

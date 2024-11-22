@@ -538,6 +538,11 @@ JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
 			xml->BoolAttribute("useDynamicDecoupling");
 	}
 
+	// mass matrix source
+	if (xml->Attribute("getMassMatrixFromRedis")) {
+		config.get_mass_matrix_from_redis = xml->BoolAttribute("getMassMatrixFromRedis");
+	}
+
 	// bie threshold
 	if (xml->Attribute("bieThreshold")) {
 		config.bie_threshold = xml->DoubleAttribute("bieThreshold");
