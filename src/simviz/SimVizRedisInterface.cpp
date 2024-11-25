@@ -86,6 +86,7 @@ void SimVizRedisInterface::resetInternal() {
 	_robot_control_torques.clear();
 	_robot_q.clear();
 	_robot_dq.clear();
+	_robot_M.clear();
 	_object_pose.clear();
 	_object_vel.clear();
 	_force_sensor_data.clear();
@@ -106,6 +107,10 @@ void SimVizRedisInterface::resetInternal() {
 		const int robot_dof = _simulation->dof(robot_name);
 		_robot_q[robot_name] = _simulation->getJointPositions(robot_name);
 		_robot_dq[robot_name] = _simulation->getJointVelocities(robot_name);
+		if (_config.publish_mass_matrices_to_redis) {
+			_robot_M[robot_name] =
+				_simulation->computeAndGetMassMatrix(robot_name);
+		}
 
 		// logger for all modes
 		_loggers[robot_name] = std::make_unique<Sai2Common::Logger>(
@@ -115,6 +120,10 @@ void SimVizRedisInterface::resetInternal() {
 			->addToLog(_robot_q.at(robot_name), "joint_positions");
 		_loggers.at(robot_name)
 			->addToLog(_robot_dq.at(robot_name), "joint_velocities");
+		if (_config.publish_mass_matrices_to_redis) {
+			_loggers.at(robot_name)
+				->addToLog(_robot_M.at(robot_name), "mass_matrix");
+		}
 
 		// model specific parameters
 		// if it does not exists yet, create it with the default and global
@@ -157,6 +166,11 @@ void SimVizRedisInterface::resetInternal() {
 			_redis_client->addToSendGroup(
 				"sensors::" + robot_name + "::joint_velocities",
 				_robot_dq.at(robot_name), group_name);
+			if (_config.publish_mass_matrices_to_redis) {
+				_redis_client->addToSendGroup(
+					"sensors::" + robot_name + "::mass_matrix",
+					_robot_M.at(robot_name), group_name);
+			}
 
 			// logger
 			_loggers.at(robot_name)
@@ -469,6 +483,10 @@ void SimVizRedisInterface::simLoopRun(
 					_simulation->getJointPositions(robot_name);
 				_robot_dq.at(robot_name) =
 					_simulation->getJointVelocities(robot_name);
+				if (_config.publish_mass_matrices_to_redis) {
+					_robot_M.at(robot_name) =
+						_simulation->computeAndGetMassMatrix(robot_name);
+				}
 			}
 			for (auto& object_name : _simulation->getObjectNames()) {
 				_object_pose.at(object_name) =
