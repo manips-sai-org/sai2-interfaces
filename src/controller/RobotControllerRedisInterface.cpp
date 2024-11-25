@@ -68,6 +68,10 @@ void RobotControllerRedisInterface::runRedisCommunication(
 	}
 	timer.stop();
 	// timer.printInfoPostRun();
+
+	// let redis know the controller is no longer running for that robot
+	_redis_client->setBool("controllers::" + _config.robot_name + "::is_running",
+					   false);
 }
 
 void RobotControllerRedisInterface::run(
@@ -145,6 +149,16 @@ void RobotControllerRedisInterface::initialize() {
 	_robot_model->setTRobotBase(_config.robot_base_in_world);
 	_robot_model->setWorldGravity(_config.world_gravity);
 
+	std::string joint_names_str = "[";
+	for (const auto& joint_name : _robot_model->jointNames()) {
+		joint_names_str += joint_name + ",";
+	}
+	joint_names_str.pop_back();
+	joint_names_str += "]";
+
+	_redis_client->set("controllers::" + _config.robot_name + "::joint_names",
+					   joint_names_str);
+
 	_robot_q.setZero(_robot_model->dof());
 	_robot_dq.setZero(_robot_model->dof());
 	_robot_command_torques.setZero(_robot_model->dof());
@@ -160,7 +174,11 @@ void RobotControllerRedisInterface::initialize() {
 	_redis_client->addToReceiveGroup(
 		"controllers::" + _config.robot_name + "::logging_on", _logging_on);
 
-	std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	// let redis know the controller is running for that robot
+	_redis_client->setBool("controllers::" + _config.robot_name + "::is_running",
+					   true);
+
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	_redis_client->receiveAllFromGroup();
 	_robot_model->setQ(_robot_q);
 	_robot_model->updateModel();
