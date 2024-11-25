@@ -53,7 +53,15 @@ void RobotControllerRedisInterface::runRedisCommunication(
 	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
 		{
+			lock_guard<mutex> lock(_control_torques_mutex);
+			// WARNING: need to use the assignment operator << here to keep the
+			// same memory address for the redis communication that references
+			// this by pointer
+			_robot_command_torques << _robot_command_torques_local;
+		}
+		{
 			lock_guard<mutex> lock(_switching_controller_mutex);
+
 			if (_reset_redis_inputs) {
 				_redis_client->sendAllFromGroup(
 					{"default", reset_inputs_redis_group});
@@ -64,6 +72,12 @@ void RobotControllerRedisInterface::runRedisCommunication(
 
 			_redis_client->receiveAllFromGroup(
 				std::vector<std::string>{"default", _active_controller_name});
+			_robot_q_local = _robot_q;
+			_robot_dq_local = _robot_dq;
+			if(_config.get_mass_matrix_from_redis) {
+				std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
+				_robot_M_local = _robot_M;
+			}
 		}
 	}
 	timer.stop();
@@ -110,23 +124,26 @@ void RobotControllerRedisInterface::run(
 		}
 
 		// update task models
-		_robot_model->setQ(_robot_q);
-		_robot_model->setDq(_robot_dq);
+		_robot_model->setQ(_robot_q_local);
+		_robot_model->setDq(_robot_dq_local);
 		if (_config.get_mass_matrix_from_redis) {
-			_robot_model->updateModel(_robot_M);
+			std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
+			_robot_model->updateModel(_robot_M_local);
 		} else {
 			_robot_model->updateModel();
+			_robot_M_local = _robot_model->M();
+
 		}
 		_robot_controllers.at(_active_controller_name)
 			->updateControllerTaskModels();
 
 		// compute torques
-		// WARNING: need to use the assignment operator << here to keep the same
-		// memory address for the redis communication that references this by
-		// pointer
-		_robot_command_torques
-			<< _robot_controllers.at(_active_controller_name)
-				   ->computeControlTorques();
+		{
+			lock_guard<mutex> lock(_control_torques_mutex);
+			_robot_command_torques_local =
+				_robot_controllers.at(_active_controller_name)
+					->computeControlTorques();
+		}
 	}
 	timer.stop();
 
@@ -164,9 +181,13 @@ void RobotControllerRedisInterface::initialize() {
 					   joint_names_str);
 
 	_robot_q.setZero(_robot_model->dof());
+	_robot_q_local.setZero(_robot_model->dof());
 	_robot_dq.setZero(_robot_model->dof());
+	_robot_dq_local.setZero(_robot_model->dof());
 	_robot_command_torques.setZero(_robot_model->dof());
+	_robot_command_torques_local.setZero(_robot_model->dof());
 	_robot_M.setIdentity(_robot_model->dof(), _robot_model->dof());
+	_robot_M_local.setIdentity(_robot_model->dof(), _robot_model->dof());
 
 	_redis_client->addToSendGroup(
 		"commands::" + _config.robot_name + "::control_torques",
@@ -189,11 +210,14 @@ void RobotControllerRedisInterface::initialize() {
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	_redis_client->receiveAllFromGroup();
-	_robot_model->setQ(_robot_q);
+	_robot_q_local = _robot_q;
+	_robot_model->setQ(_robot_q_local);
 	if (_config.get_mass_matrix_from_redis) {
-		_robot_model->updateModel(_robot_M);
+		std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
+		_robot_model->updateModel(_robot_M_local);
 	} else {
 		_robot_model->updateModel();
+		_robot_M_local = _robot_model->M();
 	}
 
 	for (const auto& pair : _config.controllers_configs) {
@@ -289,12 +313,14 @@ void RobotControllerRedisInterface::switchController(
 		_active_controller_name = controller_name;
 		_is_active_controller.at(_active_controller_name) = true;
 
-		_robot_model->setQ(_robot_q);
-		_robot_model->setDq(_robot_dq);
+		_robot_model->setQ(_robot_q_local);
+		_robot_model->setDq(_robot_dq_local);
 		if (_config.get_mass_matrix_from_redis) {
-			_robot_model->updateModel(_robot_M);
+			std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
+			_robot_model->updateModel(_robot_M_local);
 		} else {
 			_robot_model->updateModel();
+			_robot_M_local = _robot_model->M();
 		}
 		_robot_controllers.at(_active_controller_name)->reinitializeTasks();
 
@@ -331,10 +357,10 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 			"_control",
 		_config.logger_config.add_timestamp_to_filename);
 
-	_robot_logger->addToLog(_robot_q, "joint_positions");
-	_robot_logger->addToLog(_robot_dq, "joint_velocities");
-	_robot_logger->addToLog(_robot_command_torques, "control_torques");
-	_robot_logger->addToLog(_robot_M, "mass_matrix");
+	_robot_logger->addToLog(_robot_q_local, "joint_positions");
+	_robot_logger->addToLog(_robot_dq_local, "joint_velocities");
+	_robot_logger->addToLog(_robot_command_torques_local, "control_torques");
+	_robot_logger->addToLog(_robot_M_local, "mass_matrix");
 
 	for (auto& pair : _config.controllers_configs) {
 		const string& controller_name = pair.first;
