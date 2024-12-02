@@ -58,6 +58,12 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 		}
 	}
 
+	// Extract the flag to publish the mass matrix to redis
+	if (simviz_config_xml->Attribute("publishMassMatrixToRedis")) {
+		config.publish_mass_matrices_to_redis =
+			simviz_config_xml->BoolAttribute("publishMassMatrixToRedis");
+	}
+
 	// Extract simParameters
 	tinyxml2::XMLElement* simParams =
 		simviz_config_xml->FirstChildElement("simParameters");

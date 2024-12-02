@@ -118,6 +118,9 @@ struct SimVizConfig {
 	/// @brief The speedup factor of the simulation
 	double speedup_factor = 1.0;
 
+	/// @brief Whether to publish the mass matrices of the robots to redis
+	bool publish_mass_matrices_to_redis = false;
+
 	/// @brief The dynamic and rendering parameters for each robot or object in
 	/// the simulation.
 	std::map<std::string, DynamicAndRenderingParams>

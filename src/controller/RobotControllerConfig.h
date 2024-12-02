@@ -386,6 +386,13 @@ struct RobotControllerConfig {
 	/// corresponding attribute of the <robotControlConfiguration> element
 	double control_frequency = 1000.0;
 
+	/// @brief Flag to get the mass matrix from redis, parsed from the
+	/// corresponding attribute in the <robotControlConfiguration> element
+	/// If true, the mass matrix is read at runtime from redis, as an input to
+	/// the controller, similarly to the joint states and velocities. If set to
+	/// false, the mass matrix is computed from the urdf mass properties.
+	bool get_mass_matrix_from_redis = false;
+
 	/// @brief Config for the logger attached to the
 	/// RobotControllerRedisInterface
 	LoggerConfig logger_config =
