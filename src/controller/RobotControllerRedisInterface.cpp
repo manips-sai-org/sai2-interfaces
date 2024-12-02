@@ -74,7 +74,7 @@ void RobotControllerRedisInterface::runRedisCommunication(
 				std::vector<std::string>{"default", _active_controller_name});
 			_robot_q_local = _robot_q;
 			_robot_dq_local = _robot_dq;
-			if(_config.get_mass_matrix_from_redis) {
+			if (_config.get_mass_matrix_from_redis) {
 				std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
 				_robot_M_local = _robot_M;
 			}
@@ -132,7 +132,6 @@ void RobotControllerRedisInterface::run(
 		} else {
 			_robot_model->updateModel();
 			_robot_M_local = _robot_model->M();
-
 		}
 		_robot_controllers.at(_active_controller_name)
 			->updateControllerTaskModels();
