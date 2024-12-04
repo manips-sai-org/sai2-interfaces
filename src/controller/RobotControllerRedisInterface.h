@@ -2,6 +2,7 @@
 #define SAI2_INTERFACES_ROBOT_CONTROLLER_REDIS_INTERFACE_H
 
 #include <string>
+#include <mutex>
 
 #include "RobotControllerConfig.h"
 #include "Sai2Common.h"
@@ -222,7 +223,7 @@ private:
 		_controller_task_monitoring_data;
 
 	bool _reset_redis_inputs;
-	mutex _switching_controller_mutex;
+	std::mutex _switching_controller_mutex;
 
 	std::map<std::string,
 			 std::map<std::string, std::unique_ptr<Sai2Common::Logger>>>
