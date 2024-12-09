@@ -168,7 +168,7 @@ void SimVizRedisInterface::resetInternal() {
 				_robot_dq.at(robot_name), group_name);
 			if (_config.publish_mass_matrices_to_redis) {
 				_redis_client->addToSendGroup(
-					"sensors::" + robot_name + "::mass_matrix",
+					"sensors::" + robot_name + "::model::mass_matrix",
 					_robot_M.at(robot_name), group_name);
 			}
 

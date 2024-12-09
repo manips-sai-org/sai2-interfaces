@@ -198,7 +198,7 @@ void RobotControllerRedisInterface::initialize() {
 		"sensors::" + _config.robot_name + "::joint_velocities", _robot_dq);
 	if (_config.get_mass_matrix_from_redis) {
 		_redis_client->addToReceiveGroup(
-			"sensors::" + _config.robot_name + "::mass_matrix", _robot_M);
+			"sensors::" + _config.robot_name + "::model::mass_matrix", _robot_M);
 	}
 	_redis_client->addToReceiveGroup(
 		"controllers::" + _config.robot_name + "::logging_on", _logging_on);
