@@ -409,6 +409,13 @@ std::vector<RobotControllerConfig> RobotControllerConfigParser::parseConfig(
 			configs.back().control_frequency =
 				robotControlConfiguration->DoubleAttribute("controlFrequency");
 		}
+
+		// get whether to get the mass matrix from redis
+		if (robotControlConfiguration->Attribute("getMassMatrixFromRedis")) {
+			configs.back().get_mass_matrix_from_redis =
+				robotControlConfiguration->BoolAttribute(
+					"getMassMatrixFromRedis");
+		}
 	}
 
 	return configs;

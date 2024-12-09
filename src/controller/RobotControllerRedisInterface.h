@@ -212,10 +212,10 @@ private:
 
 	std::unique_ptr<Sai2Common::RedisClient> _redis_client;
 
-	Eigen::VectorXd _robot_q;
-	Eigen::VectorXd _robot_dq;
-	Eigen::VectorXd _robot_command_torques;
-	Eigen::MatrixXd _robot_M;
+	Eigen::VectorXd _robot_q, _robot_q_local;
+	Eigen::VectorXd _robot_dq, _robot_dq_local;
+	Eigen::VectorXd _robot_command_torques, _robot_command_torques_local;
+	Eigen::MatrixXd _robot_M, _robot_M_local;
 
 	std::map<std::string, std::map<std::string, TaskInputVariant>>
 		_controller_inputs;
@@ -224,6 +224,8 @@ private:
 
 	bool _reset_redis_inputs;
 	std::mutex _switching_controller_mutex;
+	std::mutex _control_torques_mutex;
+	std::mutex _mass_matrix_mutex;
 
 	std::map<std::string,
 			 std::map<std::string, std::unique_ptr<Sai2Common::Logger>>>

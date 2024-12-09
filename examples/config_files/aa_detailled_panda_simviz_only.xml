@@ -17,10 +17,12 @@ the virtual world. Only one is allowed per configuration file.
 Its attributes are:
 	- worldFilePath: Required. The path to the world file to be used
 	- mode: Optional. The mode of the simulation. Possible values are simviz, simOnly, vizOnly. Defaults to simviz
+	- publishMassMatrixToRedis: Optional. Whether to publish the mass matrix to redis for all simulated robots. Defaults to false.
 None of the corresponding config parameters can be changed at runtime.
 -->
 <simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf"
-	mode="simviz">
+	mode="simviz"
+	publishMassMatrixToRedis="false">
 
 	<!-- 
 	The optional <simParameters> element contains the parameters for the simulation. Only one is allowed per simvizConfiguration element.

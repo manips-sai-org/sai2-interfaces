@@ -53,7 +53,15 @@ void RobotControllerRedisInterface::runRedisCommunication(
 	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
 		{
+			lock_guard<mutex> lock(_control_torques_mutex);
+			// WARNING: need to use the assignment operator << here to keep the
+			// same memory address for the redis communication that references
+			// this by pointer
+			_robot_command_torques << _robot_command_torques_local;
+		}
+		{
 			lock_guard<mutex> lock(_switching_controller_mutex);
+
 			if (_reset_redis_inputs) {
 				_redis_client->sendAllFromGroup(
 					{"default", reset_inputs_redis_group});
@@ -64,14 +72,20 @@ void RobotControllerRedisInterface::runRedisCommunication(
 
 			_redis_client->receiveAllFromGroup(
 				std::vector<std::string>{"default", _active_controller_name});
+			_robot_q_local = _robot_q;
+			_robot_dq_local = _robot_dq;
+			if (_config.get_mass_matrix_from_redis) {
+				std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
+				_robot_M_local = _robot_M;
+			}
 		}
 	}
 	timer.stop();
 	// timer.printInfoPostRun();
 
 	// let redis know the controller is no longer running for that robot
-	_redis_client->setBool("controllers::" + _config.robot_name + "::is_running",
-					   false);
+	_redis_client->setBool(
+		"controllers::" + _config.robot_name + "::is_running", false);
 }
 
 void RobotControllerRedisInterface::run(
@@ -110,19 +124,25 @@ void RobotControllerRedisInterface::run(
 		}
 
 		// update task models
-		_robot_model->setQ(_robot_q);
-		_robot_model->setDq(_robot_dq);
-		_robot_model->updateModel();
+		_robot_model->setQ(_robot_q_local);
+		_robot_model->setDq(_robot_dq_local);
+		if (_config.get_mass_matrix_from_redis) {
+			std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
+			_robot_model->updateModel(_robot_M_local);
+		} else {
+			_robot_model->updateModel();
+			_robot_M_local = _robot_model->M();
+		}
 		_robot_controllers.at(_active_controller_name)
 			->updateControllerTaskModels();
 
 		// compute torques
-		// WARNING: need to use the assignment operator << here to keep the same
-		// memory address for the redis communication that references this by
-		// pointer
-		_robot_command_torques
-			<< _robot_controllers.at(_active_controller_name)
-				   ->computeControlTorques();
+		{
+			lock_guard<mutex> lock(_control_torques_mutex);
+			_robot_command_torques_local =
+				_robot_controllers.at(_active_controller_name)
+					->computeControlTorques();
+		}
 	}
 	timer.stop();
 
@@ -160,8 +180,13 @@ void RobotControllerRedisInterface::initialize() {
 					   joint_names_str);
 
 	_robot_q.setZero(_robot_model->dof());
+	_robot_q_local.setZero(_robot_model->dof());
 	_robot_dq.setZero(_robot_model->dof());
+	_robot_dq_local.setZero(_robot_model->dof());
 	_robot_command_torques.setZero(_robot_model->dof());
+	_robot_command_torques_local.setZero(_robot_model->dof());
+	_robot_M.setIdentity(_robot_model->dof(), _robot_model->dof());
+	_robot_M_local.setIdentity(_robot_model->dof(), _robot_model->dof());
 
 	_redis_client->addToSendGroup(
 		"commands::" + _config.robot_name + "::control_torques",
@@ -171,18 +196,28 @@ void RobotControllerRedisInterface::initialize() {
 		"sensors::" + _config.robot_name + "::joint_positions", _robot_q);
 	_redis_client->addToReceiveGroup(
 		"sensors::" + _config.robot_name + "::joint_velocities", _robot_dq);
+	if (_config.get_mass_matrix_from_redis) {
+		_redis_client->addToReceiveGroup(
+			"sensors::" + _config.robot_name + "::model::mass_matrix", _robot_M);
+	}
 	_redis_client->addToReceiveGroup(
 		"controllers::" + _config.robot_name + "::logging_on", _logging_on);
 
 	// let redis know the controller is running for that robot
-	_redis_client->setBool("controllers::" + _config.robot_name + "::is_running",
-					   true);
+	_redis_client->setBool(
+		"controllers::" + _config.robot_name + "::is_running", true);
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	_redis_client->receiveAllFromGroup();
-	_robot_model->setQ(_robot_q);
-	_robot_model->updateModel();
-	_robot_M = _robot_model->M();
+	_robot_q_local = _robot_q;
+	_robot_model->setQ(_robot_q_local);
+	if (_config.get_mass_matrix_from_redis) {
+		std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
+		_robot_model->updateModel(_robot_M_local);
+	} else {
+		_robot_model->updateModel();
+		_robot_M_local = _robot_model->M();
+	}
 
 	for (const auto& pair : _config.controllers_configs) {
 		vector<shared_ptr<Sai2Primitives::TemplateTask>> ordered_tasks_list;
@@ -277,9 +312,15 @@ void RobotControllerRedisInterface::switchController(
 		_active_controller_name = controller_name;
 		_is_active_controller.at(_active_controller_name) = true;
 
-		_robot_model->setQ(_robot_q);
-		_robot_model->setDq(_robot_dq);
-		_robot_model->updateModel();
+		_robot_model->setQ(_robot_q_local);
+		_robot_model->setDq(_robot_dq_local);
+		if (_config.get_mass_matrix_from_redis) {
+			std::lock_guard<std::mutex> lock(_mass_matrix_mutex);
+			_robot_model->updateModel(_robot_M_local);
+		} else {
+			_robot_model->updateModel();
+			_robot_M_local = _robot_model->M();
+		}
 		_robot_controllers.at(_active_controller_name)->reinitializeTasks();
 
 		// reset inputs for new active controller
@@ -315,10 +356,10 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 			"_control",
 		_config.logger_config.add_timestamp_to_filename);
 
-	_robot_logger->addToLog(_robot_q, "joint_positions");
-	_robot_logger->addToLog(_robot_dq, "joint_velocities");
-	_robot_logger->addToLog(_robot_command_torques, "control_torques");
-	_robot_logger->addToLog(_robot_M, "mass_matrix");
+	_robot_logger->addToLog(_robot_q_local, "joint_positions");
+	_robot_logger->addToLog(_robot_dq_local, "joint_velocities");
+	_robot_logger->addToLog(_robot_command_torques_local, "control_torques");
+	_robot_logger->addToLog(_robot_M_local, "mass_matrix");
 
 	for (auto& pair : _config.controllers_configs) {
 		const string& controller_name = pair.first;
@@ -331,8 +372,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 			_config.logger_config.folder_name + '/' + _config.robot_name + '_' +
 			controller_name;
 		if (!std::filesystem::exists(current_controller_logger_folder)) {
-			std::filesystem::create_directory(
-				current_controller_logger_folder);
+			std::filesystem::create_directory(current_controller_logger_folder);
 		}
 
 		auto& task_configs = pair.second;

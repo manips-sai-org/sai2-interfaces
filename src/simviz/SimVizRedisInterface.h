@@ -113,6 +113,7 @@ private:
 	std::map<std::string, Eigen::VectorXd> _robot_control_torques;
 	std::map<std::string, Eigen::VectorXd> _robot_q;
 	std::map<std::string, Eigen::VectorXd> _robot_dq;
+	std::map<std::string, Eigen::MatrixXd> _robot_M;
 	std::map<std::string, Eigen::Matrix4d> _object_pose;
 	std::map<std::string, Eigen::Vector6d> _object_vel;
 
