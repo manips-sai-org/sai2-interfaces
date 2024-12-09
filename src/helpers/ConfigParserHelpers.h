@@ -1,5 +1,5 @@
-#ifndef SAI2_INTERFACES_CONFIG_PARSER_HELPERS_H
-#define SAI2_INTERFACES_CONFIG_PARSER_HELPERS_H
+#ifndef SAI_INTERFACES_CONFIG_PARSER_HELPERS_H
+#define SAI_INTERFACES_CONFIG_PARSER_HELPERS_H
 
 #include <tinyxml2.h>
 
@@ -11,7 +11,7 @@
 
 // \cond
 // for internal use only
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 namespace ConfigParserHelpers {
 Eigen::Quaterniond rpyToQuaternion(double roll, double pitch, double yaw);
 std::vector<std::string> splitString(const std::string& str,
@@ -28,8 +28,8 @@ LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger,
 RedisConfig parseRedisConfig(tinyxml2::XMLElement* redis);
 
 }  // namespace ConfigParserHelpers
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces
 
 // \endcond
 
-#endif	// SAI2_INTERFACES_CONFIG_PARSER_HELPERS_H
+#endif	// SAI_INTERFACES_CONFIG_PARSER_HELPERS_H

@@ -1,6 +1,6 @@
-The `sai2-interfaces-axis-setter` Element
+The `sai-interfaces-axis-setter` Element
 =========================================
-The `sai2-interfaces-axis-setter` element enables the setting of a unit axis (3D vector with unit norm)
+The `sai-interfaces-axis-setter` element enables the setting of a unit axis (3D vector with unit norm)
 
 ![](./init.png)
 
@@ -12,8 +12,8 @@ The top row shows the value in the redis server (if the key does not exist yet i
 ## Usage
 
 ```
-<sai2-interfaces-axis-setter key="...">
-</sai2-interfaces-axis-setter>
+<sai-interfaces-axis-setter key="...">
+</sai-interfaces-axis-setter>
 ```
 
 ## Attributes
@@ -27,13 +27,13 @@ does not exist, the element will not show.
 We provide an [example HTML file](./axis_setter.html) containing the following html code:
 
 ```
-<sai2-interfaces-axis-setter key="sai2::interfaces::tutorial::unit_axis" display="3D Axis" />
+<sai-interfaces-axis-setter key="sai::interfaces::tutorial::unit_axis" display="3D Axis" />
 ```
 
 Run the server:
 
 ```
-~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/axis_setter/axis_setter.html 
+~/sai/core/sai-interfaces$ python3 ui/server.py docs/ui_elements_details/axis_setter/axis_setter.html 
 ```
 
 Open a browser and go to `localhost:8000` .
@@ -49,9 +49,9 @@ Then press the update button to normalize the vector and set it to the redis dat
 
 ![](./post-change.png)
 
-The axis will be set to the key `sai2::interfaces::tutorial::unit_axis` that can be checked in the redis database with:
+The axis will be set to the key `sai::interfaces::tutorial::unit_axis` that can be checked in the redis database with:
 
 ```
 ~$ redis-cli
-127.0.0.1:6379> get sai2::interfaces::tutorial::unit_axis
+127.0.0.1:6379> get sai::interfaces::tutorial::unit_axis
 ```

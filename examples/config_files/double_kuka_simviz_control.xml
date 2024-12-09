@@ -12,7 +12,7 @@
 </simvizConfiguration>
 
 <robotControlConfiguration robotName="Kuka1"
-	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/iiwa7/kuka_iiwa.urdf">
+	robotModelFile="${SAI_MODEL_URDF_FOLDER}/iiwa7/kuka_iiwa.urdf">
 	<baseFrame xyz="0.0 -0.3 0.0"
 		rpy="0 0 0" />
 
@@ -45,7 +45,7 @@
 </robotControlConfiguration>
 
 <robotControlConfiguration robotName="Kuka2"
-	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/iiwa7/kuka_iiwa.urdf">
+	robotModelFile="${SAI_MODEL_URDF_FOLDER}/iiwa7/kuka_iiwa.urdf">
 	<baseFrame xyz="0.0 0.3 0.0"
 		rpy="0 0 0" />
 

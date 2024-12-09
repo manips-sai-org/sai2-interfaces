@@ -6,7 +6,7 @@ template.innerHTML = `
 </div>
 `;
 
-class Sai2InterfacesPlotButton extends HTMLElement {
+class SaiInterfacesPlotButton extends HTMLElement {
 	constructor() {
 		super();
 		this.template = template;
@@ -73,4 +73,4 @@ class Sai2InterfacesPlotButton extends HTMLElement {
 }
 
 // Define the custom element
-customElements.define('sai2-interfaces-plot-button', Sai2InterfacesPlotButton);
+customElements.define('sai-interfaces-plot-button', SaiInterfacesPlotButton);

@@ -15,7 +15,7 @@
 
 
 <robotControlConfiguration robotName="HRP4"
-	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/HRP4C/HRP4C_custom_v1.urdf">
+	robotModelFile="${SAI_MODEL_URDF_FOLDER}/HRP4C/HRP4C_custom_v1.urdf">
 	<baseFrame xyz="0 0 0.7"
 		rpy="0 0 0" />
 	<worldGravity xyz="0 0 -9.81" />

@@ -2,9 +2,9 @@ import redis
 import numpy as np 
 import time
 
-SCALAR_KEY = 'sai2::interfaces::tutorial::scalar_key'
-VECTOR_KEY = 'sai2::interfaces::tutorial::vector_key'
-MATRIX_KEY = 'sai2::interfaces::tutorial::matrix_key'
+SCALAR_KEY = 'sai::interfaces::tutorial::scalar_key'
+VECTOR_KEY = 'sai::interfaces::tutorial::vector_key'
+MATRIX_KEY = 'sai::interfaces::tutorial::matrix_key'
 
 r = redis.Redis()
 

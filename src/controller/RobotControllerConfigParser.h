@@ -1,11 +1,11 @@
-#ifndef SAI2_INTERFACES_ROBOT_CONTROLLER_CONFIG_PARSER_H
-#define SAI2_INTERFACES_ROBOT_CONTROLLER_CONFIG_PARSER_H
+#ifndef SAI_INTERFACES_ROBOT_CONTROLLER_CONFIG_PARSER_H
+#define SAI_INTERFACES_ROBOT_CONTROLLER_CONFIG_PARSER_H
 
 #include <tinyxml2.h>
 
 #include "RobotControllerConfig.h"
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 /**
  * @brief Class to parse a robot controller config file and return a
@@ -41,6 +41,6 @@ private:
 	std::string _config_file_name;
 };
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces
 
-#endif	// SAI2_INTERFACES_ROBOT_CONTROLLER_CONFIG_PARSER_H
+#endif	// SAI_INTERFACES_ROBOT_CONTROLLER_CONFIG_PARSER_H

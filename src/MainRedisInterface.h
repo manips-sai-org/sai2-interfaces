@@ -1,12 +1,12 @@
-#ifndef SAI2_INTERFACES_MAIN_REDIS_INTERFACE_H
-#define SAI2_INTERFACES_MAIN_REDIS_INTERFACE_H
+#ifndef SAI_INTERFACES_MAIN_REDIS_INTERFACE_H
+#define SAI_INTERFACES_MAIN_REDIS_INTERFACE_H
 
 #include <string>
 
 #include "controller/RobotControllerRedisInterface.h"
 #include "simviz/SimVizRedisInterface.h"
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 /**
  * @brief Main class to run for launching a simulation and controllers from the
@@ -62,6 +62,6 @@ private:
 	std::string _config_file_name;
 };
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces
 
-#endif	// SAI2_INTERFACES_MAIN_REDIS_INTERFACE_H
+#endif	// SAI_INTERFACES_MAIN_REDIS_INTERFACE_H

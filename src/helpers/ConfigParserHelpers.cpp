@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 namespace ConfigParserHelpers {
 using namespace std;
 using namespace Eigen;
@@ -137,4 +137,4 @@ RedisConfig parseRedisConfig(tinyxml2::XMLElement* redis) {
 }
 
 }  // namespace ConfigParserHelpers
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces

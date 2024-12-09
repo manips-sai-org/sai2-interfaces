@@ -1,6 +1,6 @@
-The `sai2-interfaces-plot` Element
+The `sai-interfaces-plot` Element
 ====================================
-The `sai2-interfaces-plot` element allows you to plot scalar-valued and 
+The `sai-interfaces-plot` element allows you to plot scalar-valued and 
 vector-valued Redis keys against time. 
 
 ![plot initial](./plot1.png)
@@ -27,8 +27,8 @@ image. That's pretty much it!
 
 ## Usage
 ```
-<sai2-interfaces-plot>
-</sai2-interfaces-plot>
+<sai-interfaces-plot>
+</sai-interfaces-plot>
 ```
 
 ## Attributes
@@ -38,17 +38,17 @@ There are no attributes for this element.
 
 Let's start by first running the provided [writekeys.py](./writekeys.py) script:
 ```
-~/sai2/core/sai2-interfaces$ python3 docs/ui_elements_details/plot/writekeys.py 
+~/sai/core/sai-interfaces$ python3 docs/ui_elements_details/plot/writekeys.py 
 Writing keys...
 ```
 
 Now let's start up the interface:
 ```
-~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/plot/plot.html 
+~/sai/core/sai-interfaces$ python3 ui/server.py docs/ui_elements_details/plot/plot.html 
 ```
 
-Then, select the keys `sai2::interfaces::tutorial::scalar_key` and 
-`sai2::interfaces::tutorial::vector_key` and a rate of `0.1`. Hit "Start" to 
+Then, select the keys `sai::interfaces::tutorial::scalar_key` and 
+`sai::interfaces::tutorial::vector_key` and a rate of `0.1`. Hit "Start" to 
 begin plotting, and click "Stop" when done.
 
 ![plot after](./plot2.png)

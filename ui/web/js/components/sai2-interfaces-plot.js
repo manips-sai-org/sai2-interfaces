@@ -3,8 +3,8 @@
  * Currently only supports plotting a scalar key as x and either
  * scalar or vector y.
  * <br>
- * Example usage: <pre>&lt;sai2-interface-plot/&gt;</pre>
- * @module ./module/sai2-interface-plot
+ * Example usage: <pre>&lt;sai-interface-plot/&gt;</pre>
+ * @module ./module/sai-interface-plot
  */
 
 import { get_redis_all_keys } from '../redis.js';
@@ -12,24 +12,24 @@ import { get_redis_all_keys } from '../redis.js';
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
-	.sai2-interface-plot-top {
+	.sai-interface-plot-top {
 		display: flex;
 		flex-direction: column;
 		height: 100%;
 	}
 
-	.sai2-interface-plot-top .metadata {
+	.sai-interface-plot-top .metadata {
 		display: flex;
 		align-items: baseline;
 		flex-wrap: wrap;
 		justify-content: space-around;
 	}
 
-	.sai2-interface-plot-top .plot-div {
+	.sai-interface-plot-top .plot-div {
 		flex: 1;
 	}
 </style>
-<div class="sai2-interface-plot-top">
+<div class="sai-interface-plot-top">
 	<div class="metadata">
 		<select class="x_key chosen_select" data-placeholder="Select x key..." disabled>
 			<option value="Time" selected>Time</option>
@@ -47,7 +47,7 @@ template.innerHTML = `
 `;
 
 
-customElements.define('sai2-interfaces-plot', class extends HTMLElement {
+customElements.define('sai-interfaces-plot', class extends HTMLElement {
 	constructor() {
 		super();
 		this.template = template;

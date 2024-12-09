@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(SAI2-INTERFACES)
+project(SAI-INTERFACES)
 set(PROJECT_VERSION 0.1.0)
 
 option(BUILD_EXAMPLES "Build examples" ON)
@@ -26,34 +26,34 @@ include_directories(${CHAI3D_INCLUDE_DIRS})
 add_definitions(${CHAI3D_DEFINITIONS})
 link_directories(${CHAI3D_LIBRARY_DIRS})
 
-# * SAI2-COMMON
-find_package(SAI2-COMMON REQUIRED)
-include_directories(${SAI2-COMMON_INCLUDE_DIRS})
+# * SAI-COMMON
+find_package(SAI-COMMON REQUIRED)
+include_directories(${SAI-COMMON_INCLUDE_DIRS})
 
-# * SAI2-URDF
-find_package(SAI2-URDF REQUIRED)
-include_directories(${SAI2-URDF_INCLUDE_DIRS})
+# * SAI-URDF
+find_package(SAI-URDF REQUIRED)
+include_directories(${SAI-URDF_INCLUDE_DIRS})
 
-# * SAI2-MODEL
-find_package(SAI2-MODEL REQUIRED)
-include_directories(${SAI2-MODEL_INCLUDE_DIRS})
+# * SAI-MODEL
+find_package(SAI-MODEL REQUIRED)
+include_directories(${SAI-MODEL_INCLUDE_DIRS})
 
-# * SAI2-SIMULATION
-find_package(SAI2-SIMULATION REQUIRED)
-include_directories(${SAI2-SIMULATION_INCLUDE_DIRS})
-add_definitions(${SAI2-SIMULATION_DEFINITIONS})
+# * SAI-SIMULATION
+find_package(SAI-SIMULATION REQUIRED)
+include_directories(${SAI-SIMULATION_INCLUDE_DIRS})
+add_definitions(${SAI-SIMULATION_DEFINITIONS})
 
-# * SAI2-GRAPHICS
-find_package(SAI2-GRAPHICS REQUIRED)
-include_directories(${SAI2-GRAPHICS_INCLUDE_DIRS})
-add_definitions(${SAI2-GRAPHICS_DEFINITIONS})
+# * SAI-GRAPHICS
+find_package(SAI-GRAPHICS REQUIRED)
+include_directories(${SAI-GRAPHICS_INCLUDE_DIRS})
+add_definitions(${SAI-GRAPHICS_DEFINITIONS})
 
-# * SAI2-PRIMITIVES
-find_package(SAI2-PRIMITIVES REQUIRED)
-include_directories(${SAI2-PRIMITIVES_INCLUDE_DIRS})
+# * SAI-PRIMITIVES
+find_package(SAI-PRIMITIVES REQUIRED)
+include_directories(${SAI-PRIMITIVES_INCLUDE_DIRS})
 
 # add redis interface classes
-set(SAI2_INTERFACES_SOURCE
+set(SAI_INTERFACES_SOURCE
     ${PROJECT_SOURCE_DIR}/src/helpers/ConfigParserHelpers.cpp
     ${PROJECT_SOURCE_DIR}/src/simviz/SimVizRedisInterface.cpp
     ${PROJECT_SOURCE_DIR}/src/simviz/SimVizConfigParser.cpp
@@ -61,33 +61,33 @@ set(SAI2_INTERFACES_SOURCE
     ${PROJECT_SOURCE_DIR}/src/controller/RobotControllerConfigParser.cpp
     ${PROJECT_SOURCE_DIR}/src/MainRedisInterface.cpp)
 
-set(SAI2-INTERFACES_INCLUDE_DIRS
+set(SAI-INTERFACES_INCLUDE_DIRS
     ${PROJECT_SOURCE_DIR}/src
     ${PROJECT_SOURCE_DIR}/src/third_party/glaze/include)
-include_directories(${SAI2-INTERFACES_INCLUDE_DIRS})
+include_directories(${SAI-INTERFACES_INCLUDE_DIRS})
 
-set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/ui)
-add_definitions(-DUI_FOLDER="${SAI2-INTERFACES_UI_DIR}")
+set(SAI-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/ui)
+add_definitions(-DUI_FOLDER="${SAI-INTERFACES_UI_DIR}")
 
 # Create the library
-add_library(sai2-interfaces STATIC ${SAI2_INTERFACES_SOURCE})
+add_library(sai-interfaces STATIC ${SAI_INTERFACES_SOURCE})
 
 # Ensure Glaze include directories are part of the target
 target_include_directories(
-  sai2-interfaces
+  sai-interfaces
   PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src>
          $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/third_party/glaze/include>
          $<INSTALL_INTERFACE:include>)
 
-set(SAI2-INTERFACES_LIBRARIES
-    sai2-interfaces
-    ${SAI2-PRIMITIVES_LIBRARIES}
-    ${SAI2-SIMULATION_LIBRARIES}
-    ${SAI2-GRAPHICS_LIBRARIES}
+set(SAI-INTERFACES_LIBRARIES
+    sai-interfaces
+    ${SAI-PRIMITIVES_LIBRARIES}
+    ${SAI-SIMULATION_LIBRARIES}
+    ${SAI-GRAPHICS_LIBRARIES}
     ${CHAI3D_LIBRARIES}
-    ${SAI2-MODEL_LIBRARIES}
-    ${SAI2-URDF_LIBRARIES}
-    ${SAI2-COMMON_LIBRARIES})
+    ${SAI-MODEL_LIBRARIES}
+    ${SAI-URDF_LIBRARIES}
+    ${SAI-COMMON_LIBRARIES})
 
 # add examples
 if(BUILD_EXAMPLES)
@@ -97,22 +97,22 @@ endif()
 #
 # export package
 #
-set(SAI2-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/ui)
+set(SAI-INTERFACES_UI_DIR ${PROJECT_SOURCE_DIR}/ui)
 
 # export package for use from the build tree
-export(TARGETS sai2-interfaces
-       FILE ${PROJECT_BINARY_DIR}/SAI2-INTERFACESTargets.cmake)
-export(PACKAGE SAI2-INTERFACES)
+export(TARGETS sai-interfaces
+       FILE ${PROJECT_BINARY_DIR}/SAI-INTERFACESTargets.cmake)
+export(PACKAGE SAI-INTERFACES)
 
 # configure package
-set(CONF_INCLUDE_DIRS ${SAI2-INTERFACES_INCLUDE_DIRS})
-set(CONF_LIBRARIES sai2-interfaces)
+set(CONF_INCLUDE_DIRS ${SAI-INTERFACES_INCLUDE_DIRS})
+set(CONF_LIBRARIES sai-interfaces)
 
 # create package configuration and version files
-configure_file(SAI2-INTERFACESConfig.cmake.in
-               "${PROJECT_BINARY_DIR}/SAI2-INTERFACESConfig.cmake" @ONLY)
+configure_file(SAI-INTERFACESConfig.cmake.in
+               "${PROJECT_BINARY_DIR}/SAI-INTERFACESConfig.cmake" @ONLY)
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/SAI2-INTERFACESConfigVersion.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/SAI-INTERFACESConfigVersion.cmake"
   VERSION ${PROJECT_VERSION}
   COMPATIBILITY SameMajorVersion)

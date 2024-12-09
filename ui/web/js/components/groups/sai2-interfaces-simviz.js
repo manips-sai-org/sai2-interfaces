@@ -1,9 +1,9 @@
 const valid_types = ['robot', 'object']
 
-class Sai2InterfacesSimviz extends HTMLElement {
+class SaiInterfacesSimviz extends HTMLElement {
 	constructor() {
 		super();
-		this.redis_prefix = this.getAttribute('redisPrefix') || 'sai2::interfaces';
+		this.redis_prefix = this.getAttribute('redisPrefix') || 'sai::interfaces';
 	}
 
 	connectedCallback() {
@@ -15,7 +15,7 @@ class Sai2InterfacesSimviz extends HTMLElement {
 
 		if (!this.checkAttributesValidity(model_names, model_types)) {
 			const errorMessage = document.createElement('div');
-			errorMessage.textContent = 'Attributes of sai2-interfaces-simviz are not valid';
+			errorMessage.textContent = 'Attributes of sai-interfaces-simviz are not valid';
 			errorMessage.style.color = 'red';
 			errorMessage.style.fontWeight = 'bold';
 			errorMessage.style.fontSize = 'larger';
@@ -23,44 +23,44 @@ class Sai2InterfacesSimviz extends HTMLElement {
 			return
 		}
 
-		let htmlString = `<sai2-interfaces-tabs tabsOnTheLeft color="#cc7a00" name="simviz_interface">`;
+		let htmlString = `<sai-interfaces-tabs tabsOnTheLeft color="#cc7a00" name="simviz_interface">`;
 
 		for (let i = 0; i < model_names.length; i++) {
-			let model_tab_content = `<sai2-interfaces-tab-content name="${model_display_names[i]}" value="${model_names[i]}">`;
+			let model_tab_content = `<sai-interfaces-tab-content name="${model_display_names[i]}" value="${model_names[i]}">`;
 
-			let model_ui_type = 'sai2-interfaces-simviz-' + model_types[i];
+			let model_ui_type = 'sai-interfaces-simviz-' + model_types[i];
 			let task_ui_element = `<${model_ui_type} ${model_types[i]}Name="${model_names[i]}" redisPrefix="${this.redis_prefix}" />`;
 			model_tab_content += task_ui_element;
-			model_tab_content += `</sai2-interfaces-tab-content>`;
+			model_tab_content += `</sai-interfaces-tab-content>`;
 			htmlString += model_tab_content;
 		}
 
 		htmlString += `
-		<sai2-interfaces-tab-inline-content>
+		<sai-interfaces-tab-inline-content>
 			<div class="row mt-3 p-2">
-				<sai2-interfaces-toggle key="${this.redis_prefix}::simviz::gravity_comp_enabled" display="Gravity Compensation"/>
+				<sai-interfaces-toggle key="${this.redis_prefix}::simviz::gravity_comp_enabled" display="Gravity Compensation"/>
 			</div>
 			<div class="row mt-3 p-2">
-				<sai2-interfaces-toggle key="${this.redis_prefix}::simviz::logging_on" display="SimViz Logging"/>
+				<sai-interfaces-toggle key="${this.redis_prefix}::simviz::logging_on" display="SimViz Logging"/>
 			</div>
-		</sai2-interfaces-tab-inline-content>`;
-		htmlString += `</sai2-interfaces-tabs>`;
+		</sai-interfaces-tab-inline-content>`;
+		htmlString += `</sai-interfaces-tabs>`;
 
 		this.innerHTML = htmlString;
 	}
 
 	checkAttributesValidity(model_names, model_types) {
 		if (model_names.length == 0) {
-			console.error("Model names are empty in custom html element sai2-interfaces-simviz");
+			console.error("Model names are empty in custom html element sai-interfaces-simviz");
 			return false;
 		}
 		if (model_names.length != model_types.length) {
-			console.error("Model names and types do not have the same length in custom html element sai2-interfaces-simviz");
+			console.error("Model names and types do not have the same length in custom html element sai-interfaces-simviz");
 			return false;
 		}
 		for (let i = 0; i < model_types.length; i++) {
 			if (!valid_types.includes(model_types[i])) {
-				console.error("Invalid model type in custom html element sai2-interfaces-simviz");
+				console.error("Invalid model type in custom html element sai-interfaces-simviz");
 				return false;
 			}
 		}
@@ -69,4 +69,4 @@ class Sai2InterfacesSimviz extends HTMLElement {
 }
 
 // Define the custom element
-customElements.define('sai2-interfaces-simviz', Sai2InterfacesSimviz);
+customElements.define('sai-interfaces-simviz', SaiInterfacesSimviz);

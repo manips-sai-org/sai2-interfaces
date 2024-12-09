@@ -5,5 +5,5 @@ add_executable(MainRedisInterfaceExample MainRedisInterfaceExample.cpp)
 add_executable(AuxPandaSimvizOnly AuxPandaSimvizOnly.cpp)
 
 # and link the library against the executable
-target_link_libraries(MainRedisInterfaceExample ${SAI2-INTERFACES_LIBRARIES})
-target_link_libraries(AuxPandaSimvizOnly ${SAI2-INTERFACES_LIBRARIES})
+target_link_libraries(MainRedisInterfaceExample ${SAI-INTERFACES_LIBRARIES})
+target_link_libraries(AuxPandaSimvizOnly ${SAI-INTERFACES_LIBRARIES})

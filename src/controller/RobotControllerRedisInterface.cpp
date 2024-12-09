@@ -7,7 +7,7 @@
 using namespace std;
 using namespace Eigen;
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 namespace {
 
@@ -25,7 +25,7 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 	_logging_on = _config.logger_config.start_with_logger_on;
 	_logging_state = _logging_on ? LoggingState::START : LoggingState::OFF;
 
-	_redis_client = make_unique<Sai2Common::RedisClient>(
+	_redis_client = make_unique<SaiCommon::RedisClient>(
 		_config.redis_config.redis_namespace_prefix);
 	_redis_client->connect(_config.redis_config.redis_ip,
 						   _config.redis_config.redis_port);
@@ -42,7 +42,7 @@ RobotControllerRedisInterface::RobotControllerRedisInterface(
 
 void RobotControllerRedisInterface::runRedisCommunication(
 	const std::atomic<bool>& user_stop_signal) {
-	Sai2Common::LoopTimer timer(_config.control_frequency);
+	SaiCommon::LoopTimer timer(_config.control_frequency);
 	timer.setTimerName(
 		"RobotControllerRedisInterface Timer for redis communication on "
 		"robot: " +
@@ -96,7 +96,7 @@ void RobotControllerRedisInterface::run(
 		std::ref(user_stop_signal));
 
 	// create timer
-	Sai2Common::LoopTimer timer(_config.control_frequency);
+	SaiCommon::LoopTimer timer(_config.control_frequency);
 	timer.setTimerName(
 		"RobotControllerRedisInterface Timer for controller on robot: " +
 		_config.robot_name);
@@ -165,7 +165,7 @@ void RobotControllerRedisInterface::run(
 }
 
 void RobotControllerRedisInterface::initialize() {
-	_robot_model = make_shared<Sai2Model::Sai2Model>(_config.robot_model_file);
+	_robot_model = make_shared<SaiModel::SaiModel>(_config.robot_model_file);
 	_robot_model->setTRobotBase(_config.robot_base_in_world);
 	_robot_model->setWorldGravity(_config.world_gravity);
 
@@ -220,7 +220,7 @@ void RobotControllerRedisInterface::initialize() {
 	}
 
 	for (const auto& pair : _config.controllers_configs) {
-		vector<shared_ptr<Sai2Primitives::TemplateTask>> ordered_tasks_list;
+		vector<shared_ptr<SaiPrimitives::TemplateTask>> ordered_tasks_list;
 
 		_is_active_controller[pair.first] = false;
 
@@ -245,7 +245,7 @@ void RobotControllerRedisInterface::initialize() {
 				}
 
 				// create joint task
-				auto joint_task = make_shared<Sai2Primitives::JointTask>(
+				auto joint_task = make_shared<SaiPrimitives::JointTask>(
 					_robot_model, S, joint_task_config.task_name,
 					1.0 / _config.control_frequency);
 
@@ -257,7 +257,7 @@ void RobotControllerRedisInterface::initialize() {
 
 				// create task
 				auto motion_force_task =
-					make_shared<Sai2Primitives::MotionForceTask>(
+					make_shared<SaiPrimitives::MotionForceTask>(
 						_robot_model, motion_force_task_config.link_name,
 						motion_force_task_config.controlled_directions_position,
 						motion_force_task_config
@@ -272,7 +272,7 @@ void RobotControllerRedisInterface::initialize() {
 			}
 		}
 		_robot_controllers[pair.first] =
-			make_unique<Sai2Primitives::RobotController>(_robot_model,
+			make_unique<SaiPrimitives::RobotController>(_robot_model,
 														 ordered_tasks_list);
 	}
 
@@ -351,7 +351,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 		std::filesystem::create_directories(_config.logger_config.folder_name);
 	}
 
-	_robot_logger = std::make_unique<Sai2Common::Logger>(
+	_robot_logger = std::make_unique<SaiCommon::Logger>(
 		_config.logger_config.folder_name + '/' + _config.robot_name +
 			"_control",
 		_config.logger_config.add_timestamp_to_filename);
@@ -390,7 +390,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					JointTaskMonitoringData(joint_task->getTaskDof());
 
 				_task_loggers[controller_name][task_name] =
-					std::make_unique<Sai2Common::Logger>(
+					std::make_unique<SaiCommon::Logger>(
 						current_controller_logger_folder + '/' + task_name,
 						_config.logger_config.add_timestamp_to_filename);
 				auto task_logger =
@@ -549,7 +549,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 					MotionForceTaskMonitoringData();
 
 				_task_loggers[controller_name][task_name] =
-					std::make_unique<Sai2Common::Logger>(
+					std::make_unique<SaiCommon::Logger>(
 						current_controller_logger_folder + '/' + task_name,
 						_config.logger_config.add_timestamp_to_filename);
 				auto task_logger =
@@ -999,13 +999,13 @@ void RobotControllerRedisInterface::processInputs() {
 			// dynamic decoupling
 			if (joint_task_config.use_dynamic_decoupling) {
 				joint_task->setDynamicDecouplingType(
-					Sai2Primitives::DynamicDecouplingType::
+					SaiPrimitives::DynamicDecouplingType::
 						BOUNDED_INERTIA_ESTIMATES);
 				joint_task->setBoundedInertiaEstimateThreshold(
 					joint_task_config.bie_threshold);
 			} else {
 				joint_task->setDynamicDecouplingType(
-					Sai2Primitives::DynamicDecouplingType::IMPEDANCE);
+					SaiPrimitives::DynamicDecouplingType::IMPEDANCE);
 			}
 
 			// velocity saturation
@@ -1070,13 +1070,13 @@ void RobotControllerRedisInterface::processInputs() {
 
 			if (motion_force_task_config.use_dynamic_decoupling) {
 				motion_force_task->setDynamicDecouplingType(
-					Sai2Primitives::DynamicDecouplingType::
+					SaiPrimitives::DynamicDecouplingType::
 						BOUNDED_INERTIA_ESTIMATES);
 				motion_force_task->setBoundedInertiaEstimateThreshold(
 					motion_force_task_config.bie_threshold);
 			} else {
 				motion_force_task->setDynamicDecouplingType(
-					Sai2Primitives::DynamicDecouplingType::IMPEDANCE);
+					SaiPrimitives::DynamicDecouplingType::IMPEDANCE);
 			}
 
 			// force control parametrization
@@ -1264,4 +1264,4 @@ void RobotControllerRedisInterface::processInputs() {
 	}
 }
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces

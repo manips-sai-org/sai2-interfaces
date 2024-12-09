@@ -1,6 +1,6 @@
-The `sai2-interfaces-plot-button` Element
+The `sai-interfaces-plot-button` Element
 =========================================
-The `sai2-interfaces-plot-button` element makes a double button
+The `sai-interfaces-plot-button` element makes a double button
 
 ![](./plot_button.png)
 
@@ -10,7 +10,7 @@ The `sai2-interfaces-plot-button` element makes a double button
 ## Usage
 
 ```
-<sai2-interfaces-plot-button/>
+<sai-interfaces-plot-button/>
 ```
 
 ## Attributes
@@ -22,13 +22,13 @@ There are no attributes
 We provide an [example HTML file](./plot_button.html) containing the following html code:
 
 ```
-<sai2-interfaces-plot-button/>
+<sai-interfaces-plot-button/>
 ```
 
 Run the server:
 
 ```
-~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/plot_button/plot_button.html 
+~/sai/core/sai-interfaces$ python3 ui/server.py docs/ui_elements_details/plot_button/plot_button.html 
 ```
 
 Open a browser and go to `localhost:8000` .

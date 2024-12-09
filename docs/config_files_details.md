@@ -1,10 +1,10 @@
-Sai2-Interface config files details
+Sai-Interface config files details
 ===================================
 
 The config files used to parametrize the simulation and/or controller are custom xml files.
 
 Such a config file can contain one `<redisConfiguration>` , one `<simvizConfiguration>` element, and several `<robotControlConfiguration>` elements (one per robot to control).
-We will go over those in details using the two example files [ `aa_detailled_panda_simviz_only.xml` ](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_simviz_only.xml) and [ `aa_detailled_panda_control_only.xml` ](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_control_only.xml).
+We will go over those in details using the two example files [ `aa_detailled_panda_simviz_only.xml` ](https://github.com/manips-sai-org/sai-interfaces/blob/master/examples/config_files/aa_detailled_panda_simviz_only.xml) and [ `aa_detailled_panda_control_only.xml` ](https://github.com/manips-sai-org/sai-interfaces/blob/master/examples/config_files/aa_detailled_panda_control_only.xml).
 
 ### The `<redisConfiguration>` element
 
@@ -15,19 +15,19 @@ Let's start with the redis configuration. This one is very simple. It is optionn
 The <redisConfiguration> element contains the configuration for the redis clients used by the controllers (and the simviz if present).
 Only one is allowed per configuration file.
 Its attributes are:
-	- namespacePrefix: Optional. The prefix that will be added to all keys. Defaults to "sai2::interfaces"
+	- namespacePrefix: Optional. The prefix that will be added to all keys. Defaults to "sai::interfaces"
 	- ip: Optional. The ip address of the redis server. Defaults to 127.0.0.1 (localhost)
 	- port: Optional. The port of the redis server. Defaults to 6379
 None of the corresponding config parameters can be changed at runtime.
 -->
-<redisConfiguration namespacePrefix="sai2::interfaces" 
+<redisConfiguration namespacePrefix="sai::interfaces" 
 	ip="127.0.0.1" 
 	port="6379" />
 ```
 
 ### The `<simvizConfiguration>` element
 
-Let's continue with the simviz configuration. If we want an application with a simulation or rendering, we need to set a simviz configuration in the config file by using the `<simvizConfiguration>` element. We will go step by step over the [commented example file](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_simviz_only.xml) to explain the possible attributes and children elements. The only required attribute is the `worldFilePath` that provides the path to the world file defining the virtual world. For more details on the world file, see the [example world file](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/world/panda_world.urdf)
+Let's continue with the simviz configuration. If we want an application with a simulation or rendering, we need to set a simviz configuration in the config file by using the `<simvizConfiguration>` element. We will go step by step over the [commented example file](https://github.com/manips-sai-org/sai-interfaces/blob/master/examples/config_files/aa_detailled_panda_simviz_only.xml) to explain the possible attributes and children elements. The only required attribute is the `worldFilePath` that provides the path to the world file defining the virtual world. For more details on the world file, see the [example world file](https://github.com/manips-sai-org/sai-interfaces/blob/master/examples/world/panda_world.urdf)
 
 ```
 <!-- 
@@ -164,7 +164,7 @@ Its only optional child element is the `<origin>` tag to define the force sensor
 
 ### The `<robotControlConfiguration>` element
 
-Now let's move to the robot control configuration element. Note that in the examples, we separated the simviz configuration and the control configuration in different files for pedagogic purposes, but if you want an application with bot a simulation and a controller, they must be in the same file (and it is the case for many other example config files). If we want an application with a controller for a robot, we need to set a robot control configuration for that robot in the config file by using the `<robotControlConfiguration>` element. We will go step by step over the [commented example file](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_control_only.xml) to explain the possible attributes and children elements. The required attributes here are is the `robotModelFile` that provides the path to the robot urdf model file defining the kinematic and dynamic model of the robot (see the [ROS URDF documentation for more details](http://wiki.ros.org/urdf/XML/model)), and the `robotName` that is used to generate the correct redis keys for the controller (so when using the simulation, the robot name here must match the one in the simulated world, and when controlling an actual robot, the redis keys must be selected accordingly).
+Now let's move to the robot control configuration element. Note that in the examples, we separated the simviz configuration and the control configuration in different files for pedagogic purposes, but if you want an application with bot a simulation and a controller, they must be in the same file (and it is the case for many other example config files). If we want an application with a controller for a robot, we need to set a robot control configuration for that robot in the config file by using the `<robotControlConfiguration>` element. We will go step by step over the [commented example file](https://github.com/manips-sai-org/sai-interfaces/blob/master/examples/config_files/aa_detailled_panda_control_only.xml) to explain the possible attributes and children elements. The required attributes here are is the `robotModelFile` that provides the path to the robot urdf model file defining the kinematic and dynamic model of the robot (see the [ROS URDF documentation for more details](http://wiki.ros.org/urdf/XML/model)), and the `robotName` that is used to generate the correct redis keys for the controller (so when using the simulation, the robot name here must match the one in the simulated world, and when controlling an actual robot, the redis keys must be selected accordingly).
 
 ```
 <!--
@@ -179,7 +179,7 @@ Its attributes are:
 None of the corresponding config parameters can be changed at runtime.
 -->
 <robotControlConfiguration robotName="Panda"
-	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf"
+	robotModelFile="${SAI_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf"
 	controlFrequency="1000.0"
 	getMassMatrixFromRedis="false">
 
@@ -294,8 +294,8 @@ Its attributes are:
 		When controlling an actual robot, it is advised to leave it between 0.01 and 0.1.
 		In simulation, you can set it to 0 in order to have perfect dynamic decoupling.
 All default values for the optional parameters here and in the sub-elements are the default
-values defined in the MotionForceTask class in the sai2-primitives library
-see (https://github.com/manips-sai-org/sai2-primitives).
+values defined in the MotionForceTask class in the sai-primitives library
+see (https://github.com/manips-sai-org/sai-primitives).
 Dynamic decoupling can be switched on and off at runtime.
 The rest of the parameters corresponding to those attributes are fixed and cannot be changed at runtime.
 -->
@@ -368,7 +368,7 @@ Its attributes are:
 	- closedLoopForceControl: Optional. Whether to use closed loop force control.
 		If false, open loop force control will be used.
 Closed loop force control can be switched on and off at runtime.
-Default value can be found in the MotionForceTask class in the sai2-primitives library.
+Default value can be found in the MotionForceTask class in the sai-primitives library.
 -->
 <forceControl closedLoopForceControl="false">
 	<!--
@@ -392,7 +392,7 @@ Default value can be found in the MotionForceTask class in the sai2-primitives l
 			- 3: Full force control
 		- direction: Optional. The direction of line when the dimension is 1 or 2 (unused when the dimension is 0 or 3).
 	Those values can be changed at runtime.
-	Default value for the dim can be found in the MotionForceTask class in the sai2-primitives library.
+	Default value for the dim can be found in the MotionForceTask class in the sai-primitives library.
 	-->
 	<forceSpaceParametrization dim="0"
 		direction="0 0 1" />
@@ -409,7 +409,7 @@ Default value can be found in the MotionForceTask class in the sai2-primitives l
 		- kv: Optional. The derivative gain for the force control (velocity-based damping).
 		- ki: Optional. The integral gain for the force control.
 	Those values can be changed at runtime.
-	Default values can be found in the MotionForceTask class in the sai2-primitives library.
+	Default values can be found in the MotionForceTask class in the sai-primitives library.
 	-->
 	<forceGains kp="1.0"
 		kv="20.0"
@@ -421,7 +421,7 @@ Default value can be found in the MotionForceTask class in the sai2-primitives l
 		- kv: Optional. The derivative gain for the moment control (velocity-based damping).
 		- ki: Optional. The integral gain for the moment control.
 	Those values can be changed at runtime.
-	Default values can be found in the MotionForceTask class in the sai2-primitives library.
+	Default values can be found in the MotionForceTask class in the sai-primitives library.
 	-->
 	<momentGains kp="1.0"
 		kv="20.0"
@@ -440,7 +440,7 @@ Its attributes are:
 	- linearVelocityLimit: Optional. The limit for the linear velocity in m/s.
 	- angularVelocityLimit: Optional. The limit for the angular velocity in Rad/s.
 Those values can be changed at runtime.
-Default values can be found in the MotionForceTask class in the sai2-primitives library.
+Default values can be found in the MotionForceTask class in the sai-primitives library.
 -->
 <velocitySaturation enabled="true"
 	linearVelocityLimit="0.35"
@@ -464,7 +464,7 @@ Its attributes are:
 	- maxAngularAcceleration: Optional. The maximum angular acceleration in Rad/s^2.
 	- maxAngularJerk: Optional. The maximum angular jerk in Rad/s^3.
 Those values can be changed at runtime.
-Default values can be found in the MotionForceTask class in the sai2-primitives library.
+Default values can be found in the MotionForceTask class in the sai-primitives library.
 -->
 <otg type="disabled"
 	maxLinearVelocity="0.35"
@@ -488,7 +488,7 @@ Its attributes are:
 	- kv: Optional. The derivative gain for the position control.
 	- ki: Optional. The integral gain for the position control.
 Those values can be changed at runtime.
-Default values can be found in the MotionForceTask class in the sai2-primitives library.
+Default values can be found in the MotionForceTask class in the sai-primitives library.
 -->
 <positionGains kp="100.0 110.0 100.0"
 	kv="20.0" />
@@ -503,7 +503,7 @@ Its attributes are:
 	- kv: Optional. The derivative gain for the orientation control.
 	- ki: Optional. The integral gain for the orientation control.
 Those values can be changed at runtime.
-Default values can be found in the MotionForceTask class in the sai2-primitives library.
+Default values can be found in the MotionForceTask class in the sai-primitives library.
 -->
 <orientationGains kp="100.0"
 	kv="20.0" />
@@ -551,8 +551,8 @@ Its attributes are:
 		When controlling an actual robot, it is advised to leave it between 0.01 and 0.1.
 		In simulation, you can set it to 0 in order to have perfect dynamic decoupling.
 All default values for the optional parameters here and in the sub-elements are the default
-values defined in the JointTask class in the sai2-primitives library
-see (https://github.com/manips-sai-org/sai2-primitives).
+values defined in the JointTask class in the sai-primitives library
+see (https://github.com/manips-sai-org/sai-primitives).
 Dynamic decoupling can be switched on and off at runtime.
 The rest of the parameters corresponding to those attributes are fixed and cannot be changed at runtime.		
 -->
@@ -593,7 +593,7 @@ Its attributes are:
 	- velocityLimit: Optional. The limit for the velocity in Rad/s. Can be defined as a single number 
 		or a list of the correct size for a different limit per joint.
 Those values can be changed at runtime.
-Default values can be found in the JointTask class in the sai2-primitives library.
+Default values can be found in the JointTask class in the sai-primitives library.
 -->
 <velocitySaturation enabled="false"
 	velocityLimit="1.1 1.2 1.3 1.4 1.5 1.6 1.7" />
@@ -616,7 +616,7 @@ Its attributes are:
 	- maxJerk: Optional. The maximum jerk in Rad/s^3. Can be defined as a single number 
 		or a list of the correct size for a different limit per joint.
 Those values can be changed at runtime.
-Default values can be found in the JointTask class in the sai2-primitives library.
+Default values can be found in the JointTask class in the sai-primitives library.
 -->
 <otg type="acceleration"
 	maxVelocity="1.05"
@@ -637,7 +637,7 @@ Its attributes are:
 	- ki: Optional. The integral gain for the joint control. Can be defined as a single number 
 		or a list of the correct size for a different gain per joint.
 Those values can be changed at runtime.
-Default values can be found in the JointTask class in the sai2-primitives library.
+Default values can be found in the JointTask class in the sai-primitives library.
 -->
 <gains kp="50.0"
 	kv="14.0"

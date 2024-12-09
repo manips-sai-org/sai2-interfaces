@@ -98,7 +98,7 @@ def handle_redis_call():
 @app.route('/redis/keys', methods=['GET'])
 def handle_get_all_redis_keys():
     '''
-    Gets all SAI2 redis keys.
+    Gets all SAI redis keys.
     
     Frontend documentation:
     GET to /redis/keys

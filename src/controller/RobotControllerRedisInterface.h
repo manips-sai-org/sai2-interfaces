@@ -1,15 +1,15 @@
-#ifndef SAI2_INTERFACES_ROBOT_CONTROLLER_REDIS_INTERFACE_H
-#define SAI2_INTERFACES_ROBOT_CONTROLLER_REDIS_INTERFACE_H
+#ifndef SAI_INTERFACES_ROBOT_CONTROLLER_REDIS_INTERFACE_H
+#define SAI_INTERFACES_ROBOT_CONTROLLER_REDIS_INTERFACE_H
 
 #include <string>
 #include <mutex>
 
 #include "RobotControllerConfig.h"
-#include "Sai2Common.h"
-#include "Sai2Model.h"
-#include "Sai2Primitives.h"
+#include "SaiCommon.h"
+#include "SaiModel.h"
+#include "SaiPrimitives.h"
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 /**
  * @brief Class to run a robot controller from a custom xml config file and
@@ -63,7 +63,7 @@ private:
 		}
 
 		void setFromTask(
-			const std::shared_ptr<Sai2Primitives::JointTask>& task) {
+			const std::shared_ptr<SaiPrimitives::JointTask>& task) {
 			goal_position = task->getGoalPosition();
 			goal_velocity = task->getGoalVelocity();
 			goal_acceleration = task->getGoalAcceleration();
@@ -93,7 +93,7 @@ private:
 		}
 
 		void setFromTask(
-			const std::shared_ptr<Sai2Primitives::JointTask>& task) {
+			const std::shared_ptr<SaiPrimitives::JointTask>& task) {
 			current_position = task->getCurrentPosition();
 			current_velocity = task->getCurrentVelocity();
 			desired_position = task->getDesiredPosition();
@@ -128,7 +128,7 @@ private:
 		}
 
 		void setFromTask(
-			const std::shared_ptr<Sai2Primitives::MotionForceTask>& task) {
+			const std::shared_ptr<SaiPrimitives::MotionForceTask>& task) {
 			goal_position = task->getGoalPosition();
 			goal_linear_velocity = task->getGoalLinearVelocity();
 			goal_linear_acceleration = task->getGoalLinearAcceleration();
@@ -172,7 +172,7 @@ private:
 		}
 
 		void setFromTask(
-			const std::shared_ptr<Sai2Primitives::MotionForceTask>& task) {
+			const std::shared_ptr<SaiPrimitives::MotionForceTask>& task) {
 			current_position = task->getCurrentPosition();
 			current_linear_velocity = task->getCurrentLinearVelocity();
 			current_orientation = task->getCurrentOrientation();
@@ -204,13 +204,13 @@ private:
 
 	RobotControllerConfig _config;
 
-	std::shared_ptr<Sai2Model::Sai2Model> _robot_model;
-	std::map<std::string, std::unique_ptr<Sai2Primitives::RobotController>>
+	std::shared_ptr<SaiModel::SaiModel> _robot_model;
+	std::map<std::string, std::unique_ptr<SaiPrimitives::RobotController>>
 		_robot_controllers;
 	std::string _active_controller_name;
 	std::string _tentative_next_active_controller_name;
 
-	std::unique_ptr<Sai2Common::RedisClient> _redis_client;
+	std::unique_ptr<SaiCommon::RedisClient> _redis_client;
 
 	Eigen::VectorXd _robot_q, _robot_q_local;
 	Eigen::VectorXd _robot_dq, _robot_dq_local;
@@ -228,14 +228,14 @@ private:
 	std::mutex _mass_matrix_mutex;
 
 	std::map<std::string,
-			 std::map<std::string, std::unique_ptr<Sai2Common::Logger>>>
+			 std::map<std::string, std::unique_ptr<SaiCommon::Logger>>>
 		_task_loggers;
-	std::unique_ptr<Sai2Common::Logger> _robot_logger;
+	std::unique_ptr<SaiCommon::Logger> _robot_logger;
 	std::map<std::string, bool> _is_active_controller;
 	bool _logging_on;
 	LoggingState _logging_state;
 };
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces
 
-#endif	// SAI2_INTERFACES_ROBOT_CONTROLLER_REDIS_INTERFACE_H
+#endif	// SAI_INTERFACES_ROBOT_CONTROLLER_REDIS_INTERFACE_H

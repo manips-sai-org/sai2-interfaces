@@ -1,11 +1,11 @@
-The `sai2-interfaces-setkey` Element
+The `sai-interfaces-setkey` Element
 ====================================
-The `sai2-interfaces-setkey` element created a button that sets a redis key to a predefined value when the button is pressed
+The `sai-interfaces-setkey` element created a button that sets a redis key to a predefined value when the button is pressed
 
 ## Usage
 ```
-<sai2-interfaces-setkey key="..." value="..." display="...">
-</sai2-interfaces-setkey>
+<sai-interfaces-setkey key="..." value="..." display="...">
+</sai-interfaces-setkey>
 ```
 
 ## Attributes
@@ -16,30 +16,30 @@ The `sai2-interfaces-setkey` element created a button that sets a redis key to a
 ## Example
 The [example HTML file](./setkey.html) contains the following:
 ```
-<sai2-interfaces-setkey key="sai2::interfaces::tutorial::setkey" value="28.3" display="Set 28.3"/>
+<sai-interfaces-setkey key="sai::interfaces::tutorial::setkey" value="28.3" display="Set 28.3"/>
 ```
 
 Start the server
 ```
-~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/setkey/setkey.html 
+~/sai/core/sai-interfaces$ python3 ui/server.py docs/ui_elements_details/setkey/setkey.html 
 ```
 
 Open a browser and navigate to `localhost:8000` and you should see:
 ![](./setkey.png)
 
 Open up `redis-cli`, and let's set the key
-`sai2::interfaces::tutorial::setkey` to some value like 7:
+`sai::interfaces::tutorial::setkey` to some value like 7:
 ```
 ~$ redis-cli
-127.0.0.1:6379> set sai2::interfaces::tutorial::setkey 7
+127.0.0.1:6379> set sai::interfaces::tutorial::setkey 7
 OK
-127.0.0.1:6379> get sai2::interfaces::tutorial::setkey
+127.0.0.1:6379> get sai::interfaces::tutorial::setkey
 "7"
 ```
 
 Now press the button in the web browser, and the key should have changed
 ```
 ~$ redis-cli
-127.0.0.1:6379> get sai2::interfaces::tutorial::setkey
+127.0.0.1:6379> get sai::interfaces::tutorial::setkey
 "28.3"
 ```

@@ -4,13 +4,13 @@ import { get_redis_val, post_redis_key_val } from '../redis.js';
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
-	.sai2-interfaces-toggle-group-top {
+	.sai-interfaces-toggle-group-top {
 		display: flex;
 		flex-direction: column;
 		flex-wrap: wrap;
 	}
 </style>
-<div class="sai2-interfaces-toggle-group-top">
+<div class="sai-interfaces-toggle-group-top">
 	<label>
 		<input type="checkbox">
 		<span class="checkable"></span>
@@ -18,7 +18,7 @@ template.innerHTML = `
 </div>
 `;
 
-class Sai2InterfacesToggleGroup extends HTMLElement {
+class SaiInterfacesToggleGroup extends HTMLElement {
 	constructor() {
 		super();
 		this.template = template;
@@ -31,7 +31,7 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 		this.display = this.getAttribute("name");
 		this.enabled = this.hasAttribute("enabled");
 
-		this.container = template_node.querySelector(".sai2-interfaces-toggle-group-container");
+		this.container = template_node.querySelector(".sai-interfaces-toggle-group-container");
 		this.checkbox = template_node.querySelector("input");
 		this.checkbox.checked = this.enabled;
 		this.label = template_node.querySelector("span");
@@ -67,8 +67,8 @@ class Sai2InterfacesToggleGroup extends HTMLElement {
 	}
 
 	updateGroups() {
-		let enabled_group = this.querySelectorAll(':scope > sai2-interfaces-toggle-group-enabled');
-		let disabled_group = this.querySelectorAll(':scope > sai2-interfaces-toggle-group-disabled');
+		let enabled_group = this.querySelectorAll(':scope > sai-interfaces-toggle-group-enabled');
+		let disabled_group = this.querySelectorAll(':scope > sai-interfaces-toggle-group-disabled');
 
 		enabled_group = $(enabled_group);
 		disabled_group = $(disabled_group);
@@ -125,6 +125,6 @@ class ToggleGroupChildDisabled extends HTMLElement {
 	}
 }
 
-customElements.define('sai2-interfaces-toggle-group', Sai2InterfacesToggleGroup);
-customElements.define('sai2-interfaces-toggle-group-enabled', ToggleGroupChildEnabled);
-customElements.define('sai2-interfaces-toggle-group-disabled', ToggleGroupChildDisabled);
+customElements.define('sai-interfaces-toggle-group', SaiInterfacesToggleGroup);
+customElements.define('sai-interfaces-toggle-group-enabled', ToggleGroupChildEnabled);
+customElements.define('sai-interfaces-toggle-group-disabled', ToggleGroupChildDisabled);

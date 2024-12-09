@@ -1,9 +1,9 @@
-#ifndef SAI2_INTERFACES_CONFIG_COMMON_CONFIGS_H
-#define SAI2_INTERFACES_CONFIG_COMMON_CONFIGS_H
+#ifndef SAI_INTERFACES_CONFIG_COMMON_CONFIGS_H
+#define SAI_INTERFACES_CONFIG_COMMON_CONFIGS_H
 
 #include <string>
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 /**
  * @brief Configuration struct for the logger object (common to simviz and
  * controller configs)
@@ -48,9 +48,9 @@ struct RedisConfig {
 	int redis_port = 6379;
 
 	/// @brief The default redis namespace prefix
-	std::string redis_namespace_prefix = "sai2::interfaces";
+	std::string redis_namespace_prefix = "sai::interfaces";
 };
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces
 
-#endif	// SAI2_INTERFACES_CONFIG_COMMON_CONFIGS_H
+#endif	// SAI_INTERFACES_CONFIG_COMMON_CONFIGS_H

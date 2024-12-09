@@ -3,23 +3,23 @@
  * Defines a custom HTML element to display the current value of a Redis key. 
  * <br>
  * <pre>
- * Element Tag: &lt;sai2-interface-display&gt;
+ * Element Tag: &lt;sai-interface-display&gt;
  * HTML attributes:
  *    key: string - Redis key to query
  *    refreshRate: number - How often, in seconds, to update
  *    decimalPlaces: number - How many decimal places to show
  * </pre>
- * @module ./module/sai2-interfaces-display 
+ * @module ./module/sai-interfaces-display 
  */
 
 import { get_redis_val } from '../redis.js';
-import Sai2InterfacesComponent from './sai2-interfaces-component.js';
+import SaiInterfacesComponent from './sai-interfaces-component.js';
 
 
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
-	.sai2-interface-display-top {
+	.sai-interface-display-top {
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
@@ -27,18 +27,18 @@ template.innerHTML = `
 		padding:
 	}
 
-	.sai2-interface-display-top label {
+	.sai-interface-display-top label {
 		text-align: center;
 		flex: 1;
 	}
 
-	.sai2-interface-display-top table {
+	.sai-interface-display-top table {
 		border: 1px;
 		border-style: solid;
 		flex: 1;
 	}
 
-	.sai2-interface-display-top tr:nth-child(even),
+	.sai-interface-display-top tr:nth-child(even),
 	tbody,
 	tr,
 	td {
@@ -46,13 +46,13 @@ template.innerHTML = `
 		background: transparent;
 	}
 </style>
-<div class="sai2-interface-display-top">
+<div class="sai-interface-display-top">
 	<label></label>
 	<table></table>
 </div>
 `;
 
-class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
+class SaiInterfacesDisplay extends SaiInterfacesComponent {
 	constructor() {
 		super(template);
 
@@ -144,7 +144,7 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
 
 		// Position the label and table based on the presence or not of the labelOnTop attribute
 		if (this.labelOnTop) {
-			this.container = this.template_node.querySelector('.sai2-interface-display-top');
+			this.container = this.template_node.querySelector('.sai-interface-display-top');
 			this.container.style.flexDirection = 'column';
 			this.label.style.textAlign = 'center';
 			this.label.style.marginBottom = '15px';
@@ -173,4 +173,4 @@ class Sai2InterfacesDisplay extends Sai2InterfacesComponent {
 }
 
 
-customElements.define('sai2-interfaces-display', Sai2InterfacesDisplay);
+customElements.define('sai-interfaces-display', SaiInterfacesDisplay);

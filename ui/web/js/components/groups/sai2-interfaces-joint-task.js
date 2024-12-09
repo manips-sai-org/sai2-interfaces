@@ -1,4 +1,4 @@
-class Sai2InterfacesJointTask extends HTMLElement {
+class SaiInterfacesJointTask extends HTMLElement {
 	constructor() {
 		super();
 		this.robotName = this.getAttribute('robotName');
@@ -14,7 +14,7 @@ class Sai2InterfacesJointTask extends HTMLElement {
 		this.redisPrefix += this.robotName + "::" + this.controllerName + "::" + this.taskName + "::";
 
 		// Fetch the HTML template
-		fetch('html/component_groups_templates/sai2-interfaces-joint-task.html')
+		fetch('html/component_groups_templates/sai-interfaces-joint-task.html')
 			.then(response => response.text())
 			.then(template => {
 				let replacedHTML = template.replaceAll('{{_prefix_}}', this.redisPrefix);
@@ -43,4 +43,4 @@ class Sai2InterfacesJointTask extends HTMLElement {
 }
 
 // Define the custom element
-customElements.define('sai2-interfaces-joint-task', Sai2InterfacesJointTask);
+customElements.define('sai-interfaces-joint-task', SaiInterfacesJointTask);

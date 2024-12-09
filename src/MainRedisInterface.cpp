@@ -45,7 +45,7 @@ std::string joinVectorOfString(const std::vector<std::string>& elements) {
 
 void addInterfaceCartesianLimits(
 	string& additionalContent,
-	const Sai2Interfaces::RobotControllerConfig& config) {
+	const SaiInterfaces::RobotControllerConfig& config) {
 	string minGoalPosition = "[";
 	string maxGoalPosition = "[";
 	string minDesiredForce = "[";
@@ -62,9 +62,9 @@ void addInterfaceCartesianLimits(
 		minDesiredMoment += "[";
 		maxDesiredMoment += "[";
 		for (const auto& task_config : single_controller_config) {
-			if (std::holds_alternative<Sai2Interfaces::MotionForceTaskConfig>(
+			if (std::holds_alternative<SaiInterfaces::MotionForceTaskConfig>(
 					task_config)) {
-				auto task = std::get<Sai2Interfaces::MotionForceTaskConfig>(
+				auto task = std::get<SaiInterfaces::MotionForceTaskConfig>(
 					task_config);
 				minGoalPosition += task.interface_config.min_goal_position;
 				maxGoalPosition += task.interface_config.max_goal_position;
@@ -119,8 +119,8 @@ void addInterfaceCartesianLimits(
 	additionalContent += "\nmaxDesiredMoments=" + maxDesiredMoment;
 }
 
-const std::string CONFIG_FILE_NAME_KEY = "::sai2-interfaces-webui::config_file_name";
-const std::string RESET_KEY = "::sai2-interfaces-webui::reset";
+const std::string CONFIG_FILE_NAME_KEY = "::sai-interfaces-webui::config_file_name";
+const std::string RESET_KEY = "::sai-interfaces-webui::reset";
 
 const std::string WEBUI_TEMPLATE_FILE_PATH =
 	std::string(UI_FOLDER) + "/web/html/webui_template.html";
@@ -136,7 +136,7 @@ bool sim_initialized = false;
 
 }  // namespace
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 MainRedisInterface::MainRedisInterface(const std::string& config_folder_path,
 									   const std::string& config_file_name)
@@ -221,7 +221,7 @@ std::vector<std::string> getControllerNameAndTasksFromSingleConfig(
 		std::string,
 		std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>>
 		single_controller_config,
-	const Sai2Model::Sai2Model& robot_model) {
+	const SaiModel::SaiModel& robot_model) {
 	std::string controller_name = single_controller_config.first;
 	std::string controller_tasks_names = "[";
 	std::string controller_tasks_types = "[";
@@ -273,7 +273,7 @@ std::vector<std::string> getControllerNameAndTasksFromSingleConfig(
 
 std::vector<std::string> generateControllerNamesAndTasksForUI(
 	const RobotControllerConfig& config,
-	const Sai2Model::Sai2Model& robot_model) {
+	const SaiModel::SaiModel& robot_model) {
 	std::string controller_names = "[";
 	std::string controller_tasks_names = "[";
 	std::string controller_tasks_types = "[";
@@ -326,20 +326,20 @@ void MainRedisInterface::generateUiFile() {
 	// get random number for tabs name
 	std::string random_number = std::to_string(rand());
 
-	additionalContent += "<sai2-interfaces-tabs name='Robot_names" +
+	additionalContent += "<sai-interfaces-tabs name='Robot_names" +
 						 random_number + "' color='#b30000'>\n";
 
 	for (const auto& config : _controllers_configs) {
-		Sai2Model::Sai2Model robot_model =
-			Sai2Model::Sai2Model(config.robot_model_file, false);
+		SaiModel::SaiModel robot_model =
+			SaiModel::SaiModel(config.robot_model_file, false);
 
 		additionalContent +=
-			"<sai2-interfaces-tab-content name='" + config.robot_name + "'>\n";
+			"<sai-interfaces-tab-content name='" + config.robot_name + "'>\n";
 
 		std::vector<std::string> controller_names_and_tasks =
 			generateControllerNamesAndTasksForUI(config, robot_model);
 		additionalContent +=
-			"<div class='row my-3'>\n<sai2-interfaces-robot-controller "
+			"<div class='row my-3'>\n<sai-interfaces-robot-controller "
 			"robotName='" +
 			config.robot_name + "'\nredisPrefix='" +
 			_redis_config.redis_namespace_prefix + "'\ncontrollerNames='" +
@@ -364,11 +364,11 @@ void MainRedisInterface::generateUiFile() {
 		addInterfaceCartesianLimits(additionalContent, config);
 
 		additionalContent += " />\n</div>\n";
-		additionalContent += "</sai2-interfaces-tab-content>\n";
+		additionalContent += "</sai-interfaces-tab-content>\n";
 	}
 
 	if (_simviz_interface) {
-		additionalContent += "<sai2-interfaces-tab-content name='Simviz'>\n";
+		additionalContent += "<sai-interfaces-tab-content name='Simviz'>\n";
 		additionalContent += "<div class='row my-3'>\n";
 
 		std::string model_names = "\'[";
@@ -389,16 +389,16 @@ void MainRedisInterface::generateUiFile() {
 		model_names += "]\'";
 		model_types += "]\'";
 
-		additionalContent += "<sai2-interfaces-simviz\nredisPrefix='" +
+		additionalContent += "<sai-interfaces-simviz\nredisPrefix='" +
 							 _redis_config.redis_namespace_prefix +
 							 "'\nmodelNames=" + model_names +
 							 "\nmodelTypes=" + model_types + " />\n";
 
 		additionalContent += "</div>\n";
-		additionalContent += "</sai2-interfaces-tab-content>\n";
+		additionalContent += "</sai-interfaces-tab-content>\n";
 	}
 
-	additionalContent += "</sai2-interfaces-tabs>\n";
+	additionalContent += "</sai-interfaces-tabs>\n";
 	additionalContent += "</div>\n";
 
 	// Add content before the end of the <body> block by finding its closing tag
@@ -428,7 +428,7 @@ void MainRedisInterface::generateUiFile() {
 }
 
 void MainRedisInterface::runInterfaceLoop() {
-	Sai2Common::RedisClient redis_client;
+	SaiCommon::RedisClient redis_client;
 	redis_client.connect();
 
 	redis_client.set(CONFIG_FILE_NAME_KEY, _config_file_name);
@@ -503,4 +503,4 @@ void MainRedisInterface::stopRunningControllers() {
 	_controllers_interfaces.clear();
 }
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces

@@ -67,27 +67,27 @@ Now that Redis is installed, let's go through some core commands that you will u
 Let's set the stage by running the [writekeys.py](./writekeys.py):
 
 ```
-~/sai2/core/sai2-interfaces$ python3 docs/ui_elements_details/00-fundamentals/writekeys.py 
-~/sai2/core/sai2-interfaces$ 
+~/sai/core/sai-interfaces$ python3 docs/ui_elements_details/00-fundamentals/writekeys.py 
+~/sai/core/sai-interfaces$ 
 ```
 
 This script has written some data into the Redis database, but we have no idea what. Let's run our first command:
 
 ```
-~/sai2/core/sai2-interfaces$ redis-cli
+~/sai/core/sai-interfaces$ redis-cli
 127.0.0.1:6379> KEYS *
-1) "sai2::redis::bananas"
-2) "sai2::redis::oranges"
-3) "sai2::redis::apples"
+1) "sai::redis::bananas"
+2) "sai::redis::oranges"
+3) "sai::redis::apples"
 127.0.0.1:6379> 
 ```
 
-The KEYS command lists what keys are in Redis. The syntax is `KEYS [pattern]` . The pattern string is usually a string that has the `*` wildcard character. So if I say `sai2::*::key` , this pattern would match `sai2::abc::key` and `sai2::abcdef::key` .
+The KEYS command lists what keys are in Redis. The syntax is `KEYS [pattern]` . The pattern string is usually a string that has the `*` wildcard character. So if I say `sai::*::key` , this pattern would match `sai::abc::key` and `sai::abcdef::key` .
 
-Now that we know what keys are available, let's get the value of one of these keys. Since it's first, let's look at `sai2::redis::bananas` :
+Now that we know what keys are available, let's get the value of one of these keys. Since it's first, let's look at `sai::redis::bananas` :
 
 ```
-127.0.0.1:6379> GET sai2::redis::bananas
+127.0.0.1:6379> GET sai::redis::bananas
 "2"
 127.0.0.1:6379> 
 ```
@@ -95,31 +95,31 @@ Now that we know what keys are available, let's get the value of one of these ke
 The value of this key is the string "2". Redis has no concept of types: everything is stored as a string. Now let's modify this key's value:
 
 ```
-127.0.0.1:6379> SET sai2::redis::bananas bananas
+127.0.0.1:6379> SET sai::redis::bananas bananas
 OK
 127.0.0.1:6379> 
 ```
 
-We have now set the Redis key `sai2::redis::bananas` to have a value of "bananas". Note that the SET command can create Redis key-value pairs; the key does not need to exist before you run the SET command.
+We have now set the Redis key `sai::redis::bananas` to have a value of "bananas". Note that the SET command can create Redis key-value pairs; the key does not need to exist before you run the SET command.
 
 What if we wanted to view the contents of multiple keys? We can use the MGET command! So let's view all of the keys listed from the earlier `KEYS *` command:
 
 ```
-127.0.0.1:6379> MGET sai2::redis::bananas sai2::redis::oranges sai2::redis::apples
+127.0.0.1:6379> MGET sai::redis::bananas sai::redis::oranges sai::redis::apples
 1) "bananas"
 2) "3"
 3) "1"
 127.0.0.1:6379> 
 ```
 
-The output of the MGET command follows the order in which you input the keys. So the first line `1) "bananas"` corresponds to the key `sai2::redis::bananas` , and so on.
+The output of the MGET command follows the order in which you input the keys. So the first line `1) "bananas"` corresponds to the key `sai::redis::bananas` , and so on.
 
 Similarly, we can modify multiple Redis key-value pairs using the MSET command:
 
 ```
-127.0.0.1:6379> MSET sai2::redis::bananas 1 sai2::redis::oranges 2 sai2::redis::apples 3
+127.0.0.1:6379> MSET sai::redis::bananas 1 sai::redis::oranges 2 sai::redis::apples 3
 OK
-127.0.0.1:6379> MGET sai2::redis::bananas sai2::redis::oranges sai2::redis::apples
+127.0.0.1:6379> MGET sai::redis::bananas sai::redis::oranges sai::redis::apples
 1) "1"
 2) "2"
 3) "3"
@@ -132,9 +132,9 @@ If you are ever in a situation where you want to start with a clean Redis databa
 
 ```
 127.0.0.1:6379> KEYS *
-1) "sai2::redis::bananas"
-2) "sai2::redis::oranges"
-3) "sai2::redis::apples"
+1) "sai::redis::bananas"
+2) "sai::redis::oranges"
+3) "sai::redis::apples"
 127.0.0.1:6379> FLUSHALL
 OK
 127.0.0.1:6379> KEYS *
@@ -156,17 +156,17 @@ For the complete reference on Redis commands, see [this link](https://redis.io/c
 
 ### SAI Redis Conventions
 
-There are a couple of Redis conventions when writing a SAI program. Keys are typically namespaced, e.g. `sai2::interfaces::tutorial::key_name` . This avoids conflicts with other applications who may use the same key names.
+There are a couple of Redis conventions when writing a SAI program. Keys are typically namespaced, e.g. `sai::interfaces::tutorial::key_name` . This avoids conflicts with other applications who may use the same key names.
 
 Because all values in Redis are strings, we use JSON to serialize numbers, vectors, and matrices. Examples:
 
 ```
-~/sai2/core/sai2-interfaces$ redis-cli
+~/sai/core/sai-interfaces$ redis-cli
 127.0.0.1:6379> KEYS *
-1) "sai2::interfaces::tutorial::vector_key"
-2) "sai2::interfaces::tutorial::scalar_key"
-3) "sai2::interfaces::tutorial::matrix_key"
-127.0.0.1:6379> MGET sai2::interfaces::tutorial::scalar_key sai2::interfaces::tutorial::vector_key sai2::interfaces::tutorial::matrix_key
+1) "sai::interfaces::tutorial::vector_key"
+2) "sai::interfaces::tutorial::scalar_key"
+3) "sai::interfaces::tutorial::matrix_key"
+127.0.0.1:6379> MGET sai::interfaces::tutorial::scalar_key sai::interfaces::tutorial::vector_key sai::interfaces::tutorial::matrix_key
 1) "8.206620897641367"
 2) "[6.851870215604476, 2.1029221506516516, 1.1095839118932904, 0.011003444282613462]"
 3) "[[7.5883954560722255, 9.799527232067836, 4.611120291703585, 8.988172974436225], [6.191392604661857, 0.4093771175738614, 4.233489255610024, 6.654460943264885], [1.8534865739395334, 2.106126402048827, 5.172664018630291, 5.68907076006051], [0.2101737811965776, 7.818571685472374, 6.8076501360884905, 6.909170716320676]]"
@@ -176,20 +176,20 @@ Because all values in Redis are strings, we use JSON to serialize numbers, vecto
 ## Web Development Basics
 
 In this section, we will talk about HTML and CSS since knowledge of both topics
-is needed to create custom interfaces using modules from SAI2-Interfaces. This
+is needed to create custom interfaces using modules from SAI-Interfaces. This
 tutorial is not intended to be exhaustive or impart good web programming practices, 
-but rather give a workable template to create an interface using sai2-interfaces.
+but rather give a workable template to create an interface using sai-interfaces.
 
 ### Hypertext Markup Language (HTML)
 
-Let's start with a blank SAI2-Interfaces interfaces HTML document:
+Let's start with a blank SAI-Interfaces interfaces HTML document:
 
 ```
 <!DOCTYPE html>
 <html>
 <head>
 	<meta charset="UTF-8">
-	<title>Sai2 Interface UI</title>
+	<title>Sai Interface UI</title>
 
 	<!-- Global and utility stylesheets -->
 	<link rel="stylesheet" href="./css/picnic.min.css" type="text/css">
@@ -238,7 +238,7 @@ Next, the `<title>` element. This is what is shown on the tab of your browser. Y
 <title>TITLE</title>
 ```
 
-The below snippet is split into two parts. The first part is CSS stylesheets and mostly from external libraries. The second chunk is JavaScript library imports that sai2-interfaces uses.  Finally, the last chunk imports everything from sai2-interfaces. In general, when you're creating a new interface, just copy this in.
+The below snippet is split into two parts. The first part is CSS stylesheets and mostly from external libraries. The second chunk is JavaScript library imports that sai-interfaces uses.  Finally, the last chunk imports everything from sai-interfaces. In general, when you're creating a new interface, just copy this in.
 
 ```
 <!-- Global and utility stylesheets -->
@@ -365,7 +365,7 @@ Additional information from [W3C](https://www.w3schools.com/css/css_grid.asp)
 
 ### Bootstrap
 
-Bootstrap is a library of pre built component with easily customizable styling and component placement. A lot of the sai2-interfaces components and complex layouts use bootstrap. More information [here](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
+Bootstrap is a library of pre built component with easily customizable styling and component placement. A lot of the sai-interfaces components and complex layouts use bootstrap. More information [here](https://getbootstrap.com/docs/5.3/getting-started/introduction/)
 
 ## Debugging
 
@@ -389,16 +389,16 @@ the page, which can help you iterate faster.
 You may run into issues where a Redis key might not be found or returning the
 correct value in your interface. In this case, you may want to look at the network
 request that the UI makes to Redis. You can do this by switching to the Network
-tab and looking for a URL like `redis?key=%22sai2%3A%3Aexamples%3A%3Aposori_velocity_saturation%22` .
+tab and looking for a URL like `redis?key=%22sai%3A%3Aexamples%3A%3Aposori_velocity_saturation%22` .
 The interface queries Redis keys in the URL format like `localhost:8000/redis?key=<your key here>` .
-The below image is looking at a query for the Redis key `sai2::examples::posori_velocity_saturation` .
+The below image is looking at a query for the Redis key `sai::examples::posori_velocity_saturation` .
 
 ![](./debugger2.png)
 
 ### JavaScript
 
 If you find yourself in a position where you need to jump into the internals of
-sai2-interfaces, you will find the JavaScript debugger helpful. You will need to 
+sai-interfaces, you will find the JavaScript debugger helpful. You will need to 
 navigate to the Sources tab and look for the relevant JavaScript file(s). From
 here, it is a standard debugger that you would normally find, like gdb. Set
 breakpoints, step, continue, etc. Please see additional debugging resources

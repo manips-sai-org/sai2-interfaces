@@ -1,5 +1,5 @@
-#ifndef SAI2_INTERFACES_SIMVIZ_CONFIG_H
-#define SAI2_INTERFACES_SIMVIZ_CONFIG_H
+#ifndef SAI_INTERFACES_SIMVIZ_CONFIG_H
+#define SAI_INTERFACES_SIMVIZ_CONFIG_H
 
 #include <Eigen/Dense>
 #include <map>
@@ -7,7 +7,7 @@
 
 #include "helpers/CommonConfigs.h"
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 /// @brief Default name of the folder where the log files will be saved
 const std::string default_logger_folder_name_simviz = "log_files/simviz";
@@ -155,6 +155,6 @@ struct SimVizConfig {
 	}
 };
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces
 
-#endif	// SAI2_INTERFACES_SIMVIZ_CONFIG_H
+#endif	// SAI_INTERFACES_SIMVIZ_CONFIG_H

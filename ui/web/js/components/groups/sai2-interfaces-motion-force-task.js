@@ -1,17 +1,17 @@
 // Define the custom web component
 const template = document.createElement('template');
 template.innerHTML = `
-<sai2-interfaces-tabs name="motion_force_task">
-	<sai2-interfaces-tab-content name="Motion control">
-		<sai2-interfaces-motion-control/>
-	</sai2-interfaces-tab-content>
-	<sai2-interfaces-tab-content name="Force control">
-		<sai2-interfaces-force-control />
-	</sai2-interfaces-tab-content>
-</sai2-interfaces-tabs>
+<sai-interfaces-tabs name="motion_force_task">
+	<sai-interfaces-tab-content name="Motion control">
+		<sai-interfaces-motion-control/>
+	</sai-interfaces-tab-content>
+	<sai-interfaces-tab-content name="Force control">
+		<sai-interfaces-force-control />
+	</sai-interfaces-tab-content>
+</sai-interfaces-tabs>
 `;
 
-class Sai2InterfacesMotionForceTask extends HTMLElement {
+class SaiInterfacesMotionForceTask extends HTMLElement {
 	constructor() {
 		super();
 	}
@@ -23,7 +23,7 @@ class Sai2InterfacesMotionForceTask extends HTMLElement {
 
 		// Fetch the HTML template
 		const template_node = template.content.cloneNode(true);
-		let motion_control = template_node.querySelector('sai2-interfaces-motion-control');
+		let motion_control = template_node.querySelector('sai-interfaces-motion-control');
 		motion_control.setAttribute('robotName', this.robotName);
 		motion_control.setAttribute('controllerName', this.controllerName);
 		motion_control.setAttribute('taskName', this.taskName);
@@ -34,7 +34,7 @@ class Sai2InterfacesMotionForceTask extends HTMLElement {
 			motion_control.setAttribute('maxGoalPosition', this.getAttribute('maxGoalPosition'));
 		}
 
-		let force_control = template_node.querySelector('sai2-interfaces-force-control');
+		let force_control = template_node.querySelector('sai-interfaces-force-control');
 		force_control.setAttribute('robotName', this.robotName);
 		force_control.setAttribute('controllerName', this.controllerName);
 		force_control.setAttribute('taskName', this.taskName);
@@ -63,4 +63,4 @@ class Sai2InterfacesMotionForceTask extends HTMLElement {
 }
 
 // Define the custom element
-customElements.define('sai2-interfaces-motion-force-task', Sai2InterfacesMotionForceTask);
+customElements.define('sai-interfaces-motion-force-task', SaiInterfacesMotionForceTask);

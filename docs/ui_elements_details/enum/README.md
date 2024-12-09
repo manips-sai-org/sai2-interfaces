@@ -1,12 +1,12 @@
-The `sai2-interfaces-enum` Element
+The `sai-interfaces-enum` Element
 ==================================
-The `sai2-interfaces-enum` element lets you set specific values into a Redis 
+The `sai-interfaces-enum` element lets you set specific values into a Redis 
 key, i.e. an `enum` type in most languages.
 
 ## Usage
 ```
-<sai2-interfaces-enum key="..." display="..." values='["a","b","c"]'>
-<sai2-interfaces-enum>
+<sai-interfaces-enum key="..." display="..." values='["a","b","c"]'>
+<sai-interfaces-enum>
 ```
 
 Specify each valid option as value in the array of `values`. If the values are strings,
@@ -22,13 +22,13 @@ around the array brackets (e.g. `"[1,2,3,4]"`).
 
 ## Example
 Open up `redis-cli`, and let's set the key 
-`sai2::interfaces::tutorial::enum_key` to "Apples". Let's say that the valid 
+`sai::interfaces::tutorial::enum_key` to "Apples". Let's say that the valid 
 options for this key are `Apples`, `Bananas`, or `Oranges`.
 ```
 ~$ redis-cli
-127.0.0.1:6379> set sai2::interfaces::tutorial::enum_key Apples
+127.0.0.1:6379> set sai::interfaces::tutorial::enum_key Apples
 OK
-127.0.0.1:6379> get sai2::interfaces::tutorial::enum_key
+127.0.0.1:6379> get sai::interfaces::tutorial::enum_key
 "Apples"
 127.0.0.1:6379> 
 ```
@@ -36,13 +36,13 @@ OK
 Let's write the HTML for this and paste it into the body of 
 [enum.html](./enum.html)
 ```
-<sai2-interfaces-enum key="sai2::interfaces::tutorial::enum_key"
+<sai-interfaces-enum key="sai::interfaces::tutorial::enum_key"
 	values='["Apples", "Bananas", "Oranges"]' />
 ```
 
-We launch our server from the SAI2-Interfaces repository root.
+We launch our server from the SAI-Interfaces repository root.
 ```
-~/sai2/core/sai2-interfaces$ python3 ui/server.py docs/ui_elements_details/enum/enum.html
+~/sai/core/sai-interfaces$ python3 ui/server.py docs/ui_elements_details/enum/enum.html
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 142-257-956
@@ -56,7 +56,7 @@ Open your browser to `localhost:8000`, and you should see something like this:
 Select the `Oranges` option in the dropdown, and we should be able to see the 
 Redis key update:
 ```
-127.0.0.1:6379> get sai2::interfaces::tutorial::enum_key
+127.0.0.1:6379> get sai::interfaces::tutorial::enum_key
 "Oranges"
 127.0.0.1:6379> 
 ```
@@ -64,7 +64,7 @@ Redis key update:
 We can also change the associated text next to the dropdown by using the 
 `display` attribute:
 ```
-<sai2-interfaces-enum key="sai2::interfaces::tutorial::enum_key" display="My favourite fruit:"
+<sai-interfaces-enum key="sai::interfaces::tutorial::enum_key" display="My favourite fruit:"
 	values='["Apples", "Bananas", "Oranges"]' />
 ```
 

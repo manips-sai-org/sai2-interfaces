@@ -1,7 +1,7 @@
 import { EVENT_CONTROLLER_STATUS } from '../config.js';
 
 
-export default class Sai2InterfacesComponent extends HTMLElement {
+export default class SaiInterfacesComponent extends HTMLElement {
 	constructor(template) {
 		super();
 		this.template = template;

@@ -1,9 +1,9 @@
-#ifndef SAI2_INTERFACES_SIMVIZ_CONFIG_PARSER_H
-#define SAI2_INTERFACES_SIMVIZ_CONFIG_PARSER_H
+#ifndef SAI_INTERFACES_SIMVIZ_CONFIG_PARSER_H
+#define SAI_INTERFACES_SIMVIZ_CONFIG_PARSER_H
 
 #include "SimVizConfig.h"
 
-namespace Sai2Interfaces
+namespace SaiInterfaces
 {
 
 /**
@@ -26,6 +26,6 @@ public:
     SimVizConfig parseConfig(const std::string& config_file);
 };
 
-} // namespace Sai2Interfaces
+} // namespace SaiInterfaces
 
-#endif // SAI2_INTERFACES_SIMVIZ_CONFIG_PARSER_H
+#endif // SAI_INTERFACES_SIMVIZ_CONFIG_PARSER_H

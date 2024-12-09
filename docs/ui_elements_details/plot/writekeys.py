@@ -2,8 +2,8 @@ import redis
 import math
 import time
 
-SCALAR_KEY = 'sai2::interfaces::scalar_key'
-VECTOR_KEY = 'sai2::interfaces::vector_key'
+SCALAR_KEY = 'sai::interfaces::scalar_key'
+VECTOR_KEY = 'sai::interfaces::vector_key'
 WRITE_PERIOD = 0.01
 
 r = redis.Redis()

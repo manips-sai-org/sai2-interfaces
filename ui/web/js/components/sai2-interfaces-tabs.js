@@ -1,11 +1,11 @@
 import { EVENT_RESET_DISPLAYS, EVENT_RESET_ACTIVE_TABS_FROM_REDIS } from '../config.js';
 import { post_redis_key_val, get_redis_val, wait_for_redis_val } from '../redis.js';
 
-class Sai2InterfacesTabs extends HTMLElement {
+class SaiInterfacesTabs extends HTMLElement {
 	constructor() {
 		super();
-		Sai2InterfacesTabs.counter = (Sai2InterfacesTabs.counter || 0) + 1;
-		this.counter = Sai2InterfacesTabs.counter;
+		SaiInterfacesTabs.counter = (SaiInterfacesTabs.counter || 0) + 1;
+		this.counter = SaiInterfacesTabs.counter;
 	}
 
 	setActiveTab(tabName) {
@@ -21,8 +21,8 @@ class Sai2InterfacesTabs extends HTMLElement {
 		const name = this.getAttribute('name').replace(/\s+/g, '_');
 		this.uniqueId = name + this.counter;
 
-		const tabsContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-CONTENT');
-		const otherContent = Array.from(this.children).filter(child => child.tagName === 'SAI2-INTERFACES-TAB-INLINE-CONTENT');
+		const tabsContent = Array.from(this.children).filter(child => child.tagName === 'SAI-INTERFACES-TAB-CONTENT');
+		const otherContent = Array.from(this.children).filter(child => child.tagName === 'SAI-INTERFACES-TAB-INLINE-CONTENT');
 
 		const tabsOnTheLeft = this.hasAttribute('tabsOnTheLeft');
 		const color = this.getAttribute('color') || 'rgb(0, 110, 255)';
@@ -177,19 +177,19 @@ class Sai2InterfacesTabs extends HTMLElement {
 }
 
 // for content to be displayed in the page and displayed when one tab is selected
-class Sai2InterfacesTabContent extends HTMLElement {
+class SaiInterfacesTabContent extends HTMLElement {
 	constructor() {
 		super();
 	}
 }
 
 // for content to appear in the tab area iteslf, at al times
-class Sai2InterfacesTabInlineContent extends HTMLElement {
+class SaiInterfacesTabInlineContent extends HTMLElement {
 	constructor() {
 		super();
 	}
 }
 
-customElements.define('sai2-interfaces-tabs', Sai2InterfacesTabs);
-customElements.define('sai2-interfaces-tab-content', Sai2InterfacesTabContent);
-customElements.define('sai2-interfaces-tab-inline-content', Sai2InterfacesTabInlineContent);
+customElements.define('sai-interfaces-tabs', SaiInterfacesTabs);
+customElements.define('sai-interfaces-tab-content', SaiInterfacesTabContent);
+customElements.define('sai-interfaces-tab-inline-content', SaiInterfacesTabInlineContent);

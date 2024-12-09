@@ -1,6 +1,6 @@
 import { post_redis_key_val, get_redis_val } from '../redis.js';
 
-customElements.define('sai2-interfaces-simple-data-structure-setter', class extends HTMLElement {
+customElements.define('sai-interfaces-simple-data-structure-setter', class extends HTMLElement {
 	constructor() {
 		super();
 		this.data = {};
