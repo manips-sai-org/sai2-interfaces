@@ -4,7 +4,7 @@
 
 	<robot name="HRP4">
 		<origin xyz="0.0 0.0 0.8" rpy="0 0 0" />
-		<model dir="${SAI2_MODEL_URDF_FOLDER}/HRP4C" path="HRP4C_custom_v1.urdf" name="HRP4" />
+		<model dir="${SAI_MODEL_URDF_FOLDER}/HRP4C" path="HRP4C_custom_v1.urdf" name="HRP4" />
 	</robot>
 
 	<static_object name="Floor">

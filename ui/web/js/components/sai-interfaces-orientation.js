@@ -1,11 +1,11 @@
 import { post_redis_key_val } from '../redis.js';
 import { throttle } from '../index.js';
-import Sai2InterfacesComponent from './sai2-interfaces-component.js';
+import SaiInterfacesComponent from './sai-interfaces-component.js';
 
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
-	.sai2-interfaces-orientation-top {
+	.sai-interfaces-orientation-top {
 		display: flex;
 		flex-direction: row;
 		flex-wrap: wrap;
@@ -13,30 +13,30 @@ template.innerHTML = `
 		padding: 0.5em;
 	}
 
-	.sai2-interfaces-orientation-left {
+	.sai-interfaces-orientation-left {
 		display: flex;
 		flex-direction: column;
 		flex: 1;
 		align-items: center;
 	}
 
-	.sai2-interfaces-orientation-left sai2-interfaces-slider {
+	.sai-interfaces-orientation-left sai-interfaces-slider {
 		width: 100%;
 	}
 
-	.sai2-interfaces-orientation-left button {
+	.sai-interfaces-orientation-left button {
 		width: max-content;
 	}
 
-	.sai2-interfaces-orientation-right {
+	.sai-interfaces-orientation-right {
 		margin: 0.5em;
 		flex: 1;
 	}
 </style>
-<div class="sai2-interfaces-orientation-top">
-	<div class="sai2-interfaces-orientation-left">
+<div class="sai-interfaces-orientation-top">
+	<div class="sai-interfaces-orientation-left">
 	</div>
-	<div class="sai2-interfaces-orientation-right">
+	<div class="sai-interfaces-orientation-right">
 	</div>
 </div>
 `;
@@ -104,7 +104,7 @@ function mat_to_xyz_fixed_angles(R) {
 }
 
 
-class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
+class SaiInterfacesOrientation extends SaiInterfacesComponent {
 	constructor() {
 		super(template);
 	}
@@ -113,17 +113,17 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 		this.key = this.getAttribute('key');
 		this.refreshRate = this.getAttribute('refreshRate') || 1;
 
-		let right_div = this.template_node.querySelector('.sai2-interfaces-orientation-right');
+		let right_div = this.template_node.querySelector('.sai-interfaces-orientation-right');
 		right_div.innerHTML = `
-			<sai2-interfaces-display key="${this.key}" display="Matrix Form" decimalPlaces="3" labelOnTop refreshRate="${this.refreshRate}"></sai2-interfaces-display>
+			<sai-interfaces-display key="${this.key}" display="Matrix Form" decimalPlaces="3" labelOnTop refreshRate="${this.refreshRate}"></sai-interfaces-display>
 			`;
-		this.display = right_div.querySelector('sai2-interfaces-display');
+		this.display = right_div.querySelector('sai-interfaces-display');
 
-		let left_div = this.template_node.querySelector('.sai2-interfaces-orientation-left');
+		let left_div = this.template_node.querySelector('.sai-interfaces-orientation-left');
 		left_div.innerHTML = `
-			<sai2-interfaces-slider size="3" display='["X (γ)", "Y (β)", "Z (α)"]' min="-3.14" max="3.14" step="0.01"/>
+			<sai-interfaces-slider size="3" display='["X (γ)", "Y (β)", "Z (α)"]' min="-3.14" max="3.14" step="0.01"/>
 			`;
-		this.slider = left_div.querySelector('sai2-interfaces-slider');
+		this.slider = left_div.querySelector('sai-interfaces-slider');
 
 		let slider_on_value_change_callback = euler_angle_delta => {
 			/*
@@ -189,4 +189,4 @@ class Sai2InterfacesOrientation extends Sai2InterfacesComponent {
 	}
 }
 
-customElements.define('sai2-interfaces-orientation', Sai2InterfacesOrientation);
+customElements.define('sai-interfaces-orientation', SaiInterfacesOrientation);

@@ -4,10 +4,10 @@
  * <br>
  * <pre>
  * Example usage:
- * <sai2-interface-enum key="long_key_name" display="friendly_key_name" values="[A,B,C]">
- * </sai2-interface-enum>
+ * <sai-interface-enum key="long_key_name" display="friendly_key_name" values="[A,B,C]">
+ * </sai-interface-enum>
  * </pre>
- * @module ./module/sai2-interface-enum
+ * @module ./module/sai-interface-enum
  */
 
 import { get_redis_val, post_redis_key_val } from '../redis.js';
@@ -20,7 +20,7 @@ template.innerHTML = `
 </div>
 `;
 
-customElements.define('sai2-interfaces-enum', class extends HTMLElement {
+customElements.define('sai-interfaces-enum', class extends HTMLElement {
 	constructor() {
 		super();
 		this.template = template;

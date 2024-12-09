@@ -5,30 +5,30 @@ import {
 
 // Import all ES6 modules here, so the HTML template only needs to load index.js.
 import './redis.js';
-import './components/sai2-interfaces-accordion.js';
-import './components/sai2-interfaces-axis-setter.js';
-import './components/sai2-interfaces-component.js';
-import './components/sai2-interfaces-config-selector.js';
-import './components/sai2-interfaces-display.js';
-import './components/sai2-interfaces-enum.js';
-import './components/sai2-interfaces-orientation.js';
-import './components/sai2-interfaces-plot-button.js';
-import './components/sai2-interfaces-plot.js';
-import './components/sai2-interfaces-setkey.js';
-import './components/sai2-interfaces-simple-data-structure-setter.js';
-import './components/sai2-interfaces-slider.js';
-import './components/sai2-interfaces-tabs.js';   // container
-import './components/sai2-interfaces-toggle-group.js';
-import './components/sai2-interfaces-toggle.js';
+import './components/sai-interfaces-accordion.js';
+import './components/sai-interfaces-axis-setter.js';
+import './components/sai-interfaces-component.js';
+import './components/sai-interfaces-config-selector.js';
+import './components/sai-interfaces-display.js';
+import './components/sai-interfaces-enum.js';
+import './components/sai-interfaces-orientation.js';
+import './components/sai-interfaces-plot-button.js';
+import './components/sai-interfaces-plot.js';
+import './components/sai-interfaces-setkey.js';
+import './components/sai-interfaces-simple-data-structure-setter.js';
+import './components/sai-interfaces-slider.js';
+import './components/sai-interfaces-tabs.js';   // container
+import './components/sai-interfaces-toggle-group.js';
+import './components/sai-interfaces-toggle.js';
 
-import './components/groups/sai2-interfaces-force-control.js';   // single tab template
-import './components/groups/sai2-interfaces-joint-task.js';      // single tab template
-import './components/groups/sai2-interfaces-motion-control.js';  // single tab template
-import './components/groups/sai2-interfaces-motion-force-task.js';    // multi tab template
-import './components/groups/sai2-interfaces-robot-controller.js';	  // multi tab template
-import './components/groups/sai2-interfaces-simviz-object.js';    // single tab template
-import './components/groups/sai2-interfaces-simviz-robot.js';     // single tab template
-import './components/groups/sai2-interfaces-simviz.js';  	   // multi tab templatesla
+import './components/groups/sai-interfaces-force-control.js';   // single tab template
+import './components/groups/sai-interfaces-joint-task.js';      // single tab template
+import './components/groups/sai-interfaces-motion-control.js';  // single tab template
+import './components/groups/sai-interfaces-motion-force-task.js';    // multi tab template
+import './components/groups/sai-interfaces-robot-controller.js';	  // multi tab template
+import './components/groups/sai-interfaces-simviz-object.js';    // single tab template
+import './components/groups/sai-interfaces-simviz-robot.js';     // single tab template
+import './components/groups/sai-interfaces-simviz.js';  	   // multi tab templatesla
 
 var socket = io();
 socket.on('connect', () => {

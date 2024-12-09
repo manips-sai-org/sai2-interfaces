@@ -1,7 +1,7 @@
 import redis
 import json
 
-KEY = 'sai2::interfaces::tutorial::simple_data_structure'
+KEY = 'sai::interfaces::tutorial::simple_data_structure'
 
 values = {
     "string_key": "str",

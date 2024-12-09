@@ -1,5 +1,5 @@
 /**
- * Shared constants module for sai2-interfaces.
+ * Shared constants module for sai-interfaces.
  * @module ./config
  */
 
@@ -11,7 +11,7 @@ export const EVENT_RESET_ACTIVE_TABS_FROM_REDIS = 'reset-tabs-from-redis';
  * @constant
  * @type {string}
  */
-export const REDIS_KEY_CONTROLLER_STATE = 'sai2::examples::control_state';
+export const REDIS_KEY_CONTROLLER_STATE = 'sai::examples::control_state';
 
 /**
  * The value of REDIS_KEY_CONTROLLER_STATE in Redis when the controller is
@@ -25,6 +25,6 @@ export const REDIS_VAL_CONTROLLER_READY = 'ready';
  * @constant
  * @type {string}
  */
-export const REDIS_KEY_CURRENT_PRIMITIVE = 'sai2::examples::primitive';
+export const REDIS_KEY_CURRENT_PRIMITIVE = 'sai::examples::primitive';
 
-export const REDIS_PRIMITIVE_UPDATING = 'sai2::examples::primitive_updating';
+export const REDIS_PRIMITIVE_UPDATING = 'sai::examples::primitive_updating';

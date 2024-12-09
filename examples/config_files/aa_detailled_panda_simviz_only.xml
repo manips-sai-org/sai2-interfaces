@@ -2,12 +2,12 @@
 The <redisConfiguration> element contains the configuration for the redis client used by the simviz (and the controllers if present).
 Only one is allowed per configuration file.
 Its attributes are:
-	- namespacePrefix: Optional. The prefix that will be added to all keys. Defaults to "sai2::interfaces"
+	- namespacePrefix: Optional. The prefix that will be added to all keys. Defaults to "sai::interfaces"
 	- ip: Optional. The ip address of the redis server. Defaults to 127.0.0.1 (localhost)
 	- port: Optional. The port of the redis server. Defaults to 6379
 None of the corresponding config parameters can be changed at runtime.
 -->
-<redisConfiguration namespacePrefix="sai2::interfaces" 
+<redisConfiguration namespacePrefix="sai::interfaces" 
 	ip="127.0.0.1" 
 	port="6379" />
 

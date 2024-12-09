@@ -1,7 +1,7 @@
-# Sai2-interfaces
+# Sai-interfaces
 
-sai2-interfaces provides two main tools to enables users to quickly develop controllers and simulations with the sai libraries:
-1. Wrappers for controller setup (around [sai2-primitives](https://github.com/manips-sai-org/sai2-primitives) library), simulation (around [sai2-simulation](https://github.com/manips-sai-org/sai2-simulation) library) and graphic visualization (around [sai2-graphics](https://github.com/manips-sai-org/sai2-graphics) library). The code for those is in the `src/` folder. Those wrappers enable:
+sai-interfaces provides two main tools to enables users to quickly develop controllers and simulations with the sai libraries:
+1. Wrappers for controller setup (around [sai-primitives](https://github.com/manips-sai-org/sai-primitives) library), simulation (around [sai-simulation](https://github.com/manips-sai-org/sai-simulation) library) and graphic visualization (around [sai-graphics](https://github.com/manips-sai-org/sai-graphics) library). The code for those is in the `src/` folder. Those wrappers enable:
   + Easy setup and configuration of controllers and simulated worlds from xml/urdf files
   + A lot of interactability with the controllers and simulation/visualization via redis
   + Built-in data logging functionality
@@ -24,9 +24,9 @@ pip3 install -r ui/requirements.txt
 ```
 
 The C++ libraries depend on:
-* [sai2-simulation](https://github.com/manips-sai-org/sai2-simulation)
-* [sai2-graphics](https://github.com/manips-sai-org/sai2-graphics)
-* [sai2-primitives](https://github.com/manips-sai-org/sai2-primitives)
+* [sai-simulation](https://github.com/manips-sai-org/sai-simulation)
+* [sai-graphics](https://github.com/manips-sai-org/sai-graphics)
+* [sai-primitives](https://github.com/manips-sai-org/sai-primitives)
 
 You will need to build those first.
 
@@ -39,7 +39,7 @@ mkdir build && cd build
 cmake .. && make -j4
 ```
 
-This will build the wrappers for the controllers and simviz, the MainInterface program, and will export `${SAI2-INTERFACES_UI_DIR}` , which points to the absolute path of the `ui/` folder in this repository. You can then use cmake's `FILE(CREATE_LINK)` macro to make a symlink to this directory from another application for easy access (recommended, for an example see the CMakeLists.txt file of [OpenSai](https://github.com/manips-sai-org/OpenSai)), or the `FILE(COPY)` macro to copy it.
+This will build the wrappers for the controllers and simviz, the MainInterface program, and will export `${SAI-INTERFACES_UI_DIR}` , which points to the absolute path of the `ui/` folder in this repository. You can then use cmake's `FILE(CREATE_LINK)` macro to make a symlink to this directory from another application for easy access (recommended, for an example see the CMakeLists.txt file of [OpenSai](https://github.com/manips-sai-org/OpenSai)), or the `FILE(COPY)` macro to copy it.
 
 ### Examples
 
@@ -54,7 +54,7 @@ This will run the `panda_simviz_control` config file that simulates and controls
 ./MainRedisInterfaceExample double_kuka_simviz_control.xml
 ```
 
-You can interact with the controller, the simulation and even reset the simulation or swap the config file at runtime via the ui interface. To run the interface, open a new terminal, go to the sai2-interfaces root folder and launch the python server to serve the automatically generated webui file:
+You can interact with the controller, the simulation and even reset the simulation or swap the config file at runtime via the ui interface. To run the interface, open a new terminal, go to the sai-interfaces root folder and launch the python server to serve the automatically generated webui file:
 
 ```
 python3 ui/server.py examples/config_files/webui_generated_file/webui.html

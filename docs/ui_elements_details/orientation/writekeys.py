@@ -3,7 +3,7 @@ import numpy as np
 import time
 import json
 
-MATRIX_KEY = 'sai2::interfaces::tutorial::matrix_key'
+MATRIX_KEY = 'sai::interfaces::tutorial::matrix_key'
 
 
 def xyz_fixed_angles_to_mat(alpha, beta, gamma):

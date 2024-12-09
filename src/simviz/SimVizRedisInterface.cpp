@@ -5,7 +5,7 @@
 #include <filesystem>
 #include <glaze/glaze.hpp>
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 namespace {
 bool external_stop_signal = false;
@@ -31,12 +31,12 @@ SimVizRedisInterface::SimVizRedisInterface(const SimVizConfig& config,
 	  _logging_on(false),
 	  _reset_complete(false),
 	  _logging_state(LoggingState::OFF) {
-	_graphics = std::make_unique<Sai2Graphics::Sai2Graphics>(
-		_config.world_file, "sai2 world", false);
-	_simulation = std::make_unique<Sai2Simulation::Sai2Simulation>(
+	_graphics = std::make_unique<SaiGraphics::SaiGraphics>(
+		_config.world_file, "sai world", false);
+	_simulation = std::make_unique<SaiSimulation::SaiSimulation>(
 		_config.world_file, false);
 
-	_redis_client = std::make_unique<Sai2Common::RedisClient>(
+	_redis_client = std::make_unique<SaiCommon::RedisClient>(
 		_config.redis_config.redis_namespace_prefix);
 	_redis_client->connect(_config.redis_config.redis_ip,
 						   _config.redis_config.redis_port);
@@ -113,7 +113,7 @@ void SimVizRedisInterface::resetInternal() {
 		}
 
 		// logger for all modes
-		_loggers[robot_name] = std::make_unique<Sai2Common::Logger>(
+		_loggers[robot_name] = std::make_unique<SaiCommon::Logger>(
 			_config.logger_config.folder_name + "/" + robot_name + "_simviz",
 			_config.logger_config.add_timestamp_to_filename);
 		_loggers.at(robot_name)
@@ -195,7 +195,7 @@ void SimVizRedisInterface::resetInternal() {
 		_object_vel[object_name] = _simulation->getObjectVelocity(object_name);
 
 		// logger for all modes
-		_loggers[object_name] = std::make_unique<Sai2Common::Logger>(
+		_loggers[object_name] = std::make_unique<SaiCommon::Logger>(
 			_config.logger_config.folder_name + "/" + object_name + "_simviz",
 			_config.logger_config.add_timestamp_to_filename);
 		_loggers.at(object_name)
@@ -270,7 +270,7 @@ void SimVizRedisInterface::resetInternal() {
 		for (auto& force_sensor_data : _force_sensor_data) {
 			_graphics->addForceSensorDisplay(force_sensor_data);
 			if (force_sensor_data.link_name ==
-				Sai2Simulation::object_link_name) {
+				SaiSimulation::object_link_name) {
 				_redis_client->addToSendGroup(
 					"sensors::" + force_sensor_data.robot_or_object_name +
 						"::ft_sensor::force",
@@ -336,7 +336,7 @@ void SimVizRedisInterface::run(const std::atomic<bool>& user_stop_signal) {
 
 void SimVizRedisInterface::vizLoopRun(
 	const std::atomic<bool>& user_stop_signal) {
-	Sai2Common::LoopTimer timer(viz_refresh_rate);
+	SaiCommon::LoopTimer timer(viz_refresh_rate);
 
 	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
@@ -413,7 +413,7 @@ double SimVizRedisInterface::computeCommunicationLoopFrequency() const {
 void SimVizRedisInterface::redisCommunicationLoopRun(
 	const std::atomic<bool>& user_stop_signal) {
 	_communication_timer =
-		make_unique<Sai2Common::LoopTimer>(computeCommunicationLoopFrequency());
+		make_unique<SaiCommon::LoopTimer>(computeCommunicationLoopFrequency());
 	_communication_timer->setTimerName(
 		"Simviz Redis Interface Communication Loop Timer");
 
@@ -440,7 +440,7 @@ void SimVizRedisInterface::redisCommunicationLoopRun(
 
 void SimVizRedisInterface::simLoopRun(
 	const std::atomic<bool>& user_stop_signal) {
-	_sim_timer = std::make_unique<Sai2Common::LoopTimer>(
+	_sim_timer = std::make_unique<SaiCommon::LoopTimer>(
 		_config.speedup_factor / _simulation->timestep());
 	_sim_timer->setTimerName("Simviz Redis Interface Sim Loop Timer");
 
@@ -619,4 +619,4 @@ void SimVizRedisInterface::setModelSpecificParametersFromConfig(
 	}
 }
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces

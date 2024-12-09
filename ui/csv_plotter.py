@@ -245,7 +245,7 @@ class CsvPlotter:
             # Create layout
             layout = go.Layout(
                 title=self.plot_title_entry.get()
-                if self.plot_title_entry.get() else "Sai2 CSV Plot",
+                if self.plot_title_entry.get() else "Sai CSV Plot",
                 xaxis=dict(title=x_column),
                 # yaxis=dict(title="Value"),
             )

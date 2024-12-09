@@ -56,7 +56,7 @@ template.innerHTML = `
 `;
 
 // Define the custom element class
-class Sai2InterfacesAxisSetter extends HTMLElement {
+class SaiInterfacesAxisSetter extends HTMLElement {
 	constructor() {
 		super();
 
@@ -153,4 +153,4 @@ class Sai2InterfacesAxisSetter extends HTMLElement {
 }
 
 // Define the custom element
-customElements.define('sai2-interfaces-axis-setter', Sai2InterfacesAxisSetter);
+customElements.define('sai-interfaces-axis-setter', SaiInterfacesAxisSetter);

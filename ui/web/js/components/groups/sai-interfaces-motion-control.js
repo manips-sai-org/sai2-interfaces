@@ -1,5 +1,5 @@
 // Define the custom web component
-class Sai2InterfacesMotionControl extends HTMLElement {
+class SaiInterfacesMotionControl extends HTMLElement {
 	constructor() {
 		super();
 		this.robotName = this.getAttribute('robotName');
@@ -14,7 +14,7 @@ class Sai2InterfacesMotionControl extends HTMLElement {
 		this.redisPrefix += this.robotName + "::" + this.controllerName + "::" + this.taskName + "::";
 
 		// Fetch the HTML template
-		fetch('html/component_groups_templates/sai2-interfaces-motion-control.html')
+		fetch('html/component_groups_templates/sai-interfaces-motion-control.html')
 			.then(response => response.text())
 			.then(template => {
 				let replacedHTML = template.replaceAll('{{_prefix_}}', this.redisPrefix);
@@ -36,4 +36,4 @@ class Sai2InterfacesMotionControl extends HTMLElement {
 }
 
 // Define the custom element
-customElements.define('sai2-interfaces-motion-control', Sai2InterfacesMotionControl);
+customElements.define('sai-interfaces-motion-control', SaiInterfacesMotionControl);

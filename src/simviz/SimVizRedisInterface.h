@@ -1,5 +1,5 @@
-#ifndef SAI2_INTERFACES_SIMVIZ_REDIS_INTERFACE_H
-#define SAI2_INTERFACES_SIMVIZ_REDIS_INTERFACE_H
+#ifndef SAI_INTERFACES_SIMVIZ_REDIS_INTERFACE_H
+#define SAI_INTERFACES_SIMVIZ_REDIS_INTERFACE_H
 
 #include <Eigen/Dense>
 #include <map>
@@ -7,12 +7,12 @@
 #include <mutex>
 #include <string>
 
-#include "Sai2Common.h"
-#include "Sai2Graphics.h"
-#include "Sai2Simulation.h"
+#include "SaiCommon.h"
+#include "SaiGraphics.h"
+#include "SaiSimulation.h"
 #include "SimVizConfig.h"
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 /**
  * @brief Class to run a simulation and visualization from a custom xml config
@@ -101,11 +101,11 @@ private:
 	SimVizConfig _config;
 	SimVizConfig _new_config;
 
-	std::unique_ptr<Sai2Common::RedisClient> _redis_client;
+	std::unique_ptr<SaiCommon::RedisClient> _redis_client;
 
-	std::unique_ptr<Sai2Graphics::Sai2Graphics> _graphics;
-	std::unique_ptr<Sai2Simulation::Sai2Simulation> _simulation;
-	std::unique_ptr<Sai2Common::LoopTimer> _sim_timer, _communication_timer;
+	std::unique_ptr<SaiGraphics::SaiGraphics> _graphics;
+	std::unique_ptr<SaiSimulation::SaiSimulation> _simulation;
+	std::unique_ptr<SaiCommon::LoopTimer> _sim_timer, _communication_timer;
 
 	std::map<std::string, Eigen::VectorXd> _robot_ui_torques;
 	std::map<std::string, Eigen::VectorXd> _object_ui_torques;
@@ -117,9 +117,9 @@ private:
 	std::map<std::string, Eigen::Matrix4d> _object_pose;
 	std::map<std::string, Eigen::Vector6d> _object_vel;
 
-	std::vector<Sai2Model::ForceSensorData> _force_sensor_data;
+	std::vector<SaiModel::ForceSensorData> _force_sensor_data;
 
-	std::map<std::string, std::unique_ptr<Sai2Common::Logger>> _loggers;
+	std::map<std::string, std::unique_ptr<SaiCommon::Logger>> _loggers;
 
 	std::map<std::string, std::string> _model_specific_params_string;
 
@@ -136,6 +136,6 @@ private:
 	bool _reset_complete;
 };
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces
 
-#endif /* SAI2_INTERFACES_SIMVIZ_REDIS_INTERFACE_H */
+#endif /* SAI_INTERFACES_SIMVIZ_REDIS_INTERFACE_H */

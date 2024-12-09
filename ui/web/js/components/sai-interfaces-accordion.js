@@ -1,5 +1,5 @@
 /**
- * @module ./module/sai2-interface-accordion
+ * @module ./module/sai-interface-accordion
  */
 
 import { get_redis_val, post_redis_key_val } from '../redis.js';
@@ -7,7 +7,7 @@ import { get_redis_val, post_redis_key_val } from '../redis.js';
 const template = document.createElement('template');
 template.innerHTML = `
 <style>
-	.sai2-interfaces-accordion-btn {
+	.sai-interfaces-accordion-btn {
 		color: white;
 		cursor: pointer;
 		padding: 18px;
@@ -18,7 +18,7 @@ template.innerHTML = `
 		transition: 0.4s;
 	}
 
-	.sai2-interfaces-content {
+	.sai-interfaces-content {
 		padding: 0 18px;
 		background-color: white;
 		max-height: 0;
@@ -26,11 +26,11 @@ template.innerHTML = `
 		transition: max-height 0.2s ease-out;
 	}
 </style>
-<button class="sai2-interfaces-accordion-btn">
+<button class="sai-interfaces-accordion-btn">
 </button>
 `;
 
-customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
+customElements.define('sai-interfaces-accordion', class extends HTMLElement {
 	constructor() {
 		super();
 		this.template = template;
@@ -43,10 +43,10 @@ customElements.define('sai2-interfaces-accordion', class extends HTMLElement {
 		let toggleKey = this.getAttribute('key');
 		let displayName = this.getAttribute('displayName') || toggleKey;
 
-		let button = template_node.querySelector('.sai2-interfaces-accordion-btn');
+		let button = template_node.querySelector('.sai-interfaces-accordion-btn');
 
 		// direct children that is not the button & styling
-		let direct_children = this.querySelectorAll(':scope > :not(.sai2-interfaces-accordion-btn), :not(style)');
+		let direct_children = this.querySelectorAll(':scope > :not(.sai-interfaces-accordion-btn), :not(style)');
 
 		button.innerHTML = displayName;
 		button.addEventListener('click', () => {

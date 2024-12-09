@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "helpers/ConfigParserHelpers.h"
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	SimVizConfig config;
@@ -194,4 +194,4 @@ SimVizConfig SimVizConfigParser::parseConfig(const std::string& config_file) {
 	return config;
 }
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces

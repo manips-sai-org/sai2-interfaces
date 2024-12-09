@@ -3,7 +3,7 @@
  * for either a scalar or vector Redis key.
  * 
  * <pre>
- * HTML tag: &lt;sai2-interface-slider /&gt;
+ * HTML tag: &lt;sai-interface-slider /&gt;
  * Attributes:
  *   * key: string - Redis key to make a slider. Must be a scalar or vector, numeric.
  *   * max: number|number[] - If scalar and key is a vector, max is applied to all elements.
@@ -14,49 +14,49 @@
  *       key is a vector, the index in brackets (e.g. [1]) will be appended. If display
  *       is a string[] and key is a vector, then each element will be matched by index.
  *  </pre>
- * @module ./module/sai2-interface-slider
+ * @module ./module/sai-interface-slider
  */
 
 import { EVENT_RESET_DISPLAYS } from '../config.js';
 import { get_redis_val, post_redis_key_val } from '../redis.js';
 import { parse_maybe_array_attribute, throttle } from '../index.js';
-import Sai2InterfacesComponent from './sai2-interfaces-component.js';
+import SaiInterfacesComponent from './sai-interfaces-component.js';
 
 
 const template = document.createElement('template');
 template.innerHTML = `
-<style>.sai2-interface-slider-top {
+<style>.sai-interface-slider-top {
 	display: flex;
 	flex-direction: column;
 	flex-wrap: wrap;
 	align-items: center;
 }
 
-.sai2-interface-slider-top div {
+.sai-interface-slider-top div {
 	width: 100%;
 }
 
-.sai2-interface-slider-top div div {
+.sai-interface-slider-top div div {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 	width: 100%;
 }
 
-.sai2-interface-slider-top div div p {
+.sai-interface-slider-top div div p {
 	flex: 1;
 }
 
-.sai2-interface-slider-top div div input {
+.sai-interface-slider-top div div input {
 	width: 50%;
 }
 
 </style>
 
-<div class="sai2-interface-slider-top"/>
+<div class="sai-interface-slider-top"/>
 `;
 
-class Sai2InterfacesSlider extends Sai2InterfacesComponent {
+class SaiInterfacesSlider extends SaiInterfacesComponent {
 	constructor() {
 		super(template);
 
@@ -315,4 +315,4 @@ class Sai2InterfacesSlider extends Sai2InterfacesComponent {
 
 
 
-customElements.define('sai2-interfaces-slider', Sai2InterfacesSlider);
+customElements.define('sai-interfaces-slider', SaiInterfacesSlider);

@@ -26,7 +26,7 @@ The <world> tag is the root tag of the file and contains the following attribute
 			- path: Required. The path to the robot urdf model file from that directory
 			- name: Required. The name of the robot model inside the provided urdf file
 		-->
-		<model dir="${SAI2_MODEL_URDF_FOLDER}/panda" path="panda_arm_sphere.urdf" name="panda" />
+		<model dir="${SAI_MODEL_URDF_FOLDER}/panda" path="panda_arm_sphere.urdf" name="panda" />
 	</robot>
 
 	<!--

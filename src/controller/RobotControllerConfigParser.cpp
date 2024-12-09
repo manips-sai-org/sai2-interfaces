@@ -7,7 +7,7 @@
 using namespace std;
 using namespace Eigen;
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 namespace {
 
@@ -859,4 +859,4 @@ MotionForceTaskConfig RobotControllerConfigParser::parseMotionForceTaskConfig(
 	return config;
 }
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces

@@ -3,12 +3,12 @@
 <world name="demo_world" gravity="0.0 0.0 -9.81">
 
 	<robot name="Kuka1">
-		<model dir="${SAI2_MODEL_URDF_FOLDER}/iiwa7" path="kuka_iiwa.urdf" name="kuka_iiwa" />
+		<model dir="${SAI_MODEL_URDF_FOLDER}/iiwa7" path="kuka_iiwa.urdf" name="kuka_iiwa" />
 		<origin xyz="0.0 -0.3 0.0" rpy="0 0 0" />
 	</robot>
 
 	<robot name="Kuka2">
-		<model dir="${SAI2_MODEL_URDF_FOLDER}/iiwa7" path="kuka_iiwa.urdf" name="kuka_iiwa" />
+		<model dir="${SAI_MODEL_URDF_FOLDER}/iiwa7" path="kuka_iiwa.urdf" name="kuka_iiwa" />
 		<origin xyz="0.0 0.3 0.0" rpy="0 0 0" />
 	</robot>
 

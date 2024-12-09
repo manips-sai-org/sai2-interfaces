@@ -3,14 +3,14 @@
  * when clicking the button.
  * 
  * Example usage:
- * <sai2-interface-button key="long_key_name" value="value_to_set" label="Button Label"/>
+ * <sai-interface-button key="long_key_name" value="value_to_set" label="Button Label"/>
  * 
- * @module ./module/sai2-interface-button 
+ * @module ./module/sai-interface-button 
  */
 
 import { post_redis_key_val } from '../redis.js';
 
-customElements.define('sai2-interfaces-setkey', class extends HTMLElement {
+customElements.define('sai-interfaces-setkey', class extends HTMLElement {
 	constructor() {
 		super();
 	}

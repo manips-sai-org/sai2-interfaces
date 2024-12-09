@@ -1,4 +1,4 @@
-Sai2-interfaces UI usage overview
+Sai-interfaces UI usage overview
 =================================
 
 In this page, we will explain the ways we can interact with the controller and simulation when using the default generated ui file. We will go over the example `panda_simviz_control.xml` to show the capabilities.

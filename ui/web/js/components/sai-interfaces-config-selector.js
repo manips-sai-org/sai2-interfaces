@@ -3,7 +3,7 @@
  * 
  * <br>
  * Example usage:
- * &lt;sai2-interfaces-logger config_key="redis-config-file-key" reset_key="redis-sim-reset-key" path_prefix="path/from/simviz/to/config/folder" /&gt;
+ * &lt;sai-interfaces-logger config_key="redis-config-file-key" reset_key="redis-sim-reset-key" path_prefix="path/from/simviz/to/config/folder" /&gt;
  * HTML attributes:
  *    config_key: string - redis key in which to store the path to config file
  *    reset_key: string - redis key for the reset function
@@ -11,12 +11,12 @@
  * <br>
  * Note: there are no available attributes to set.
  * 
- * @module ./module/sai2-interfaces-logger
+ * @module ./module/sai-interfaces-logger
  */
 
 
 import { post_redis_key_val, wait_for_redis_val } from '../redis.js';
-import Sai2InterfacesComponent from './sai2-interfaces-component.js';
+import SaiInterfacesComponent from './sai-interfaces-component.js';
 
 
 const template = document.createElement('template');
@@ -31,11 +31,11 @@ template.innerHTML = `
 </div>
 `;
 
-class Sai2InterfacesConfigSelector extends Sai2InterfacesComponent {
+class SaiInterfacesConfigSelector extends SaiInterfacesComponent {
 	constructor() {
 		super(template);
-		this.config_key = this.getAttribute('config_key') || "sai2::interfaces::simviz::config_file";
-		this.reset_key = this.getAttribute('reset_key') || "sai2::interfaces::simviz::reset";
+		this.config_key = this.getAttribute('config_key') || "sai::interfaces::simviz::config_file";
+		this.reset_key = this.getAttribute('reset_key') || "sai::interfaces::simviz::reset";
 		this.path_prefix = this.getAttribute('path_prefix') || '';
 	}
 
@@ -60,4 +60,4 @@ class Sai2InterfacesConfigSelector extends Sai2InterfacesComponent {
 	}
 }
 
-customElements.define('sai2-interfaces-config-selector', Sai2InterfacesConfigSelector);
+customElements.define('sai-interfaces-config-selector', SaiInterfacesConfigSelector);

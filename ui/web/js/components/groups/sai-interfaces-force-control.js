@@ -1,5 +1,5 @@
 // Define the custom web component
-class Sai2InterfacesForceControl extends HTMLElement {
+class SaiInterfacesForceControl extends HTMLElement {
 	constructor() {
 		super();
 		this.robotName = this.getAttribute('robotName');
@@ -16,7 +16,7 @@ class Sai2InterfacesForceControl extends HTMLElement {
 		this.redisPrefix += this.robotName + "::" + this.controllerName + "::" + this.taskName + "::";
 
 		// Fetch the HTML template
-		fetch('html/component_groups_templates/sai2-interfaces-force-control.html')
+		fetch('html/component_groups_templates/sai-interfaces-force-control.html')
 			.then(response => response.text())
 			.then(template => {
 				let replacedHTML = template.replaceAll('{{_prefix_}}', this.redisPrefix);
@@ -49,4 +49,4 @@ class Sai2InterfacesForceControl extends HTMLElement {
 }
 
 // Define the custom element
-customElements.define('sai2-interfaces-force-control', Sai2InterfacesForceControl);
+customElements.define('sai-interfaces-force-control', SaiInterfacesForceControl);

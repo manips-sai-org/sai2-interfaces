@@ -3,9 +3,9 @@
  * while showing ON/OFF as a UI element.
  * 
  * Example usage:
- * &lt;sai2-interface-toggle key="long_key_name" display="friendly name"/&gt;
+ * &lt;sai-interface-toggle key="long_key_name" display="friendly name"/&gt;
  * 
- * @module ./module/sai2-interface-toggle 
+ * @module ./module/sai-interface-toggle 
  */
 
 import { get_redis_val, post_redis_key_val } from '../redis.js';
@@ -24,7 +24,7 @@ template.innerHTML = `
 `;
 
 
-customElements.define('sai2-interfaces-toggle', class extends HTMLElement {
+customElements.define('sai-interfaces-toggle', class extends HTMLElement {
 	constructor() {
 		super();
 		this.template = template;

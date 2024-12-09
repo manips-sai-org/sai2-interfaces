@@ -1,19 +1,19 @@
-#ifndef SAI2_INTERFACES_ROBOT_CONTROLLER_CONFIG_H
-#define SAI2_INTERFACES_ROBOT_CONTROLLER_CONFIG_H
+#ifndef SAI_INTERFACES_ROBOT_CONTROLLER_CONFIG_H
+#define SAI_INTERFACES_ROBOT_CONTROLLER_CONFIG_H
 
 #include <Eigen/Dense>
 #include <map>
 #include <string>
 #include <variant>
 
-#include "Sai2Primitives.h"
+#include "SaiPrimitives.h"
 #include "helpers/CommonConfigs.h"
 
-using JointTaskDefaultParams = Sai2Primitives::JointTask::DefaultParameters;
+using JointTaskDefaultParams = SaiPrimitives::JointTask::DefaultParameters;
 using MotionForceTaskDefaultParams =
-	Sai2Primitives::MotionForceTask::DefaultParameters;
+	SaiPrimitives::MotionForceTask::DefaultParameters;
 
-namespace Sai2Interfaces {
+namespace SaiInterfaces {
 
 /// @brief Default name of the folder where the log files will be saved
 const std::string default_logger_folder_name_controller =
@@ -150,7 +150,7 @@ struct JointTaskConfig {
 	/// corresponding attribute of the <jointTask> element
 	bool use_dynamic_decoupling =
 		JointTaskDefaultParams::dynamic_decoupling_type !=
-		Sai2Primitives::DynamicDecouplingType::IMPEDANCE;
+		SaiPrimitives::DynamicDecouplingType::IMPEDANCE;
 	/// @brief Threshold for the bounded inertia estimates, parsed from the
 	/// corresponding attribute of the <jointTask> element
 	double bie_threshold = JointTaskDefaultParams::bie_threshold;
@@ -318,7 +318,7 @@ struct MotionForceTaskConfig {
 	/// from the corresponding attribute of the <motionForceTask> element
 	bool use_dynamic_decoupling =
 		MotionForceTaskDefaultParams::dynamic_decoupling_type !=
-		Sai2Primitives::DynamicDecouplingType::IMPEDANCE;
+		SaiPrimitives::DynamicDecouplingType::IMPEDANCE;
 	/// @brief Threshold for the bounded inertia estimates, parsed from the
 	/// corresponding attribute of the <motionForceTask> element
 	double bie_threshold = MotionForceTaskDefaultParams::bie_threshold;
@@ -415,6 +415,6 @@ struct RobotControllerConfig {
 		controllers_configs = {};
 };
 
-}  // namespace Sai2Interfaces
+}  // namespace SaiInterfaces
 
-#endif	// SAI2_INTERFACES_ROBOT_CONTROLLER_CONFIG_H
+#endif	// SAI_INTERFACES_ROBOT_CONTROLLER_CONFIG_H
