@@ -3,10 +3,11 @@ Sai2-Interface config files details
 
 The config files used to parametrize the simulation and/or controller are custom xml files.
 
-Such a config file can contain one `<redisConfiguration>`, one `<simvizConfiguration>` element, and several `<robotControlConfiguration>` elements (one per robot to control).
+Such a config file can contain one `<redisConfiguration>` , one `<simvizConfiguration>` element, and several `<robotControlConfiguration>` elements (one per robot to control).
 We will go over those in details using the two example files [ `aa_detailled_panda_simviz_only.xml` ](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_simviz_only.xml) and [ `aa_detailled_panda_control_only.xml` ](https://github.com/manips-sai-org/sai2-interfaces/blob/master/examples/config_files/aa_detailled_panda_control_only.xml).
 
 ### The `<redisConfiguration>` element
+
 Let's start with the redis configuration. This one is very simple. It is optionnal, but if present, only one can be present. It has 3 potential attributes to define the namespace prefix for redis keys, the ip address and port of the redis server.
 
 ```
@@ -35,12 +36,12 @@ the virtual world. Only one is allowed per configuration file.
 Its attributes are:
 	- worldFilePath: Required. The path to the world file to be used
 	- mode: Optional. The mode of the simulation. Possible values are simviz, simOnly, vizOnly. Defaults to simviz
-	- redisPrefix: Optional. The prefix of the redis keys used by the simviz interface. Defaults to "sai2::interfaces"
+	- publishMassMatrixToRedis: Optional. Whether to publish the mass matrix to redis for all simulated robots. Defaults to false.
 None of the corresponding config parameters can be changed at runtime.
 -->
 <simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf"
 	mode="simviz"
-	redisPrefix="sai2::interfaces">
+	publishMassMatrixToRedis="false">
 
 ...
 
@@ -173,14 +174,14 @@ a robot can have multiple controllers, all defined within this element, but only
 Its attributes are:
 	- robotName: Required. The name of the robot
 	- robotModelFile: Required. The path to the URDF file of the robot
-	- redisPrefix: Optional. The prefix of the redis keys used by the robot control interface. Defaults to "sai2::interfaces"
 	- controlFrequency: Optional. The control frequency of the robot. Defaults to 1000.0 Hz
+	- getMassMatrixFromRedis: Optional. Whether to get the mass matrix from redis (must be published by the simulation or robot driver) or to compute it from the urdf mass parameters. Defaults to false.
 None of the corresponding config parameters can be changed at runtime.
 -->
 <robotControlConfiguration robotName="Panda"
 	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf"
-	redisPrefix="sai2::interfaces"
-	controlFrequency="1000.0">
+	controlFrequency="1000.0"
+	getMassMatrixFromRedis="false">
 
 ...
 

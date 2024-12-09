@@ -19,11 +19,13 @@ Its attributes are:
 	- robotName: Required. The name of the robot
 	- robotModelFile: Required. The path to the URDF file of the robot
 	- controlFrequency: Optional. The control frequency of the robot. Defaults to 1000.0 Hz
+	- getMassMatrixFromRedis: Optional. Whether to get the mass matrix from redis (must be published by the simulation or robot driver) or to compute it from the urdf mass parameters. Defaults to false.
 None of the corresponding config parameters can be changed at runtime.
 -->
 <robotControlConfiguration robotName="Panda"
 	robotModelFile="${SAI2_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf"
-	controlFrequency="1000.0">
+	controlFrequency="1000.0"
+	getMassMatrixFromRedis="false">
 
 	<!--
 	The optional <baseFrame> element contains the base frame of the robot with respect to world frame.
