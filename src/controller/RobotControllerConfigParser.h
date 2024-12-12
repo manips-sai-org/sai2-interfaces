@@ -32,8 +32,8 @@ public:
 private:
 	RobotControllerConfig parseControllersConfig(
 		tinyxml2::XMLElement* controlConfiguration);
-	std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>
-	parseSingleControllerConfig(tinyxml2::XMLElement* xml);
+	RobotSingleControllerConfig parseSingleControllerConfig(
+		tinyxml2::XMLElement* xml, const std::string& name);
 
 	JointTaskConfig parseJointTaskConfig(tinyxml2::XMLElement* xml);
 	MotionForceTaskConfig parseMotionForceTaskConfig(tinyxml2::XMLElement* xml);

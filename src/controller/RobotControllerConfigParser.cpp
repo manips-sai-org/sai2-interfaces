@@ -470,15 +470,15 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 				"controllers must have a non-empty name in config file: " +
 				_config_file_name);
 		}
-		if (config.controllers_configs.find(name) !=
-			config.controllers_configs.end()) {
+		if (config.single_controller_configs.find(name) !=
+			config.single_controller_configs.end()) {
 			throw runtime_error(
 				"controllers must have a unique name in config file: " +
 				_config_file_name);
 		}
 
-		config.controllers_configs[name] =
-			parseSingleControllerConfig(controller);
+		config.single_controller_configs[name] =
+			parseSingleControllerConfig(controller, name);
 
 		if (config.initial_active_controller_name == "") {
 			config.initial_active_controller_name = name;
@@ -487,10 +487,26 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 	return config;
 }
 
-vector<variant<JointTaskConfig, MotionForceTaskConfig>>
+RobotSingleControllerConfig
 RobotControllerConfigParser::parseSingleControllerConfig(
-	tinyxml2::XMLElement* xml) {
-	vector<variant<JointTaskConfig, MotionForceTaskConfig>> configs;
+	tinyxml2::XMLElement* xml, const std::string& name) {
+	RobotSingleControllerConfig single_controller_config;
+	single_controller_config.controller_name = name;
+
+	if (xml->Attribute("gravityCompensation")) {
+		single_controller_config.enable_gravity_compensation =
+			xml->BoolAttribute("gravityCompensation");
+	}
+	if (xml->Attribute("jointLimitAvoidance")) {
+		single_controller_config.enable_joint_limit_avoidance =
+			xml->BoolAttribute("jointLimitAvoidance");
+	}
+	if (xml->Attribute("torqueSaturation")) {
+		single_controller_config.enable_torque_saturation =
+			xml->BoolAttribute("torqueSaturation");
+	}
+
+	vector<variant<JointTaskConfig, MotionForceTaskConfig>> task_configs;
 	vector<string> controller_task_names;
 
 	// loop over tasks
@@ -499,11 +515,12 @@ RobotControllerConfigParser::parseSingleControllerConfig(
 		const char* elementName = element->Name();
 		std::string task_name = "";
 		if (strcmp(elementName, "jointTask") == 0) {
-			configs.push_back(parseJointTaskConfig(element));
-			task_name = get<JointTaskConfig>(configs.back()).task_name;
+			task_configs.push_back(parseJointTaskConfig(element));
+			task_name = get<JointTaskConfig>(task_configs.back()).task_name;
 		} else if (strcmp(elementName, "motionForceTask") == 0) {
-			configs.push_back(parseMotionForceTaskConfig(element));
-			task_name = get<MotionForceTaskConfig>(configs.back()).task_name;
+			task_configs.push_back(parseMotionForceTaskConfig(element));
+			task_name =
+				get<MotionForceTaskConfig>(task_configs.back()).task_name;
 		} else {
 			throw runtime_error(
 				"Unknown task type: " + std::string(elementName) +
@@ -520,7 +537,8 @@ RobotControllerConfigParser::parseSingleControllerConfig(
 		}
 		controller_task_names.push_back(task_name);
 	}
-	return configs;
+	single_controller_config.tasks_configs = task_configs;
+	return single_controller_config;
 }
 
 JointTaskConfig RobotControllerConfigParser::parseJointTaskConfig(
