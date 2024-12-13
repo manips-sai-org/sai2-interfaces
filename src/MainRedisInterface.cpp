@@ -5,6 +5,7 @@
 
 #include <filesystem>
 
+#include "controller/HapticDeviveControllerConfigParser.h"
 #include "controller/RobotControllerConfigParser.h"
 #include "helpers/ConfigParserHelpers.h"
 #include "simviz/SimVizConfigParser.h"
@@ -64,8 +65,8 @@ void addInterfaceCartesianLimits(
 		for (const auto& task_config : single_controller_config) {
 			if (std::holds_alternative<SaiInterfaces::MotionForceTaskConfig>(
 					task_config)) {
-				auto task = std::get<SaiInterfaces::MotionForceTaskConfig>(
-					task_config);
+				auto task =
+					std::get<SaiInterfaces::MotionForceTaskConfig>(task_config);
 				minGoalPosition += task.interface_config.min_goal_position;
 				maxGoalPosition += task.interface_config.max_goal_position;
 				minDesiredForce += task.interface_config.min_desired_force;
@@ -119,7 +120,8 @@ void addInterfaceCartesianLimits(
 	additionalContent += "\nmaxDesiredMoments=" + maxDesiredMoment;
 }
 
-const std::string CONFIG_FILE_NAME_KEY = "::sai-interfaces-webui::config_file_name";
+const std::string CONFIG_FILE_NAME_KEY =
+	"::sai-interfaces-webui::config_file_name";
 const std::string RESET_KEY = "::sai-interfaces-webui::reset";
 
 const std::string WEBUI_TEMPLATE_FILE_PATH =
@@ -205,11 +207,19 @@ bool MainRedisInterface::parseConfig(const std::string& config_file_name) {
 		_simviz_config->redis_config = _redis_config;
 	}
 
-	_controllers_configs.clear();
+	_robot_controllers_configs.clear();
 	if (doc.FirstChildElement("robotControlConfiguration")) {
-		RobotControllerConfigParser controller_parser;
-		_controllers_configs = controller_parser.parseConfig(config_file_path);
-		for (auto& config : _controllers_configs) {
+		RobotControllerConfigParser robot_controller_parser;
+		_robot_controllers_configs = robot_controller_parser.parseConfig(config_file_path);
+		for (auto& config : _robot_controllers_configs) {
+			config.redis_config = _redis_config;
+		}
+	}
+
+	if (doc.FirstChildElement("hapticDeviceControlConfiguration")) {
+		HapticDeviceControllerConfigParser haptic_controller_parser;
+		auto haptic_controllers_config = haptic_controller_parser.parseConfig(config_file_path);
+		for (auto& config : haptic_controllers_config) {
 			config.redis_config = _redis_config;
 		}
 	}
@@ -329,7 +339,7 @@ void MainRedisInterface::generateUiFile() {
 	additionalContent += "<sai-interfaces-tabs name='Robot_names" +
 						 random_number + "' color='#b30000'>\n";
 
-	for (const auto& config : _controllers_configs) {
+	for (const auto& config : _robot_controllers_configs) {
 		SaiModel::SaiModel robot_model =
 			SaiModel::SaiModel(config.robot_model_file, false);
 
@@ -483,11 +493,11 @@ void MainRedisInterface::reset() {
 
 void MainRedisInterface::startNewControllers() {
 	::controllers_stop_signal = false;
-	_controllers_threads.clear();
-	for (const auto& config : _controllers_configs) {
+	_robot_controllers_threads.clear();
+	for (const auto& config : _robot_controllers_configs) {
 		_controllers_interfaces[config.robot_name] =
 			make_unique<RobotControllerRedisInterface>(config, false);
-		_controllers_threads.push_back(std::thread([&]() {
+		_robot_controllers_threads.push_back(std::thread([&]() {
 			_controllers_interfaces.at(config.robot_name)
 				->run(::controllers_stop_signal);
 		}));
@@ -496,10 +506,10 @@ void MainRedisInterface::startNewControllers() {
 
 void MainRedisInterface::stopRunningControllers() {
 	::controllers_stop_signal = true;
-	for (auto& thread : _controllers_threads) {
+	for (auto& thread : _robot_controllers_threads) {
 		thread.join();
 	}
-	_controllers_threads.clear();
+	_robot_controllers_threads.clear();
 	_controllers_interfaces.clear();
 }
 

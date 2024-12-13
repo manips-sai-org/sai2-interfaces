@@ -229,13 +229,13 @@ This child element of `<robotControlConfiguration>` defines the configuration fo
 The optional <logger> element contains the parameters for the robot controller logger.
 Only one is allowed per robotControlConfiguration element.
 Its attributes are:
-	- logFolderName: Optional. The relative path of the folder where the log files will be saved. Defaults to "log_files/controllers"
+	- logFolderName: Optional. The relative path of the folder where the log files will be saved. Defaults to "log_files/robot_controllers"
 	- logFrequency: Optional. The frequency in Hz at which the log files are saved. Defaults to 100 Hz
 	- enabledAtStartup: Optional. Whether to start logging data as soon as the controller starts. Defaults to false
 	- addTimestampToFilename: Optional. Whether to add the timestamp of the logging start to the log file name. Defaults to true
 None of the corresponding config parameters can be changed at runtime.
 -->
-<logger logFolderName="log_files/controllers"
+<logger logFolderName="log_files/robot_controllers"
 	logFrequency="100"
 	enabledAtStartup="false"
 	addTimestampToFilename="true" />

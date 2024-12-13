@@ -16,7 +16,7 @@
 	<baseFrame xyz="0.0 -0.3 0.0"
 		rpy="0 0 0" />
 
-	<logger logFolderName="log_files/controllers/kukas" />
+	<logger logFolderName="log_files/robot_controllers/kukas" />
 
 	<controller name="cartesian_controller">
 		<motionForceTask name="cartesian_task"

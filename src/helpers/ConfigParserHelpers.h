@@ -20,6 +20,9 @@ std::vector<std::string> splitString(const std::string& str,
 Eigen::Vector3d parseVector3d(const char* vec_str);
 Eigen::Vector3d parseVector3d(tinyxml2::XMLElement* xml,
 							  std::string attribute_name = "xyz");
+
+Eigen::VectorXd parseVectorXd(const char* vec_str);
+
 Eigen::Affine3d parsePose(tinyxml2::XMLElement* xml);
 
 LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger,

@@ -450,7 +450,7 @@ RobotControllerConfig RobotControllerConfigParser::parseControllersConfig(
 				_config_file_name);
 		}
 		config.logger_config = ConfigParserHelpers::parseLoggerConfig(
-			logger, default_logger_folder_name_controller);
+			logger, default_logger_folder_name_robot_controller);
 	}
 
 	// parse all controller configs
