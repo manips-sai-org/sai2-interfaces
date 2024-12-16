@@ -5,7 +5,7 @@
 
 #include <filesystem>
 
-#include "controller/HapticDeviveControllerConfigParser.h"
+#include "controller/HapticDeviceControllerConfigParser.h"
 #include "controller/RobotControllerConfigParser.h"
 #include "helpers/ConfigParserHelpers.h"
 #include "simviz/SimVizConfigParser.h"
@@ -210,16 +210,19 @@ bool MainRedisInterface::parseConfig(const std::string& config_file_name) {
 	_robot_controllers_configs.clear();
 	if (doc.FirstChildElement("robotControlConfiguration")) {
 		RobotControllerConfigParser robot_controller_parser;
-		_robot_controllers_configs = robot_controller_parser.parseConfig(config_file_path);
+		_robot_controllers_configs =
+			robot_controller_parser.parseConfig(config_file_path);
 		for (auto& config : _robot_controllers_configs) {
 			config.redis_config = _redis_config;
 		}
 	}
 
+	_haptic_controllers_configs.clear();
 	if (doc.FirstChildElement("hapticDeviceControlConfiguration")) {
 		HapticDeviceControllerConfigParser haptic_controller_parser;
-		auto haptic_controllers_config = haptic_controller_parser.parseConfig(config_file_path);
-		for (auto& config : haptic_controllers_config) {
+		_haptic_controllers_configs =
+			haptic_controller_parser.parseConfig(config_file_path);
+		for (auto& config : _haptic_controllers_configs) {
 			config.redis_config = _redis_config;
 		}
 	}
@@ -495,10 +498,19 @@ void MainRedisInterface::startNewControllers() {
 	::controllers_stop_signal = false;
 	_robot_controllers_threads.clear();
 	for (const auto& config : _robot_controllers_configs) {
-		_controllers_interfaces[config.robot_name] =
+		_robot_controllers_interfaces[config.robot_name] =
 			make_unique<RobotControllerRedisInterface>(config, false);
 		_robot_controllers_threads.push_back(std::thread([&]() {
-			_controllers_interfaces.at(config.robot_name)
+			_robot_controllers_interfaces.at(config.robot_name)
+				->run(::controllers_stop_signal);
+		}));
+	}
+	_haptic_controllers_threads.clear();
+	for (const auto& config : _haptic_controllers_configs) {
+		_haptic_controllers_interfaces[config.device_id] =
+			make_unique<HapticDeviceControllerRedisInterface>(config, false);
+		_haptic_controllers_threads.push_back(std::thread([&]() {
+			_haptic_controllers_interfaces.at(config.device_id)
 				->run(::controllers_stop_signal);
 		}));
 	}
@@ -509,8 +521,13 @@ void MainRedisInterface::stopRunningControllers() {
 	for (auto& thread : _robot_controllers_threads) {
 		thread.join();
 	}
+	for (auto& thread : _haptic_controllers_threads) {
+		thread.join();
+	}
 	_robot_controllers_threads.clear();
-	_controllers_interfaces.clear();
+	_robot_controllers_interfaces.clear();
+	_haptic_controllers_threads.clear();
+	_haptic_controllers_interfaces.clear();
 }
 
 }  // namespace SaiInterfaces

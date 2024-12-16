@@ -65,8 +65,8 @@ struct HapticDeviceControllerConfig {
 				HapticControlDefaultParameters::reduction_factor_force;
 			double reduction_factor_moment =
 				HapticControlDefaultParameters::reduction_factor_moment;
-			int proxy_force_feedback_space_dimension = 0;
-			int proxy_moment_feedback_space_dimension = 0;
+			int proxy_force_space_dimension = 0;
+			int proxy_moment_space_dimension = 0;
 			Vector3d proxy_force_axis = Vector3d::UnitZ();
 			Vector3d proxy_moment_axis = Vector3d::UnitZ();
 		};
@@ -114,6 +114,7 @@ struct HapticDeviceControllerConfig {
 	SwitchUsageType switch_usage_type = SwitchUsageType::CLICK;
 	SwitchFunction switch_function = SwitchFunction::CLUTCH;
 	bool orientation_teleop_enabled = false;
+	bool use_switch_to_exit_homing = true;
 
 	LoggerConfig logger_config =
 		LoggerConfig(default_logger_folder_name_haptic_controller);

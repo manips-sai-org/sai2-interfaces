@@ -1,4 +1,4 @@
-#include "HapticDeviveControllerConfigParser.h"
+#include "HapticDeviceControllerConfigParser.h"
 #include "helpers/ConfigParserHelpers.h"
 
 using namespace std;
@@ -133,13 +133,13 @@ parseForceFeedbackConfig(tinyxml2::XMLElement* force_feedback) {
 		force_feedback_config.reduction_factor_moment =
 			force_feedback->DoubleAttribute("reductionFactorMoment");
 	}
-	if (force_feedback->Attribute("proxyForceFeedbackSpaceDimension")) {
-		force_feedback_config.proxy_force_feedback_space_dimension =
-			force_feedback->IntAttribute("proxyForceFeedbackSpaceDimension");
+	if (force_feedback->Attribute("proxyForceSpaceDimension")) {
+		force_feedback_config.proxy_force_space_dimension =
+			force_feedback->IntAttribute("proxyForceSpaceDimension");
 	}
-	if (force_feedback->Attribute("proxyMomentFeedbackSpaceDimension")) {
-		force_feedback_config.proxy_moment_feedback_space_dimension =
-			force_feedback->IntAttribute("proxyMomentFeedbackSpaceDimension");
+	if (force_feedback->Attribute("proxyMomentSpaceDimension")) {
+		force_feedback_config.proxy_moment_space_dimension =
+			force_feedback->IntAttribute("proxyMomentSpaceDimension");
 	}
 	if (force_feedback->Attribute("proxyForceAxis")) {
 		force_feedback_config.proxy_force_axis =
@@ -161,10 +161,10 @@ parseForceFeedbackConfig(tinyxml2::XMLElement* force_feedback) {
 			"in hapticDeviceControllerConfig");
 	}
 
-	if (force_feedback_config.proxy_force_feedback_space_dimension < 0 ||
-		force_feedback_config.proxy_force_feedback_space_dimension > 3 ||
-		force_feedback_config.proxy_moment_feedback_space_dimension < 0 ||
-		force_feedback_config.proxy_moment_feedback_space_dimension > 3) {
+	if (force_feedback_config.proxy_force_space_dimension < 0 ||
+		force_feedback_config.proxy_force_space_dimension > 3 ||
+		force_feedback_config.proxy_moment_space_dimension < 0 ||
+		force_feedback_config.proxy_moment_space_dimension > 3) {
 		throw runtime_error(
 			"Proxy force_feedback_config space dimension must be between 0 and "
 			"3 in forceFeedbackConfig in hapticDeviceControllerConfig");
@@ -284,7 +284,7 @@ HapticDeviceControllerConfig::GainsConfig parseGainsConfig(
 		gains.kp_pos = xml->DoubleAttribute("kpPos");
 	}
 	if (xml->Attribute("kvPos")) {
-		gains.kv_pos = xml->DoubleAttribute("kv");
+		gains.kv_pos = xml->DoubleAttribute("kvPos");
 	}
 	if (xml->Attribute("kpOri")) {
 		gains.kp_ori = xml->DoubleAttribute("kpOri");
@@ -438,6 +438,12 @@ HapticDeviceControllerConfigParser::parseControllerConfig(
 	if (controlConfiguration->Attribute("orientationTeleopEnabled")) {
 		config.orientation_teleop_enabled =
 			controlConfiguration->BoolAttribute("orientationTeleopEnabled");
+	}
+
+	// use switch to exit homing
+	if (controlConfiguration->Attribute("useSwitchToExitHoming")) {
+		config.use_switch_to_exit_homing =
+			controlConfiguration->BoolAttribute("useSwitchToExitHoming");
 	}
 
 	// extract logger config

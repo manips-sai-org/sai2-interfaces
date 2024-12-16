@@ -59,6 +59,7 @@ set(SAI_INTERFACES_SOURCE
     ${PROJECT_SOURCE_DIR}/src/simviz/SimVizConfigParser.cpp
     ${PROJECT_SOURCE_DIR}/src/controller/RobotControllerRedisInterface.cpp
     ${PROJECT_SOURCE_DIR}/src/controller/RobotControllerConfigParser.cpp
+    ${PROJECT_SOURCE_DIR}/src/controller/HapticDeviceControllerRedisInterface.cpp
     ${PROJECT_SOURCE_DIR}/src/controller/HapticDeviceControllerConfigParser.cpp
     ${PROJECT_SOURCE_DIR}/src/MainRedisInterface.cpp)
 

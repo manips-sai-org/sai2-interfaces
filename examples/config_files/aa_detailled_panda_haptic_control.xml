@@ -28,6 +28,7 @@
 	switchFunction="clutch"
 	switchUsageType="click"
 	orientationTeleopEnabled="false"
+	useSwitchToExitHoming="true"
 	controlFrequency="1000.0">
 
 	<baseFrame xyz="0 0 0"
@@ -57,8 +58,8 @@
 			angularDamping="0.0 0.1" />
 		<forceFeedback reductionFactorForce="1.0"
 			reductionFactorMoment="1.0"
-			proxyForceFeedbackSpaceDimension="0"
-			proxyMomentFeedbackSpaceDimension="0"
+			proxyForceSpaceDimension="0"
+			proxyMomentSpaceDimension="0"
 			proxyForceAxis="0 0 1"
 			proxyMomentAxis="0 0 1" />
 	</impedanceMode>
