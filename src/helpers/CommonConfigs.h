@@ -48,7 +48,7 @@ struct RedisConfig {
 	int redis_port = 6379;
 
 	/// @brief The default redis namespace prefix
-	std::string redis_namespace_prefix = "sai::interfaces";
+	std::string redis_namespace_prefix = "sai";
 };
 
 }  // namespace SaiInterfaces

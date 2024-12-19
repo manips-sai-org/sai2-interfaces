@@ -12,7 +12,7 @@
 		rpy="0 0 0" />
 	<worldGravity xyz="0 0 -9.81" />
 
-	<logger logFolderName="log_files/controllers/panda"
+	<logger logFolderName="log_files/robot_controllers/panda"
 		enabledAtStartup="true"
 		addTimestampToFilename="false" />
 

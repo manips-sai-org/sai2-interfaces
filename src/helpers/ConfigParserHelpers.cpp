@@ -80,6 +80,25 @@ Vector3d parseVector3d(tinyxml2::XMLElement* xml, string attribute_name) {
 	}
 }
 
+VectorXd parseVectorXd(const char* vec_str) {
+	vector<string> vectorStr = splitString(vec_str);
+	const int size = vectorStr.size();
+	VectorXd vec = VectorXd(size);
+
+	try {
+		for (int i = 0; i < size; i++) {
+			vec[i] = stod(vectorStr[i]);
+		}
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << '\n';
+		throw runtime_error("Could not parse VectorXd from the string " +
+							string(vec_str) +
+							" because one of the values is not a number.");
+	}
+
+	return vec;
+}
+
 Affine3d parsePose(tinyxml2::XMLElement* xml) {
 	Affine3d pose = Affine3d::Identity();
 
@@ -99,7 +118,8 @@ Affine3d parsePose(tinyxml2::XMLElement* xml) {
 	return pose;
 }
 
-LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger, const std::string& default_folder_name) {
+LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger,
+							   const std::string& default_folder_name) {
 	LoggerConfig config = LoggerConfig(default_folder_name);
 
 	if (logger->Attribute("logFolderName")) {
@@ -109,8 +129,7 @@ LoggerConfig parseLoggerConfig(tinyxml2::XMLElement* logger, const std::string& 
 		config.frequency = logger->DoubleAttribute("logFrequency");
 	}
 	if (logger->Attribute("enabledAtStartup")) {
-		config.start_with_logger_on =
-			logger->BoolAttribute("enabledAtStartup");
+		config.start_with_logger_on = logger->BoolAttribute("enabledAtStartup");
 	}
 	if (logger->Attribute("addTimestampToFilename")) {
 		config.add_timestamp_to_filename =

@@ -48,8 +48,6 @@ void RobotControllerRedisInterface::runRedisCommunication(
 		"robot: " +
 		_config.robot_name);
 
-	// as long as we keep all redis calls inside this thread while the main
-	// thread is running the control loop, we should be fine without mutexes
 	while (!user_stop_signal && !external_stop_signal) {
 		timer.waitForNextLoop();
 		{

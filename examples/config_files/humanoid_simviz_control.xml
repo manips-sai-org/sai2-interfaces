@@ -20,7 +20,7 @@
 		rpy="0 0 0" />
 	<worldGravity xyz="0 0 -9.81" />
 
-	<logger logFolderName="log_files/controllers/humanoid" />
+	<logger logFolderName="log_files/robot_controllers/humanoid" />
 
 	<controller name="whole_body_controller">
 		<motionForceTask name="hip_pose"

@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "controller/HapticDeviceControllerRedisInterface.h"
 #include "controller/RobotControllerRedisInterface.h"
 #include "simviz/SimVizRedisInterface.h"
 
@@ -50,12 +51,16 @@ private:
 
 	std::unique_ptr<SimVizRedisInterface> _simviz_interface;
 	std::map<std::string, std::unique_ptr<RobotControllerRedisInterface>>
-		_controllers_interfaces;
+		_robot_controllers_interfaces;
+	std::map<int, std::unique_ptr<HapticDeviceControllerRedisInterface>>
+		_haptic_controllers_interfaces;
 
-	std::vector<std::thread> _controllers_threads;
+	std::vector<std::thread> _robot_controllers_threads;
+	std::vector<std::thread> _haptic_controllers_threads;
 
 	std::unique_ptr<SimVizConfig> _simviz_config;
-	std::vector<RobotControllerConfig> _controllers_configs;
+	std::vector<RobotControllerConfig> _robot_controllers_configs;
+	std::vector<HapticDeviceControllerConfig> _haptic_controllers_configs;
 	RedisConfig _redis_config;
 
 	std::string _config_folder_path;

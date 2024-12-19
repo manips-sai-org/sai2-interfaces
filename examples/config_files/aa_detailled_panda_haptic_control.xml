@@ -1,0 +1,91 @@
+<redisConfiguration namespacePrefix="sai::interfaces"
+	ip="127.0.0.1"
+	port="6379" />
+
+<simvizConfiguration worldFilePath="${WORLD_FILES_FOLDER}/world_panda.urdf">
+	<forceSensor robotOrObjectName="Panda"
+		linkName="end-effector"
+		filterCutoff="5.0" />
+</simvizConfiguration>
+
+<robotControlConfiguration robotName="Panda"
+	robotModelFile="${SAI_MODEL_URDF_FOLDER}/panda/panda_arm_sphere.urdf">
+
+	<controller name="cartesian_controller">
+		<motionForceTask name="eef_task"
+			linkName="end-effector">
+
+			<velocitySaturation enabled="false" />
+			<otg type="disabled" />
+
+		</motionForceTask>
+
+		<jointTask name="nullspace_joint_task" />
+	</controller>
+</robotControlConfiguration>
+
+<hapticDeviceControlConfiguration controlMode="impedance"
+	switchFunction="clutch"
+	switchUsageType="click"
+	orientationTeleopEnabled="false"
+	useSwitchToExitHoming="true"
+	controlFrequency="1000.0">
+
+	<baseFrame xyz="0 0 0"
+		rpy="0 0 0.5" />
+
+	<controlledRobotTask robotName="Panda"
+		controllerName="cartesian_controller"
+		taskName="eef_task" />
+
+	<logger logFolderName="log_files/haptic_controllers"
+		logFrequency="100"
+		enabledAtStartup="false"
+		addTimestampToFilename="true" />
+
+	<homingMode maxLinearVelocity="0.15"
+		maxAngularVelocity="3.1415927" />
+
+	<impedanceMode>
+		<virtualWorkspaceLimits enabled="false"
+			radius="0.1"
+			angle="1.0471975512" />
+		<scalingFactors linear="1.0"
+			angular="1.0" />
+		<variableDamping linearVelocityThresholds="0.1 0.3"
+			linearDamping="0.0 0.3"
+			angularVelocityThresholds="0.25 0.75"
+			angularDamping="0.0 0.1" />
+		<forceFeedback reductionFactorForce="1.0"
+			reductionFactorMoment="1.0"
+			proxyForceSpaceDimension="0"
+			proxyMomentSpaceDimension="0"
+			proxyForceAxis="0 0 1"
+			proxyMomentAxis="0 0 1" />
+	</impedanceMode>
+
+	<admittanceMode linearAdmittanceFactor="3e-5"
+		angularAdmittanceFactor="1.5e-3"
+		forceDeadband="2.0"
+		momentDeadband="0.02" />
+
+	<planeGuidance enabled="false"
+		originToCurrentPosition="true"
+		origin="0 0 0"
+		axis="0 0 1" />
+	<lineGuidance enabled="false"
+		originToCurrentPosition="true"
+		origin="0 0 0"
+		axis="0 0 1" />
+
+	<controlGains kpPos="1000.0"
+		kvPos="10.0"
+		kpOri="10.0"
+		kvOri="1.5" />
+
+	<guidanceGains kpPos="3000.0"
+		kvPos="20.0"
+		kpOri="20.0"
+		kvOri="3.5" />
+
+</hapticDeviceControlConfiguration>

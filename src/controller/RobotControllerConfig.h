@@ -18,8 +18,8 @@ using RobotControllerDefaultParams =
 namespace SaiInterfaces {
 
 /// @brief Default name of the folder where the log files will be saved
-const std::string default_logger_folder_name_controller =
-	"log_files/controllers";
+const std::string default_logger_folder_name_robot_controller =
+	"log_files/robot_controllers";
 
 /**
  * @brief A config object for the gains of a controller. It contains the P, D,
@@ -424,7 +424,7 @@ struct RobotControllerConfig {
 	/// @brief Config for the logger attached to the
 	/// RobotControllerRedisInterface
 	LoggerConfig logger_config =
-		LoggerConfig(default_logger_folder_name_controller);
+		LoggerConfig(default_logger_folder_name_robot_controller);
 
 	/// @brief Config for the redis interface attached to the robot controller
 	RedisConfig redis_config;
