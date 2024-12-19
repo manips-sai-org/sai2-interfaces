@@ -73,11 +73,19 @@ None of the corresponding config parameters can be changed at runtime.
 		- motionForceTask: a task to control the robot end-effector in cartesian space
 	The attributes of the controller element are:
 		- name: Required. The name of the controller. Two controllers on the same robot cannot have the same name
+		- gravityCompensation: Optional. Whether to compensate for gravity in the controller. Defaults to false as 
+			most robots API perform the gravity compensation internally
+		- jointLimitAvoidance: Optional. Whether to enable the joint limit avoidance task for position and velocity limits 
+			in the controller. Defaults to false as it is an experimental feature and should be used with caution
+		- torqueSaturation: Optional. Whether to saturate the torques computed by the controller. Defaults to false
 	Only one controller can be active at a time.
 	The active controller initially is the one defined first in the robotControlConfiguration element.
-	The active controller can be changed at runtime.
+	The active controller can be changed at runtime. All the other parameters are fixed at runtime
 	-->
-	<controller name="cartesian_controller">
+	<controller name="cartesian_controller"
+		gravityCompensation="false"
+		jointLimitAvoidance="false"
+		torqueSaturation="false">
 
 		<!--
 		The <motionForceTask> element contains the configuration for a motion-force task.
