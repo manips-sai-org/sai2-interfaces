@@ -53,8 +53,8 @@ void addInterfaceCartesianLimits(
 	string maxDesiredForce = "[";
 	string minDesiredMoment = "[";
 	string maxDesiredMoment = "[";
-	for (auto it = config.controllers_configs.begin();
-		 it != config.controllers_configs.end(); ++it) {
+	for (auto it = config.single_controller_configs.begin();
+		 it != config.single_controller_configs.end(); ++it) {
 		const auto& single_controller_config = it->second;
 		minGoalPosition += "[";
 		maxGoalPosition += "[";
@@ -62,7 +62,7 @@ void addInterfaceCartesianLimits(
 		maxDesiredForce += "[";
 		minDesiredMoment += "[";
 		maxDesiredMoment += "[";
-		for (const auto& task_config : single_controller_config) {
+		for (const auto& task_config : single_controller_config.tasks_configs) {
 			if (std::holds_alternative<SaiInterfaces::MotionForceTaskConfig>(
 					task_config)) {
 				auto task =
@@ -81,7 +81,8 @@ void addInterfaceCartesianLimits(
 				minDesiredMoment += "[]";
 				maxDesiredMoment += "[]";
 			}
-			if (&task_config != &single_controller_config.back()) {
+			if (&task_config !=
+				&single_controller_config.tasks_configs.back()) {
 				minGoalPosition += ",";
 				maxGoalPosition += ",";
 				minDesiredForce += ",";
@@ -96,7 +97,7 @@ void addInterfaceCartesianLimits(
 		maxDesiredForce += "]";
 		minDesiredMoment += "]";
 		maxDesiredMoment += "]";
-		if (next(it) != config.controllers_configs.end()) {
+		if (next(it) != config.single_controller_configs.end()) {
 			minGoalPosition += ",";
 			maxGoalPosition += ",";
 			minDesiredForce += ",";
@@ -230,17 +231,14 @@ bool MainRedisInterface::parseConfig(const std::string& config_file_name) {
 }
 
 std::vector<std::string> getControllerNameAndTasksFromSingleConfig(
-	const std::pair<
-		std::string,
-		std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>>
-		single_controller_config,
+	const SaiInterfaces::RobotSingleControllerConfig single_controller_config,
 	const SaiModel::SaiModel& robot_model) {
-	std::string controller_name = single_controller_config.first;
+	std::string controller_name = single_controller_config.controller_name;
 	std::string controller_tasks_names = "[";
 	std::string controller_tasks_types = "[";
 	std::string controller_tasks_selections = "[";
-	for (int i = 0; i < single_controller_config.second.size(); i++) {
-		const auto& task = single_controller_config.second.at(i);
+	for (int i = 0; i < single_controller_config.tasks_configs.size(); i++) {
+		const auto& task = single_controller_config.tasks_configs.at(i);
 		if (std::holds_alternative<JointTaskConfig>(task)) {
 			controller_tasks_types += "\"joint_task\"";
 			controller_tasks_names +=
@@ -270,7 +268,7 @@ std::vector<std::string> getControllerNameAndTasksFromSingleConfig(
 		} else {
 			std::cerr << "Error: Unknown task type in generating ui html.\n";
 		}
-		if (i != single_controller_config.second.size() - 1) {
+		if (i != single_controller_config.tasks_configs.size() - 1) {
 			controller_tasks_names += ", ";
 			controller_tasks_types += ", ";
 			controller_tasks_selections += ", ";
@@ -292,14 +290,14 @@ std::vector<std::string> generateControllerNamesAndTasksForUI(
 	std::string controller_tasks_types = "[";
 	std::string controller_task_selections = "[";
 
-	for (auto it = config.controllers_configs.begin();
-		 it != config.controllers_configs.end(); ++it) {
+	for (auto it = config.single_controller_configs.begin();
+		 it != config.single_controller_configs.end(); ++it) {
 		const auto& pair = *it;
 		const auto& controller_name = pair.first;
 
 		auto controller_ui_specs =
-			getControllerNameAndTasksFromSingleConfig(pair, robot_model);
-		if (it != config.controllers_configs.begin()) {
+			getControllerNameAndTasksFromSingleConfig(pair.second, robot_model);
+		if (it != config.single_controller_configs.begin()) {
 			controller_names += ", ";
 			controller_tasks_names += ", ";
 			controller_tasks_types += ", ";

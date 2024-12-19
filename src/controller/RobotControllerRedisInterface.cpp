@@ -196,7 +196,8 @@ void RobotControllerRedisInterface::initialize() {
 		"sensors::" + _config.robot_name + "::joint_velocities", _robot_dq);
 	if (_config.get_mass_matrix_from_redis) {
 		_redis_client->addToReceiveGroup(
-			"sensors::" + _config.robot_name + "::model::mass_matrix", _robot_M);
+			"sensors::" + _config.robot_name + "::model::mass_matrix",
+			_robot_M);
 	}
 	_redis_client->addToReceiveGroup(
 		"controllers::" + _config.robot_name + "::logging_on", _logging_on);
@@ -217,12 +218,12 @@ void RobotControllerRedisInterface::initialize() {
 		_robot_M_local = _robot_model->M();
 	}
 
-	for (const auto& pair : _config.controllers_configs) {
+	for (const auto& pair : _config.single_controller_configs) {
 		vector<shared_ptr<SaiPrimitives::TemplateTask>> ordered_tasks_list;
 
 		_is_active_controller[pair.first] = false;
 
-		for (const auto& tasks : pair.second) {
+		for (const auto& tasks : pair.second.tasks_configs) {
 			if (holds_alternative<JointTaskConfig>(tasks)) {
 				const auto& joint_task_config = get<JointTaskConfig>(tasks);
 
@@ -271,7 +272,15 @@ void RobotControllerRedisInterface::initialize() {
 		}
 		_robot_controllers[pair.first] =
 			make_unique<SaiPrimitives::RobotController>(_robot_model,
-														 ordered_tasks_list);
+														ordered_tasks_list);
+		_robot_controllers.at(pair.first)
+			->enableGravityCompensation(
+				pair.second.enable_gravity_compensation);
+		_robot_controllers.at(pair.first)
+			->enableJointLimitAvoidance(
+				pair.second.enable_joint_limit_avoidance);
+		_robot_controllers.at(pair.first)
+			->enableTorqueSaturation(pair.second.enable_torque_saturation);
 	}
 
 	if (_robot_controllers.find(_config.initial_active_controller_name) ==
@@ -359,7 +368,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 	_robot_logger->addToLog(_robot_command_torques_local, "control_torques");
 	_robot_logger->addToLog(_robot_M_local, "mass_matrix");
 
-	for (auto& pair : _config.controllers_configs) {
+	for (auto& pair : _config.single_controller_configs) {
 		const string& controller_name = pair.first;
 
 		_controller_inputs[controller_name] = {};
@@ -373,7 +382,7 @@ void RobotControllerRedisInterface::initializeRedisTasksIO() {
 			std::filesystem::create_directory(current_controller_logger_folder);
 		}
 
-		auto& task_configs = pair.second;
+		auto& task_configs = pair.second.tasks_configs;
 
 		for (auto& task_config : task_configs) {
 			if (holds_alternative<JointTaskConfig>(task_config)) {
@@ -985,9 +994,9 @@ void RobotControllerRedisInterface::processInputs() {
 	bool reset_inputs = false;
 
 	auto& current_controller_config =
-		_config.controllers_configs.at(_active_controller_name);
+		_config.single_controller_configs.at(_active_controller_name);
 
-	for (auto& task_config : current_controller_config) {
+	for (auto& task_config : current_controller_config.tasks_configs) {
 		if (holds_alternative<JointTaskConfig>(task_config)) {
 			auto& joint_task_config = get<JointTaskConfig>(task_config);
 			auto joint_task =

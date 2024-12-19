@@ -243,7 +243,7 @@ None of the corresponding config parameters can be changed at runtime.
 
 #### The `<controller>` sub element
 
-This is the main child element of the `<robotControlConfiguration>` . Each one of the `<controller>` tags allows the definition of a hierarchical controller that can have motion force cartesian tasks and joint tasks.
+This is the main child element of the `<robotControlConfiguration>` . Each one of the `<controller>` tags allows the definition of a hierarchical controller that can have motion force cartesian tasks and joint tasks. The controller can perform gravity compensation or not, and the experimental joint limit avoidance task can be enabled for joint position and velocity limits avoidance. The controller can also be configured to saturate the computed torques to the mas torque value defined in the urdf file.
 
 ```
 <!--
@@ -258,11 +258,19 @@ The supported tasks are:
 	- motionForceTask: a task to control the robot end-effector in cartesian space
 The attributes of the controller element are:
 	- name: Required. The name of the controller. Two controllers on the same robot cannot have the same name
+	- gravityCompensation: Optional. Whether to compensate for gravity in the controller. Defaults to false as 
+		most robots API perform the gravity compensation internally
+	- jointLimitAvoidance: Optional. Whether to enable the joint limit avoidance task for position and velocity limits 
+		in the controller. Defaults to false as it is an experimental feature and should be used with caution
+	- torqueSaturation: Optional. Whether to saturate the torques computed by the controller. Defaults to false
 Only one controller can be active at a time.
 The active controller initially is the one defined first in the robotControlConfiguration element.
-The active controller can be changed at runtime.
+The active controller can be changed at runtime. All the other parameters are fixed at runtime
 -->
-<controller name="cartesian_controller">
+<controller name="cartesian_controller"
+	gravityCompensation="false"
+	jointLimitAvoidance="false"
+	torqueSaturation="false">
 
 ...
 

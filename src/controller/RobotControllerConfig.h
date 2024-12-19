@@ -12,6 +12,8 @@
 using JointTaskDefaultParams = SaiPrimitives::JointTask::DefaultParameters;
 using MotionForceTaskDefaultParams =
 	SaiPrimitives::MotionForceTask::DefaultParameters;
+using RobotControllerDefaultParams =
+	SaiPrimitives::RobotController::DefaultParameters;
 
 namespace SaiInterfaces {
 
@@ -359,6 +361,32 @@ struct MotionForceTaskConfig {
 };
 
 /**
+ * @brief Configuration for a single controller. Each robot can be pre
+ * configured with multiple controllers.
+ *
+ */
+struct RobotSingleControllerConfig {
+	/// @brief Name of the controller, parsed from the corresponding attribute
+	/// of the <controller> element
+	std::string controller_name = "";
+
+	/// @brief Flag to enable gravity compensation in the controller
+	bool enable_gravity_compensation =
+		RobotControllerDefaultParams::enable_gravity_compensation;
+	/// @brief Flag to enable joint limit avoidance in the controller
+	bool enable_joint_limit_avoidance =
+		RobotControllerDefaultParams::enable_joint_limit_avoidance;
+	/// @brief Flag to enable torque saturation in the controller
+	bool enable_torque_saturation =
+		RobotControllerDefaultParams::enable_torque_saturation;
+
+	/// @brief List of task configurations for this controller in the
+	/// hierarchical order
+	std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>
+		tasks_configs = {};
+};
+
+/**
  * @brief Config for the RobotControllerRedisInterface. There should be one per
  * robot to control, and each one can contain several controllers.
  *
@@ -406,13 +434,9 @@ struct RobotControllerConfig {
 	std::string initial_active_controller_name = "";
 
 	/// @brief Map of the controllers to be used by the robot controller. The
-	/// keys are the names of the controllers, and the values are lists of task
-	/// configurations, corresponding to the tasks within the controller in the
-	/// order of their appearance in the xml config file, which is also the
-	/// hierarchial order of the tasks in the controller.
-	std::map<std::string,
-			 std::vector<std::variant<JointTaskConfig, MotionForceTaskConfig>>>
-		controllers_configs = {};
+	/// keys are the names of the controllers.
+	std::map<std::string, RobotSingleControllerConfig>
+		single_controller_configs = {};
 };
 
 }  // namespace SaiInterfaces
